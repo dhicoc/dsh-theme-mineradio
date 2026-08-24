@@ -1057,6 +1057,31 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   color: #F2F0EA;
 }
 
+/* Settings model / API-protocol <select> triggers. Stock fill is
+   --dsw-alias-bg-layer-1 (a flat token). Same family glass as the panes;
+   keep the stock chevron image on the right. */
+[data-dsh-aqua] [role='dialog'] select {
+  background-color: transparent;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='%237A7468' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+    var(--dsh-aqua-glass-card-light);
+  background-position: right 12px center, 0 0;
+  background-repeat: no-repeat, no-repeat;
+  background-size: 12px 12px, auto;
+  border-color: rgba(154, 111, 44, 0.22);
+  box-shadow: var(--dsh-aqua-glass-shadow-light);
+  backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04);
+  color: var(--dsw-alias-label-primary);
+}
+
+[data-dsh-aqua] body[data-ds-dark-theme] [role='dialog'] select {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='%23CBC4B8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+    var(--dsh-aqua-glass-card-dark);
+  border-color: rgba(0, 245, 212, 0.22);
+  box-shadow: var(--dsh-aqua-glass-shadow-dark);
+}
+
 /* ---------- Display typography: the serif face marks headings and the
    session tree, so the page reads in two voices —serif headings over the
    sans body. Space Grotesk keeps Latin/digits in the same stack. ---------- */
