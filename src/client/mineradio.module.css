@@ -903,7 +903,7 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
 /* Glass surfaces: menus and dialogs follow the site's frosted recipe
    (standard `backdrop-filter` only —see the composer card note). */
 [data-dsh-float] [role='menu'] {
-  background: color-mix(in srgb, rgb(255 255 255) calc(94% * var(--dsh-aqua-frost, 1)), transparent);
+  background: color-mix(in srgb, rgb(255 255 255) 94%, transparent);
   backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.55) brightness(1.04);
 }
 
@@ -911,9 +911,9 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
    translucent override and no backdrop blur —the override made the panel
    muddy and the blur scrambled its fixed-position layout. */
 [data-dsh-float] body[data-ds-dark-theme] [role='menu'] {
-  /* Dropdowns sit over chat text; keep them near-opaque so the text behind
-     can't read through and overlap the menu items. */
-  background: color-mix(in srgb, rgb(28 32 42) calc(96% * var(--dsh-aqua-frost, 1)), transparent);
+  /* Dropdowns sit over chat text; keep them near-opaque (fixed, NOT tied to the
+     frost knob) so the text behind can't read through and overlap the items. */
+  background: color-mix(in srgb, rgb(28 32 42) 96%, transparent);
 }
 
 /* Sub-agent tree dropdown (role=tree, e.g. the composer's sub-agent switcher)
