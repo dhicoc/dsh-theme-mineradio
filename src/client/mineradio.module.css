@@ -959,6 +959,25 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   box-shadow: var(--dsh-aqua-glass-shadow-dark);
 }
 
+/* Todo / composer-dock tip cards: stock fill is --dsw-specific-tip (a flat
+   token, no blur). Same family glass as the panes. The todo card is the
+   _root that owns a collapse header (aria-expanded); the dock panel is
+   the _panel sitting in a _dock. */
+[data-dsh-float] [class*='_root']:has(> [class*='_body'] > button[class*='_header'][aria-expanded]),
+[data-dsh-float] [class*='_dock'] > [class*='_panel']:has(> [class*='_header']) {
+  background: var(--dsh-aqua-glass-card-light);
+  border-color: rgba(154, 111, 44, 0.22);
+  box-shadow: var(--dsh-aqua-glass-shadow-light);
+  backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [class*='_root']:has(> [class*='_body'] > button[class*='_header'][aria-expanded]),
+[data-dsh-float] body[data-ds-dark-theme] [class*='_dock'] > [class*='_panel']:has(> [class*='_header']) {
+  background: var(--dsh-aqua-glass-card-dark);
+  border-color: rgba(0, 245, 212, 0.22);
+  box-shadow: var(--dsh-aqua-glass-shadow-dark);
+}
+
 /* ---------- Page edge fades: 5px gradient blur bands pinned to the top and
    bottom of the viewport. They sit BELOW the floating glass (the header
    card, composer card, and sidebar card hold z-index 8) but ABOVE the
