@@ -962,9 +962,10 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
 /* Todo / composer-dock tip cards: stock fill is --dsw-specific-tip (a flat
    token, no blur). Same family glass as the panes. The todo card is the
    _root that owns a collapse header (aria-expanded); the dock panel is
-   the _panel sitting in a _dock. */
+   the _panel sitting in a _dock; the goal strip is the _bar in a _dock. */
 [data-dsh-float] [class*='_root']:has(> [class*='_body'] > button[class*='_header'][aria-expanded]),
-[data-dsh-float] [class*='_dock'] > [class*='_panel']:has(> [class*='_header']) {
+[data-dsh-float] [class*='_dock'] > [class*='_panel']:has(> [class*='_header']),
+[data-dsh-float] [class*='_dock'] > [class*='_bar'] {
   background: var(--dsh-aqua-glass-card-light);
   border-color: rgba(154, 111, 44, 0.22);
   box-shadow: var(--dsh-aqua-glass-shadow-light);
@@ -972,7 +973,8 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
 }
 
 [data-dsh-float] body[data-ds-dark-theme] [class*='_root']:has(> [class*='_body'] > button[class*='_header'][aria-expanded]),
-[data-dsh-float] body[data-ds-dark-theme] [class*='_dock'] > [class*='_panel']:has(> [class*='_header']) {
+[data-dsh-float] body[data-ds-dark-theme] [class*='_dock'] > [class*='_panel']:has(> [class*='_header']),
+[data-dsh-float] body[data-ds-dark-theme] [class*='_dock'] > [class*='_bar'] {
   background: var(--dsh-aqua-glass-card-dark);
   border-color: rgba(0, 245, 212, 0.22);
   box-shadow: var(--dsh-aqua-glass-shadow-dark);
@@ -1168,8 +1170,21 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
    translucent fill + champagne hairline; add the missing frosted backdrop-filter
    and let the opaque workbench pane (which resolves to the opaque base token)
    read through to the panel's frost instead of sitting as a solid slab. */
-[data-dsh-aqua] [data-dsh-panel-host] [class*='panel' i]:not([class*='Body' i]) {
+[data-dsh-aqua] [data-dsh-panel-host] [class*='panel' i]:not([class*='Body' i]):not([class*='Resize' i]):not([class*='Tab' i]) {
+  background: var(--dsh-aqua-glass-card-light);
+  border-color: rgba(154, 111, 44, 0.22);
+  box-shadow: var(--dsh-aqua-glass-shadow-light);
   backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04);
+}
+[data-dsh-aqua] body[data-ds-dark-theme] [data-dsh-panel-host] [class*='panel' i]:not([class*='Body' i]):not([class*='Resize' i]):not([class*='Tab' i]) {
+  background: var(--dsh-aqua-glass-card-dark);
+  border-color: rgba(0, 245, 212, 0.22);
+  box-shadow: var(--dsh-aqua-glass-shadow-dark);
+}
+/* Tab strip sits inside the already-frosted panel; its own layer-1 fill
+   reads as a second flat slab. Let the panel glass show through. */
+[data-dsh-aqua] [data-dsh-panel-host] [class*='tabBar'] {
+  background: transparent;
 }
 /* "_pane" is a prefix of "_panel", so exclude panel/content/tab to hit only the
    opaque workbench pane (not the translucent panel shell or its children). */
