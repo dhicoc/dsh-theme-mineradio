@@ -916,6 +916,14 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   background: color-mix(in srgb, rgb(28 32 42) calc(96% * var(--dsh-aqua-frost, 1)), transparent);
 }
 
+/* Sub-agent tree dropdown (role=tree, e.g. the composer's sub-agent switcher)
+   rides --dsw-specific-menu and ships no backdrop-filter of its own; give it the
+   same frosted blur. Scoped to [class*='menu'] so the sidebar's workspace tree
+   (class*=list) stays untouched. */
+[data-dsh-float] [role='tree'][class*='menu'] {
+  backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.55) brightness(1.04);
+}
+
 /* ---------- Page edge fades: 5px gradient blur bands pinned to the top and
    bottom of the viewport. They sit BELOW the floating glass (the header
    card, composer card, and sidebar card hold z-index 8) but ABOVE the
