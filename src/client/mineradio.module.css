@@ -528,7 +528,21 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   background: var(--dsh-aqua-glass-card-light);
   border: 1px solid rgba(154, 111, 44, 0.22);
   box-shadow: var(--dsh-aqua-glass-shadow-light);
+}
+
+/* The frosted blur lives on a ::before veil, NOT the card itself: a
+   backdrop-filter on the card turns it into the containing block for its fixed
+   descendants (the model / access-mode dropdown menus), re-anchoring them and
+   breaking their own backdrop blur. The veil keeps the identical blur while the
+   card stays transparent to those overlays (same trick as the sidebar). */
+[data-dsh-float] [data-composer-card]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
   backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04);
+  pointer-events: none;
+  z-index: -1;
 }
 
 [data-dsh-float] body[data-ds-dark-theme] [data-composer-card] {
@@ -903,7 +917,13 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
 /* Glass surfaces: menus and dialogs follow the site's frosted recipe
    (standard `backdrop-filter` only —see the composer card note). */
 [data-dsh-float] [role='menu'] {
-  background: color-mix(in srgb, rgb(255 255 255) 94%, transparent);
+  /* Same liquid-glass gradient as the panes, but with a higher base opacity so
+     the chat text can't read through. Fixed (NOT tied to the frost knob): the
+     dropdown must stay readable even when the user lowers 磨砂度. */
+  background:
+    radial-gradient(circle at 16% 0%, rgb(255 255 255 / 0.22), transparent 34%),
+    radial-gradient(circle at 88% 8%, rgb(154 111 44 / 0.10), transparent 36%),
+    linear-gradient(145deg, rgb(244 210 138 / 0.10), rgb(250 246 238 / 0.90) 42%, rgb(244 240 232 / 0.92));
   backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.55) brightness(1.04);
 }
 
@@ -911,9 +931,10 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
    translucent override and no backdrop blur —the override made the panel
    muddy and the blur scrambled its fixed-position layout. */
 [data-dsh-float] body[data-ds-dark-theme] [role='menu'] {
-  /* Dropdowns sit over chat text; keep them near-opaque (fixed, NOT tied to the
-     frost knob) so the text behind can't read through and overlap the items. */
-  background: color-mix(in srgb, rgb(28 32 42) 96%, transparent);
+  background:
+    radial-gradient(circle at 16% 0%, rgb(255 255 255 / 0.10), transparent 34%),
+    radial-gradient(circle at 88% 8%, rgb(0 245 212 / 0.12), transparent 36%),
+    linear-gradient(145deg, rgb(0 245 212 / 0.115), rgb(28 32 42 / 0.90) 42%, rgb(20 23 28 / 0.92));
 }
 
 /* Sub-agent tree dropdown (role=tree, e.g. the composer's sub-agent switcher)
@@ -1061,7 +1082,7 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
    so these hero surfaces layer the dispersion after their blur. The fused-slab
    inner composer/stats keep backdrop-filter:none (their higher-specificity
    fused rules still win); the slab itself carries it. ---------- */
-[data-dsh-float][data-dsh-dispersion] [data-composer-card],
+[data-dsh-float][data-dsh-dispersion] [data-composer-card]::before,
 [data-dsh-float][data-dsh-dispersion] header,
 [data-dsh-float][data-dsh-dispersion] [data-dsh-trajectory],
 [data-dsh-float][data-dsh-dispersion] [data-dsh-stats],
