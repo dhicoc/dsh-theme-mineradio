@@ -1157,6 +1157,17 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
 [data-dsh-aqua] [data-dsh-panel-host] [class*='_pane']:not([class*='panel']):not([class*='Content']):not([class*='Tab']) {
   background: transparent;
 }
+/* Terminal wrap + xterm viewport paint an OPAQUE --dsw-alias-bg-base
+   (#08090B) slab — xterm even inlines it on .xterm-viewport. Drop both
+   fills so the panel frost shows through. allowTransparency is already
+   on; ANSI ink stays. */
+[data-dsh-aqua] [data-dsh-panel-host] [class*='terminalWrap'] {
+  background: transparent;
+}
+[data-dsh-aqua] [data-dsh-panel-host] [class*='xterm-viewport'],
+[data-dsh-aqua] [data-dsh-panel-host] [class*='xterm-screen'] {
+  background-color: transparent !important;
+}
 
 /* ---------- Reduced motion: keep the static look, drop every effect. ---------- */
 @media (prefers-reduced-motion: reduce) {
