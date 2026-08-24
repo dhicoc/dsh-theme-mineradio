@@ -528,7 +528,20 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   background: var(--dsh-aqua-glass-card-light);
   border: 1px solid rgba(154, 111, 44, 0.22);
   box-shadow: var(--dsh-aqua-glass-shadow-light);
+}
+
+/* Frost lives on a ::before veil, not the card: backdrop-filter on the card
+   makes it a backdrop root for its absolute/fixed descendants (model /
+   access-mode / sub-agent menus), so those popups can only frost the card
+   itself and the chat text reads through sharp. Same trick as the sidebar. */
+[data-dsh-float] [data-composer-card]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
   backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04);
+  pointer-events: none;
+  z-index: -1;
 }
 
 [data-dsh-float] body[data-ds-dark-theme] [data-composer-card] {
@@ -544,6 +557,8 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
    seam stays. The slab shrinks to its content width (max-content) so the
    glass hugs the composer exactly. */
 [data-dsh-aqua][data-dsh-float] [data-dsh-inputbar]:has([data-dsh-stats]) {
+  position: relative;
+  z-index: 8;
   width: calc(var(--dsh-chat-content-width) + 32px);
   max-width: none;
   margin: 0 auto 12px;
@@ -552,7 +567,19 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   border-radius: 24px;
   background: var(--dsh-aqua-glass-card-light);
   box-shadow: var(--dsh-aqua-glass-shadow-light);
+}
+
+/* Fused slab: same veil as the unfused card. z-index on the wrapper makes a
+   stacking context for the glow / veil (z -1) without isolation — isolation
+   would also become a backdrop root and clip popup frost to the bar. */
+[data-dsh-aqua][data-dsh-float] [data-dsh-inputbar]:has([data-dsh-stats])::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
   backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04);
+  pointer-events: none;
+  z-index: -1;
 }
 
 [data-dsh-float] body[data-ds-dark-theme] [data-dsh-inputbar]:has([data-dsh-stats]) {
@@ -569,6 +596,7 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   backdrop-filter: none;
 }
 
+[data-dsh-float] [data-dsh-inputbar]:has([data-dsh-stats]) [data-composer-card]::before,
 [data-dsh-float] [data-dsh-inputbar]:has([data-dsh-stats]) [data-composer-card]::after {
   display: none;
 }
@@ -819,6 +847,15 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   isolation: isolate;
 }
 
+/* The inputbar hosts the composer dropdowns. isolation would clip their
+   backdrop-filter to the bar, so chat text stays sharp behind the menus.
+   z-index (not isolation) keeps the glow / veil at z-index -1 inside the
+   pane without becoming a backdrop root. */
+[data-dsh-aqua][data-dsh-aqua-spotlight] [data-dsh-inputbar][data-dsh-aqua-spot] {
+  isolation: auto;
+  z-index: 8;
+}
+
 /* The injected glow div must never affect layout: inert by default (compat
    mode / toggle off), absolute-positioned only while the glow is on. */
 [data-dsh-aqua] [data-dsh-aqua-glow] {
@@ -900,28 +937,26 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
     inset 0 0 0 1px rgba(255, 255, 255, 0.085);
 }
 
-/* Glass surfaces: menus and dialogs follow the site's frosted recipe
-   (standard `backdrop-filter` only —see the composer card note). */
-[data-dsh-float] [role='menu'] {
-  background: color-mix(in srgb, rgb(255 255 255) 94%, transparent);
-  backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.55) brightness(1.04);
+/* Composer / overflow menus: the SAME liquid-glass recipe as the panes
+   (family gradient + specular rim + blur knob). They sit over chat text, so
+   the readable frost comes from real backdrop blur (the composer veil above
+   lets them sample the transcript) — not a near-opaque flat slab. */
+[data-dsh-float] [role='menu'],
+[data-dsh-float] [role='tree'][class*='menu'] {
+  background: var(--dsh-aqua-glass-card-light);
+  border: 1px solid rgba(154, 111, 44, 0.22);
+  box-shadow: var(--dsh-aqua-glass-shadow-light);
+  backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04);
 }
 
 /* Dialogs keep their native token surface (bg-layer-2) and radius; no
    translucent override and no backdrop blur —the override made the panel
    muddy and the blur scrambled its fixed-position layout. */
-[data-dsh-float] body[data-ds-dark-theme] [role='menu'] {
-  /* Dropdowns sit over chat text; keep them near-opaque (fixed, NOT tied to the
-     frost knob) so the text behind can't read through and overlap the items. */
-  background: color-mix(in srgb, rgb(28 32 42) 96%, transparent);
-}
-
-/* Sub-agent tree dropdown (role=tree, e.g. the composer's sub-agent switcher)
-   rides --dsw-specific-menu and ships no backdrop-filter of its own; give it the
-   same frosted blur. Scoped to [class*='menu'] so the sidebar's workspace tree
-   (class*=list) stays untouched. */
-[data-dsh-float] [role='tree'][class*='menu'] {
-  backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.55) brightness(1.04);
+[data-dsh-float] body[data-ds-dark-theme] [role='menu'],
+[data-dsh-float] body[data-ds-dark-theme] [role='tree'][class*='menu'] {
+  background: var(--dsh-aqua-glass-card-dark);
+  border-color: rgba(0, 245, 212, 0.22);
+  box-shadow: var(--dsh-aqua-glass-shadow-dark);
 }
 
 /* ---------- Page edge fades: 5px gradient blur bands pinned to the top and
@@ -1061,11 +1096,11 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
    so these hero surfaces layer the dispersion after their blur. The fused-slab
    inner composer/stats keep backdrop-filter:none (their higher-specificity
    fused rules still win); the slab itself carries it. ---------- */
-[data-dsh-float][data-dsh-dispersion] [data-composer-card],
+[data-dsh-float][data-dsh-dispersion] [data-composer-card]::before,
 [data-dsh-float][data-dsh-dispersion] header,
 [data-dsh-float][data-dsh-dispersion] [data-dsh-trajectory],
 [data-dsh-float][data-dsh-dispersion] [data-dsh-stats],
-[data-dsh-float][data-dsh-dispersion] [data-dsh-inputbar]:has([data-dsh-stats]) {
+[data-dsh-float][data-dsh-dispersion] [data-dsh-inputbar]:has([data-dsh-stats])::before {
   backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) url(#mineradio-glass-dispersion) saturate(1.22) brightness(1.04);
 }
 
