@@ -959,6 +959,14 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   box-shadow: var(--dsh-aqua-glass-shadow-dark);
 }
 
+/* Model-picker provider rows are sticky group titles. Stock fill is
+   --dsw-specific-menu (near-black 92%), so the label reads as a black
+   strip on the glass. Drop the plate; ink follows the theme ladder. */
+[data-dsh-float] [role='menu'] [class*='groupTitle'] {
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+}
+
 /* Todo / composer-dock tip cards: stock fill is --dsw-specific-tip (a flat
    token, no blur). Same family glass as the panes. The todo card is the
    _root that owns a collapse header (aria-expanded); the dock panel is
