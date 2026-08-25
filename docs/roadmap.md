@@ -39,9 +39,9 @@
 
 第五个场景「彩虹」已落地：三色带缓慢游走，默认关。
 
-### 6. 安装说明
+### 6. 安装说明（本轮）
 
-市场更新请走 npm 包 `dsh-theme-mineradio`。`github:` 源会触发 pnpm 构建脚本拦截。主题包本身没有 `prepare` / `postinstall`。
+README 已改成推荐 npm / 插件市场，并写明不要用 `github:` 源。
 
 ## 明确不做
 

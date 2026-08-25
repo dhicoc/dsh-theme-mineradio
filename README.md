@@ -50,10 +50,18 @@ Pin a version or track the dev branch:
 .\install.ps1 -Version 'main'     # the development branch
 ```
 
-### Manual / via pnpm
+### Plugin market / npm (recommended)
 
 ```powershell
-dsh plugin --profile web add https://github.com/dhicoc/dsh-theme-mineradio
+dsh plugin --profile web add dsh-theme-mineradio
+```
+
+Or search **dsh-theme-mineradio** in Settings → Plugin market. That installs the prebuilt npm package (`lib/` already bundled). There is **no** `prepare` / `postinstall` script.
+
+Do not install with `github:dhicoc/dsh-theme-mineradio` or `dsh plugin add https://github.com/dhicoc/dsh-theme-mineradio`. A git / tarball spec makes pnpm block "build scripts", and market updates then fail. If you already have the git spec, switch to npm:
+
+```powershell
+dsh plugin --profile web add dsh-theme-mineradio@latest
 ```
 
 The `dsh.bundle` manifest registers `ui-mineradio` automatically, so no manual patch is needed. (The installer adds this equivalent entry for source installs:)

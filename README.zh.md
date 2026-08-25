@@ -50,10 +50,18 @@ powershell -ExecutionPolicy Bypass -Command "Invoke-WebRequest 'https://github.c
 .\install.ps1 -Version 'main'     # 开发分支
 ```
 
-### 手动 / 通过 pnpm
+### 插件市场 / npm（推荐）
 
 ```powershell
-dsh plugin --profile web add https://github.com/dhicoc/dsh-theme-mineradio
+dsh plugin --profile web add dsh-theme-mineradio
+```
+
+或在设置 → 插件市场搜索 **dsh-theme-mineradio**。装的是 npm 上的预构建包（`lib/` 已打好），**没有** `prepare` / `postinstall`。
+
+不要写成 `github:dhicoc/dsh-theme-mineradio` 或 `dsh plugin add https://github.com/dhicoc/dsh-theme-mineradio`。git / tarball 源会让 pnpm 拦「构建脚本」，市场更新也会失败。已经是 git 源的，改成 npm 即可：
+
+```powershell
+dsh plugin --profile web add dsh-theme-mineradio@latest
 ```
 
 `dsh.bundle` manifest 会自动注册 `ui-mineradio`，无需手动补丁。（安装脚本对源码安装会写入这条等价条目：）
