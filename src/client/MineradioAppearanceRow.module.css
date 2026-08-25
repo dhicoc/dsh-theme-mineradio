@@ -26,6 +26,52 @@
   color: var(--dsw-alias-label-primary);
 }
 
+.fold {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.foldHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.foldTitle {
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--dsw-alias-label-primary);
+}
+
+.foldChevron {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--dsw-alias-label-tertiary);
+  transform: rotate(-90deg);
+}
+
+.foldChevronOpen {
+  transform: rotate(0deg);
+}
+
+.foldBody {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 /* Controls stack: one column of rows and knobs. */
 .controls {
   display: flex;

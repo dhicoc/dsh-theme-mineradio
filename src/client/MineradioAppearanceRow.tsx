@@ -9,7 +9,7 @@
  * and the whole row renders nothing while the master switch in the Plugins
  * section is off.
  */
-import { useRef } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { IconCheckOutline16 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { PropsLocale, PropsRuntime, PropsStore } from '@deepseek-ai/dsh-client-ui-slots'
 // Type-only: pulls the `settings.general.item` SlotMap merge.
@@ -19,6 +19,35 @@ import { loadVideoHandle, saveVideoBlob, saveVideoHandle } from './wallpaper-sto
 import type { createMineradioRowStore } from './settings-store.ts'
 import { matchScenePreset, type PerfTier, type ScenePreset, type TextStyle } from './theme-layer.ts'
 import css from './MineradioAppearanceRow.module.css'
+
+function Fold({
+  title,
+  open,
+  onToggle,
+  children,
+}: {
+  title: string
+  open: boolean
+  onToggle: () => void
+  children: ReactNode
+}) {
+  return (
+    <div className={css.fold}>
+      <button
+        type="button"
+        className={css.foldHead}
+        aria-expanded={open}
+        onClick={onToggle}
+      >
+        <span className={css.foldTitle}>{title}</span>
+        <svg className={open ? css.foldChevronOpen : css.foldChevron} width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M2.15 8.5L2.58 8.08L5.30 5.35C5.56 5.09 5.78 4.87 5.99 4.70C6.20 4.53 6.44 4.38 6.75 4.33C6.92 4.31 7.08 4.31 7.25 4.33C7.56 4.38 7.80 4.53 8.01 4.70C8.22 4.87 8.44 5.09 8.70 5.35L11.42 8.08L11.85 8.50L11 9.35L10.58 8.92L7.85 6.20C7.57 5.92 7.40 5.75 7.26 5.64C7.13 5.53 7.08 5.52 7.06 5.52C7.02 5.51 6.98 5.51 6.94 5.52C6.92 5.52 6.87 5.53 6.74 5.64C6.60 5.75 6.43 5.92 6.15 6.20L3.42 8.92L3 9.35L2.15 8.50Z" fill="currentColor" />
+        </svg>
+      </button>
+      {open ? <div className={css.foldBody}>{children}</div> : null}
+    </div>
+  )
+}
 
 /** Injected business face: every knob write except the master switch. */
 export interface MineradioAppearanceRowInjected {
@@ -129,6 +158,10 @@ export function MineradioAppearanceRow(props: MineradioAppearanceRowComponentPro
   const perf = useStore(s => s.perf)
   const fileRef = useRef<HTMLInputElement | null>(null)
   const videoRef = useRef<HTMLInputElement | null>(null)
+  const [openLooks, setOpenLooks] = useState(true)
+  const [openMaterial, setOpenMaterial] = useState(false)
+  const [openBackdrop, setOpenBackdrop] = useState(false)
+  const [openMotion, setOpenMotion] = useState(false)
 
   // Videos are `idb:` blobs, `fsa:` remembered-file handles, or legacy
   // `data:video/` URLs.
@@ -210,6 +243,7 @@ export function MineradioAppearanceRow(props: MineradioAppearanceRowComponentPro
 
   return (
     <div className={css.group}>
+      <Fold title={t('mineradio.foldLooks')} open={openLooks} onToggle={() => { setOpenLooks(v => !v) }}>
       {/* 场景：一键拧现有旋钮 */}
       <div className={css.subGroup}>
         <div className={css.subTitle}>{t('mineradio.scene')}</div>
@@ -290,7 +324,9 @@ export function MineradioAppearanceRow(props: MineradioAppearanceRowComponentPro
           </div>
         </div>
       </div>
+      </Fold>
 
+      <Fold title={t('mineradio.foldMaterial')} open={openMaterial} onToggle={() => { setOpenMaterial(v => !v) }}>
       {/* 玻璃材质：仅云母模式 */}
       {mode === 'mica' && (
         <div className={css.subGroup}>
@@ -301,7 +337,9 @@ export function MineradioAppearanceRow(props: MineradioAppearanceRowComponentPro
           </div>
         </div>
       )}
+      </Fold>
 
+      <Fold title={t('mineradio.foldBackdrop')} open={openBackdrop} onToggle={() => { setOpenBackdrop(v => !v) }}>
       {/* 背景 */}
       <div className={css.subGroup}>
         <div className={css.subTitle}>{t('mineradio.background')}</div>
@@ -448,7 +486,9 @@ export function MineradioAppearanceRow(props: MineradioAppearanceRowComponentPro
           </div>
         </div>
       </div>
+      </Fold>
 
+      <Fold title={t('mineradio.foldMotion')} open={openMotion} onToggle={() => { setOpenMotion(v => !v) }}>
       {/* 装饰：环境装饰 */}
       <div className={css.subGroup}>
         <div className={css.subTitle}>{t('mineradio.decorAmbient')}</div>
@@ -549,6 +589,7 @@ export function MineradioAppearanceRow(props: MineradioAppearanceRowComponentPro
           </div>
         </div>
       )}
+      </Fold>
     </div>
   )
 }
