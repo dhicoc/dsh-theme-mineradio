@@ -398,7 +398,7 @@ const SCENE_BUNDLES: Record<ScenePreset, SceneBundle> = {
   },
   rainbow: {
     textStyle: 'neutral', blur: 22, frost: 48,
-    fluidHue: 44, fluidDepth: 24, dispersionHue: 44, dispersionRefract: 45,
+    fluidHue: 44, fluidDepth: 24, dispersionHue: 44, dispersionRefract: 0,
     starDensity: 50, spotlight: true, press: true, audioReact: false, background: 'fluid', rainbow: true,
   },
 }
