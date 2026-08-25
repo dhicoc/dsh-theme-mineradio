@@ -5,15 +5,25 @@
 
 **Mineradio** 是一套为 DeepSeek Harness Web UI 打造的影院级玻璃拟态主题——对 Mineradio「私人视觉电台」气质的忠实移植。顶栏、侧栏、输入框、状态行与轨迹视图都化作近黑演播室背景上一块块温暖的香槟金玻璃。你可以把视频设为壁纸，一键关闭后原样还原官方界面，无需改动 DSH 任何源码。
 
+<p align="center">
+  <img src="docs/screenshot-dark.png" alt="Mineradio 深色演播室：香槟流体、青绿玻璃侧栏、漂浮发送栏" width="920">
+</p>
+
+<p align="center"><em>深色演播室：青绿玻璃压在香槟金流体上，发送栏浮在液体里。</em></p>
+
 ## 截图
 
-主题在 DeepSeek Harness UI 上的实机截图——深色、浅色与设置面板：
+2.2.x 实机——主画面、暖纸白、以及外观分组（场景 / 性能 / 云母）：
 
-| 深色 | 浅色 |
+| 深色演播室 | 浅色暖纸 |
 | --- | --- |
 | ![深色主题](docs/screenshot-dark.png) | ![浅色主题](docs/screenshot-light.png) |
 
-![设置面板](docs/screenshot-settings-dark.png)
+<p align="center">
+  <img src="docs/screenshot-settings-dark.png" alt="Mineradio 设置：外观分组里的场景与性能档" width="920">
+</p>
+
+<p align="center"><em>外观：演播室 / 深海 / 午夜 / 雾面 / 彩虹，外加性能 / 均衡 / 炫——一键，同一套玻璃。</em></p>
 
 原图相册也托管在 **https://dhicoc.github.io/dsh-theme-mineradio/**。
 
