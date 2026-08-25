@@ -89,28 +89,28 @@ export const MINERADIO_TOKEN_OVERRIDES: ThemeTokenOverrides = {
   '--dsw-alias-bg-mask-drop': { light: 'rgba(247, 243, 234, 0.72)', dark: 'rgba(8, 9, 11, 0.70)' },
 
   // Hairlines and strokes.
-  '--dsw-alias-border-l1': { light: 'rgba(154, 111, 44, 0.12)', dark: 'rgba(244, 210, 138, 0.09)' },
-  '--dsw-alias-border-l2': { light: 'rgba(154, 111, 44, 0.18)', dark: 'rgba(244, 210, 138, 0.16)' },
-  '--dsw-alias-border-l2-darkmode-thin': { light: 'rgba(154, 111, 44, 0.12)', dark: 'rgba(244, 210, 138, 0.10)' },
-  '--dsw-alias-border-l3': { light: 'rgba(154, 111, 44, 0.26)', dark: 'rgba(244, 210, 138, 0.26)' },
-  '--dsw-alias-border-l4': { light: 'rgba(154, 111, 44, 0.36)', dark: 'rgba(244, 210, 138, 0.36)' },
-  '--dsw-alias-border-inverted': { light: 'rgba(154, 111, 44, 0.08)', dark: 'rgba(244, 210, 138, 0.12)' },
-  '--dsw-alias-border-inverted2': { light: 'rgba(154, 111, 44, 0.10)', dark: 'rgba(244, 210, 138, 0.08)' },
+  '--dsw-alias-border-l1': { light: 'rgba(122, 86, 28, 0.20)', dark: 'rgba(244, 210, 138, 0.09)' },
+  '--dsw-alias-border-l2': { light: 'rgba(122, 86, 28, 0.28)', dark: 'rgba(244, 210, 138, 0.16)' },
+  '--dsw-alias-border-l2-darkmode-thin': { light: 'rgba(122, 86, 28, 0.20)', dark: 'rgba(244, 210, 138, 0.10)' },
+  '--dsw-alias-border-l3': { light: 'rgba(122, 86, 28, 0.38)', dark: 'rgba(244, 210, 138, 0.26)' },
+  '--dsw-alias-border-l4': { light: 'rgba(122, 86, 28, 0.50)', dark: 'rgba(244, 210, 138, 0.36)' },
+  '--dsw-alias-border-inverted': { light: 'rgba(122, 86, 28, 0.16)', dark: 'rgba(244, 210, 138, 0.12)' },
+  '--dsw-alias-border-inverted2': { light: 'rgba(122, 86, 28, 0.18)', dark: 'rgba(244, 210, 138, 0.08)' },
 
   // Text ink.
-  '--dsw-alias-label-primary': { light: '#2A241A', dark: '#F2F0EA' },
-  '--dsw-alias-label-secondary': { light: '#5C5240', dark: '#CBC4B8' },
-  '--dsw-alias-label-tertiary': { light: '#7A6F5A', dark: '#98917F' },
-  '--dsw-alias-label-caption': { light: '#8F8572', dark: '#7A7468' },
-  '--dsw-alias-label-dimmed': { light: '#C8BFAB', dark: '#5A564C' },
+  '--dsw-alias-label-primary': { light: '#1F1A14', dark: '#F2F0EA' },
+  '--dsw-alias-label-secondary': { light: '#4A4030', dark: '#CBC4B8' },
+  '--dsw-alias-label-tertiary': { light: '#675A45', dark: '#98917F' },
+  '--dsw-alias-label-caption': { light: '#7A6C54', dark: '#7A7468' },
+  '--dsw-alias-label-dimmed': { light: '#A89880', dark: '#5A564C' },
   '--dsw-alias-label-primary-bluish': { light: '#A97A2A', dark: '#E8CEA0' },
   '--dsw-alias-label-primary-dimmed': { light: '#4A3A1E', dark: '#EADFC6' },
   '--dsw-alias-label-primary-inverted': { light: '#FFFFFF', dark: '#15171C' },
   '--dsw-alias-label-primary-foreground': { light: '#FFFFFF', dark: '#15171C' },
 
   // Brand (wordmark ink stays scheme ink; accents go champagne gold).
-  '--dsw-alias-brand-primary': { light: '#2A241A', dark: '#F2F0EA' },
-  '--dsw-alias-brand-text': { light: '#2A241A', dark: '#F2F0EA' },
+  '--dsw-alias-brand-primary': { light: '#1F1A14', dark: '#F2F0EA' },
+  '--dsw-alias-brand-text': { light: '#1F1A14', dark: '#F2F0EA' },
   '--dsw-alias-brand-primary-invert': { light: '#FFFFFF', dark: INK },
   '--dsw-alias-brand-primary-new-colorprimary-new-color': { light: CHAMPAGNE_DEEP, dark: CHAMPAGNE },
 
@@ -129,7 +129,7 @@ export const MINERADIO_TOKEN_OVERRIDES: ThemeTokenOverrides = {
   '--dsw-alias-button-elevated-fill': { light: '#FFFFFF', dark: 'color-mix(in srgb, rgb(21 23 28) calc(55% * var(--dsh-aqua-frost, 1)), transparent)' },
   '--dsw-alias-button-floating-fill': { light: '#FFFFFF', dark: 'color-mix(in srgb, rgb(21 23 28) calc(55% * var(--dsh-aqua-frost, 1)), transparent)' },
   '--dsw-alias-button-floating-hover': { light: '#F2EAE0', dark: 'color-mix(in srgb, rgb(28 31 37) calc(55% * var(--dsh-aqua-frost, 1)), transparent)' },
-  '--dsw-alias-button-contrast-fill': { light: '#2A241A', dark: '#F2F0EA' },
+  '--dsw-alias-button-contrast-fill': { light: '#1F1A14', dark: '#F2F0EA' },
   '--dsw-alias-button-ghost-active-fill': { light: 'rgba(244, 210, 138, 0.16)', dark: 'color-mix(in srgb, rgb(28 31 37) calc(55% * var(--dsh-aqua-frost, 1)), transparent)' },
   '--dsw-alias-button-ghost-active-hover': { light: 'rgba(244, 210, 138, 0.22)', dark: 'color-mix(in srgb, rgb(21 23 28) calc(55% * var(--dsh-aqua-frost, 1)), transparent)' },
   '--dsw-alias-button-ghost-active-border': { light: CHAMPAGNE_DEEP, dark: '#BF9E5B' },
@@ -221,7 +221,7 @@ interface TextInkPalette {
 function textInkPalette(style: TextStyle): { light: TextInkPalette; dark: TextInkPalette } {
   if (style === 'champagne') {
     return {
-      light: { primary: '#2A241A', secondary: '#5C5240', tertiary: '#7A6F5A', caption: '#8F8572', dimmed: '#C8BFAB', bluish: '#A97A2A', primaryDimmed: '#4A3A1E' },
+      light: { primary: '#1F1A14', secondary: '#4A4030', tertiary: '#675A45', caption: '#7A6C54', dimmed: '#A89880', bluish: '#8A6420', primaryDimmed: '#3A2E18' },
       dark: { primary: '#F2F0EA', secondary: '#CBC4B8', tertiary: '#98917F', caption: '#7A7468', dimmed: '#5A564C', bluish: '#E8CEA0', primaryDimmed: '#EADFC6' },
     }
   }
@@ -229,13 +229,13 @@ function textInkPalette(style: TextStyle): { light: TextInkPalette; dark: TextIn
   const s = style === 'mint' ? 0.18 : style === 'rose' ? 0.15 : 0
   return {
     light: {
-      primary: hslHex(h, s, 0.13),
-      secondary: hslHex(h, s, 0.32),
-      tertiary: hslHex(h, s, 0.46),
-      caption: hslHex(h, s, 0.53),
-      dimmed: hslHex(h, s, 0.75),
-      bluish: hslHex(h, Math.min(1, s + 0.12), 0.34),
-      primaryDimmed: hslHex(h, s, 0.22),
+      primary: hslHex(h, s, 0.11),
+      secondary: hslHex(h, s, 0.26),
+      tertiary: hslHex(h, s, 0.38),
+      caption: hslHex(h, s, 0.46),
+      dimmed: hslHex(h, s, 0.62),
+      bluish: hslHex(h, Math.min(1, s + 0.12), 0.28),
+      primaryDimmed: hslHex(h, s, 0.18),
     },
     dark: {
       primary: hslHex(h, s, 0.95),

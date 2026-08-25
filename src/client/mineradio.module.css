@@ -30,9 +30,9 @@
      (--dsh-aqua-frost-white) so "frostier" lightens rather than darkens. */
   --dsh-aqua-glass-card-light:
     linear-gradient(rgba(255 255 255 / var(--dsh-aqua-frost-white, 0)), rgba(255 255 255 / var(--dsh-aqua-frost-white, 0))),
-    radial-gradient(circle at 16% 0%, rgb(255 255 255 / calc(0.22 * var(--dsh-aqua-frost, 1))), transparent 34%),
-    radial-gradient(circle at 88% 8%, rgb(154 111 44 / calc(0.10 * var(--dsh-aqua-frost, 1))), transparent 36%),
-    linear-gradient(145deg, rgb(244 210 138 / calc(0.10 * var(--dsh-aqua-frost, 1))), rgb(250 246 238 / calc(0.58 * var(--dsh-aqua-frost, 1))) 42%, rgb(244 240 232 / calc(0.64 * var(--dsh-aqua-frost, 1))));
+    radial-gradient(circle at 16% 0%, rgb(255 255 255 / calc(0.38 * var(--dsh-aqua-frost, 1))), transparent 34%),
+    radial-gradient(circle at 88% 8%, rgb(154 111 44 / calc(0.16 * var(--dsh-aqua-frost, 1))), transparent 36%),
+    linear-gradient(145deg, rgb(244 210 138 / calc(0.16 * var(--dsh-aqua-frost, 1))), rgb(255 252 246 / calc(0.78 * var(--dsh-aqua-frost, 1))) 42%, rgb(250 246 238 / calc(0.82 * var(--dsh-aqua-frost, 1))));
   --dsh-aqua-glass-card-dark:
     linear-gradient(rgba(255 255 255 / var(--dsh-aqua-frost-white, 0)), rgba(255 255 255 / var(--dsh-aqua-frost-white, 0))),
     radial-gradient(circle at 16% 0%, rgb(255 255 255 / calc(0.10 * var(--dsh-aqua-frost, 1))), transparent 34%),
@@ -47,12 +47,12 @@
      specular-parallax.ts, -1..1) so the rim brightens on the edge facing the
      cursor and dims on the far edge — Apple Liquid Glass's moving edge light. */
   --dsh-aqua-glass-shadow-light:
-    inset 0 0 0 1px rgb(255 255 255 / 0.20),
-    inset 0 1px 0 rgb(255 255 255 / calc(0.55 + 0.30 * (1 - var(--dsh-aqua-spec-y, 0)) / 2)),
-    inset 0 -1px 0 rgb(255 255 255 / calc(0.05 + 0.34 * (1 + var(--dsh-aqua-spec-y, 0)) / 2)),
-    inset 1px 0 0 rgb(255 255 255 / calc(0.04 + 0.14 * (1 - var(--dsh-aqua-spec-x, 0)) / 2)),
-    inset -1px 0 0 rgb(255 255 255 / calc(0.04 + 0.14 * (1 + var(--dsh-aqua-spec-x, 0)) / 2)),
-    0 22px 64px rgb(38 26 8 / 0.16);
+    inset 0 0 0 1px rgb(255 255 255 / 0.42),
+    inset 0 1px 0 rgb(255 255 255 / calc(0.70 + 0.22 * (1 - var(--dsh-aqua-spec-y, 0)) / 2)),
+    inset 0 -1px 0 rgb(154 111 44 / calc(0.10 + 0.16 * (1 + var(--dsh-aqua-spec-y, 0)) / 2)),
+    inset 1px 0 0 rgb(255 255 255 / calc(0.10 + 0.16 * (1 - var(--dsh-aqua-spec-x, 0)) / 2)),
+    inset -1px 0 0 rgb(154 111 44 / calc(0.06 + 0.10 * (1 + var(--dsh-aqua-spec-x, 0)) / 2)),
+    0 18px 44px rgb(38 26 8 / 0.12);
   --dsh-aqua-glass-shadow-dark:
     inset 0 0 0 1px rgb(255 255 255 / 0.13),
     inset 0 1px 0 rgb(255 255 255 / calc(0.22 + 0.20 * (1 - var(--dsh-aqua-spec-y, 0)) / 2)),
@@ -411,7 +411,7 @@
    noticeably frosted relative to the cards around it. */
 [data-dsh-float] [data-dsh-surface] {
   background: color-mix(in srgb, rgb(255 255 255) calc(62% * var(--dsh-aqua-surface-frost, 1)), transparent);
-  border: 1px solid rgba(154, 111, 44, 0.14);
+  border: 1px solid rgba(122, 86, 28, 0.26);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
   backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04);
 }
@@ -452,7 +452,7 @@
    control reads as a brighter bead on the glass rather than a solid token. */
 [data-dsh-float] [data-dsh-add] {
   background: color-mix(in srgb, rgb(255 255 255) calc(40% * var(--dsh-aqua-frost, 1)), transparent);
-  border: 1px solid rgba(154, 111, 44, 0.15);
+  border: 1px solid rgba(122, 86, 28, 0.26);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04);
 }
@@ -475,8 +475,8 @@
    white, both with a backdrop blur so the fluid shimmers behind the text. */
 [data-dsh-float] [class*='bubble'] {
   border-radius: 14px;
-  border: 1px solid rgba(154, 111, 44, 0.12);
-  background: color-mix(in srgb, rgb(255 255 255) calc(42% * var(--dsh-aqua-frost, 1)), transparent);
+  border: 1px solid rgba(122, 86, 28, 0.22);
+  background: color-mix(in srgb, rgb(255 255 255) calc(62% * var(--dsh-aqua-frost, 1)), transparent);
   backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04);
 }
 
@@ -489,7 +489,7 @@
    text never fights the film; the backdrop blur still frosts the video. */
 html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] [class*='bubble'] {
   background: color-mix(in srgb, rgb(255 255 255) 70%, transparent);
-  border-color: rgba(154, 111, 44, 0.18);
+  border-color: rgba(122, 86, 28, 0.28);
 }
 
 html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[data-ds-dark-theme] [class*='bubble'] {
@@ -526,7 +526,7 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   position: relative;
   z-index: 8;
   background: var(--dsh-aqua-glass-card-light);
-  border: 1px solid rgba(154, 111, 44, 0.22);
+  border: 1px solid rgba(122, 86, 28, 0.34);
   box-shadow: var(--dsh-aqua-glass-shadow-light);
 }
 
@@ -563,7 +563,7 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   max-width: none;
   margin: 0 auto 12px;
   padding: 0;
-  border: 1px solid rgba(154, 111, 44, 0.22);
+  border: 1px solid rgba(122, 86, 28, 0.34);
   border-radius: 24px;
   background: var(--dsh-aqua-glass-card-light);
   box-shadow: var(--dsh-aqua-glass-shadow-light);
@@ -614,7 +614,7 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   display: block;
   padding: 2px 16px;
   border: none;
-  border-top: 1px solid rgba(154, 111, 44, 0.15);
+  border-top: 1px solid rgba(122, 86, 28, 0.24);
   border-radius: 0;
   background: transparent;
   box-shadow: none;
@@ -648,7 +648,7 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
 [data-dsh-float] header {
   margin: 12px 16px 0;
   padding: 10px 16px 8px;
-  border: 1px solid rgba(154, 111, 44, 0.22);
+  border: 1px solid rgba(122, 86, 28, 0.34);
   border-bottom-color: transparent;
   border-radius: 20px;
   background: var(--dsh-aqua-glass-card-light);
@@ -766,7 +766,7 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   margin: 8px 16px 12px;
   width: calc(100% - 32px);
   height: calc(100% - 20px);
-  border: 1px solid rgba(154, 111, 44, 0.22);
+  border: 1px solid rgba(122, 86, 28, 0.34);
   border-radius: 20px;
   background: var(--dsh-aqua-glass-card-light);
   box-shadow: var(--dsh-aqua-glass-shadow-light);
@@ -802,10 +802,10 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   max-width: none;
   margin: 0 auto;
   padding: 2px 16px;
-  border: 1px solid rgba(154, 111, 44, 0.22);
+  border: 1px solid rgba(122, 86, 28, 0.34);
   /* The ONLY seam cue: one hairline between the two pieces of the same
      glass slab (the composer card drops its bottom border when fused). */
-  border-top: 1px solid rgba(154, 111, 44, 0.15);
+  border-top: 1px solid rgba(122, 86, 28, 0.24);
   border-radius: 0 0 24px 24px;
   /* Continues the card's FLAT tone exactly, so the two read as one piece
      of glass with no tonal step at the seam. */
@@ -909,7 +909,7 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
    `body` hop out-ranks the compat generic glass (blur 12px on `panel`
    classes) and the raised-surface 14px radius rule. ---------- */
 [data-dsh-aqua] body [role='dialog'] {
-  border: 1px solid rgba(154, 111, 44, 0.22);
+  border: 1px solid rgba(122, 86, 28, 0.34);
   border-radius: 20px;
   background: var(--dsh-aqua-glass-card-light);
   box-shadow: var(--dsh-aqua-glass-shadow-light);
@@ -944,7 +944,7 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
 [data-dsh-float] [role='menu'],
 [data-dsh-float] [role='tree'][class*='menu'] {
   background: var(--dsh-aqua-glass-card-light);
-  border: 1px solid rgba(154, 111, 44, 0.22);
+  border: 1px solid rgba(122, 86, 28, 0.34);
   box-shadow: var(--dsh-aqua-glass-shadow-light);
   backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04);
 }
@@ -975,7 +975,7 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
 [data-dsh-float] [class*='_dock'] > [class*='_panel']:has(> [class*='_header']),
 [data-dsh-float] [class*='_dock'] > [class*='_bar'] {
   background: var(--dsh-aqua-glass-card-light);
-  border-color: rgba(154, 111, 44, 0.22);
+  border-color: rgba(122, 86, 28, 0.34);
   box-shadow: var(--dsh-aqua-glass-shadow-light);
   backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04);
 }
@@ -1068,7 +1068,7 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   background-position: right 12px center, 0 0;
   background-repeat: no-repeat, no-repeat;
   background-size: 12px 12px, auto;
-  border-color: rgba(154, 111, 44, 0.22);
+  border-color: rgba(122, 86, 28, 0.34);
   box-shadow: var(--dsh-aqua-glass-shadow-light);
   backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04);
   color: var(--dsw-alias-label-primary);
@@ -1205,7 +1205,7 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
    read through to the panel's frost instead of sitting as a solid slab. */
 [data-dsh-aqua] [data-dsh-panel-host] [class*='panel' i]:not([class*='Body' i]):not([class*='Resize' i]):not([class*='Tab' i]) {
   background: var(--dsh-aqua-glass-card-light);
-  border-color: rgba(154, 111, 44, 0.22);
+  border-color: rgba(122, 86, 28, 0.34);
   box-shadow: var(--dsh-aqua-glass-shadow-light);
   backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04);
 }
