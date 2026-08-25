@@ -78,6 +78,7 @@ export function apply(ctx: ClientContext): void {
       videoBlur: s.videoBlur,
       videoBrightness: s.videoBrightness,
       perf: s.perf,
+      rainbow: s.rainbow,
     }
   }
   const sync = (): void => {

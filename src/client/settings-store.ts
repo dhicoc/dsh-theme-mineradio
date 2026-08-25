@@ -66,6 +66,8 @@ export interface MineradioRowState {
   videoBrightness: number
   /** Performance gate. */
   perf: PerfTier
+  /** Rainbow fluid drift. */
+  rainbow: boolean
   /** Monotonic revision; -1 until first sync so revision 0 lands as a change. */
   revision: number
 }
@@ -101,6 +103,7 @@ export interface MineradioSettingsPayload {
   videoBlur: number
   videoBrightness: number
   perf: PerfTier
+  rainbow: boolean
 }
 
 /** Declared action shape giving the exported factory a stable return type. */
@@ -144,6 +147,7 @@ export function createMineradioRowStore(): EngineStoreHandle<MineradioRowState, 
       videoBlur: 6,
       videoBrightness: 48,
       perf: 'balanced',
+      rainbow: false,
       revision: -1,
     }),
     actions: {
@@ -178,6 +182,7 @@ export function createMineradioRowStore(): EngineStoreHandle<MineradioRowState, 
         d.videoBlur = next.videoBlur
         d.videoBrightness = next.videoBrightness
         d.perf = next.perf
+        d.rainbow = next.rainbow
         d.revision = revision
       },
     },

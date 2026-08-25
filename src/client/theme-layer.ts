@@ -358,41 +358,48 @@ export interface MineradioSettings {
   videoBrightness: number
   /** Performance gate: which motion layers actually run. Orthogonal to scenes. */
   perf: PerfTier
+  /** Optional rainbow fluid drift. Off by default; does not rewrite fluidHue. */
+  rainbow: boolean
 }
 
 /** Performance gate. Scenes keep their knob values; this only mounts layers. */
 export type PerfTier = 'performance' | 'balanced' | 'vivid'
 
 /** One-click scene: a named bundle of existing knobs (never the wallpaper). */
-export type ScenePreset = 'studio' | 'deepsea' | 'midnight' | 'mist'
+export type ScenePreset = 'studio' | 'deepsea' | 'midnight' | 'mist' | 'rainbow'
 
 /** Knob bundle for one scene. Wallpaper / video files stay untouched. */
 type SceneBundle = Pick<MineradioSettings,
   | 'textStyle' | 'blur' | 'frost' | 'fluidHue' | 'fluidDepth'
   | 'dispersionHue' | 'dispersionRefract' | 'starDensity'
-  | 'spotlight' | 'press' | 'audioReact' | 'background'
+  | 'spotlight' | 'press' | 'audioReact' | 'background' | 'rainbow'
 >
 
 const SCENE_BUNDLES: Record<ScenePreset, SceneBundle> = {
   studio: {
     textStyle: 'champagne', blur: 22, frost: 50,
     fluidHue: 44, fluidDepth: 22, dispersionHue: 44, dispersionRefract: 60,
-    starDensity: 60, spotlight: true, press: true, audioReact: false, background: 'fluid',
+    starDensity: 60, spotlight: true, press: true, audioReact: false, background: 'fluid', rainbow: false,
   },
   deepsea: {
     textStyle: 'mint', blur: 24, frost: 48,
     fluidHue: 166, fluidDepth: 28, dispersionHue: 166, dispersionRefract: 55,
-    starDensity: 70, spotlight: true, press: true, audioReact: false, background: 'fluid',
+    starDensity: 70, spotlight: true, press: true, audioReact: false, background: 'fluid', rainbow: false,
   },
   midnight: {
     textStyle: 'rose', blur: 22, frost: 52,
     fluidHue: 352, fluidDepth: 26, dispersionHue: 352, dispersionRefract: 55,
-    starDensity: 55, spotlight: true, press: true, audioReact: false, background: 'fluid',
+    starDensity: 55, spotlight: true, press: true, audioReact: false, background: 'fluid', rainbow: false,
   },
   mist: {
     textStyle: 'neutral', blur: 26, frost: 78,
     fluidHue: 44, fluidDepth: 18, dispersionHue: 44, dispersionRefract: 30,
-    starDensity: 20, spotlight: false, press: false, audioReact: false, background: 'fluid',
+    starDensity: 20, spotlight: false, press: false, audioReact: false, background: 'fluid', rainbow: false,
+  },
+  rainbow: {
+    textStyle: 'neutral', blur: 22, frost: 48,
+    fluidHue: 44, fluidDepth: 24, dispersionHue: 44, dispersionRefract: 45,
+    starDensity: 50, spotlight: true, press: true, audioReact: false, background: 'fluid', rainbow: true,
   },
 }
 
@@ -413,6 +420,7 @@ export function matchScenePreset(settings: Pick<MineradioSettings, keyof SceneBu
       && settings.press === bundle.press
       && settings.audioReact === bundle.audioReact
       && settings.background === bundle.background
+      && settings.rainbow === bundle.rainbow
     ) return id
   }
   return null
@@ -447,6 +455,7 @@ const SETTINGS_DEFAULTS: MineradioSettings = {
   videoBlur: 6,
   videoBrightness: 45,
   perf: 'balanced',
+  rainbow: false,
 }
 
 /** Numeric knob keys and their localStorage names. */
@@ -481,6 +490,7 @@ const SPOTLIGHT_KEY = 'dsh.ui-mineradio.spotlight'
 const PRESS_KEY = 'dsh.ui-mineradio.press'
 const AUDIO_REACT_KEY = 'dsh.ui-mineradio.audioReact'
 const PERF_KEY = 'dsh.ui-mineradio.perf'
+const RAINBOW_KEY = 'dsh.ui-mineradio.rainbow'
 
 /** Read the performance gate (absent/invalid means balanced). */
 function readPerf(): PerfTier {
@@ -496,6 +506,24 @@ function readPerf(): PerfTier {
 function writePerf(value: PerfTier): void {
   try {
     localStorage.setItem(PERF_KEY, value)
+  } catch {
+    /* in-memory state still applies */
+  }
+}
+
+/** Read the rainbow-fluid flag (absent means off). */
+function readRainbow(): boolean {
+  try {
+    return localStorage.getItem(RAINBOW_KEY) === 'true'
+  } catch {
+    return false
+  }
+}
+
+/** Persist the rainbow-fluid flag. */
+function writeRainbow(value: boolean): void {
+  try {
+    localStorage.setItem(RAINBOW_KEY, String(value))
   } catch {
     /* in-memory state still applies */
   }
@@ -797,6 +825,9 @@ export class MineradioLayer {
   private extractedHue: number | undefined
   /** Wallpaper source the extracted hue was computed from (guards re-reads). */
   private extractedWallpaper: string | undefined
+  /** Live rainbow hue, only while the rainbow scene is on. Not persisted. */
+  private rainbowHue = 0
+  private rainbowRaf = 0
   private readonly ctx: Context
 
   /**
@@ -913,6 +944,7 @@ export class MineradioLayer {
       videoBlur: readSetting('videoBlur'),
       videoBrightness: readSetting('videoBrightness'),
       perf: readPerf(),
+      rainbow: readRainbow(),
     }
   }
 
@@ -941,6 +973,7 @@ export class MineradioLayer {
     this.settings.press = bundle.press
     this.settings.audioReact = bundle.audioReact
     this.settings.background = bundle.background
+    this.settings.rainbow = bundle.rainbow
     writeTextStyle(bundle.textStyle)
     writeSetting('blur', bundle.blur)
     writeSetting('frost', bundle.frost)
@@ -953,6 +986,7 @@ export class MineradioLayer {
     writePress(bundle.press)
     writeAudioReact(bundle.audioReact)
     writeBackground(bundle.background)
+    writeRainbow(bundle.rainbow)
     if (!this.enabled) return
     this.applySettings()
     this.applyTokens()
@@ -962,6 +996,7 @@ export class MineradioLayer {
     this.starRiverHandle?.setDensity(bundle.starDensity)
     this.syncAudioReact()
     this.syncMotionLayers()
+    this.syncRainbowDrift()
   }
 
   /** Flip the layer: persist, then apply or retract every owned effect. */
@@ -1497,6 +1532,7 @@ export class MineradioLayer {
     this.startSeamStamper()
     this.startSpotlightFeed()
     this.syncMotionLayers()
+    this.syncRainbowDrift()
   }
 
   /** Performance / balanced keep the last fluid frame; vivid runs the loop. */
@@ -1671,6 +1707,7 @@ export class MineradioLayer {
     this.meshHandle = undefined
     this.audioHandle?.dispose()
     this.audioHandle = undefined
+    this.stopRainbowDrift()
     document.documentElement.style.removeProperty('--dsh-aqua-audio-glow')
     delete document.documentElement.dataset.dshAquaAudioEnv
     delete document.documentElement.dataset.dshAquaAudioStatus
@@ -1719,7 +1756,42 @@ export class MineradioLayer {
   private fluidParams(): FluidParams {
     // Continuous hue + depth drive the palette through HSL interpolation —
     // the depth lives in the colors, so the canvas needs no global filter.
-    return { ...SITE_FLUID_PARAMS, ...fluidToneColors(this.dark, this.settings.fluidHue, this.settings.fluidDepth) }
+    const hue = this.settings.rainbow ? this.rainbowHue : this.settings.fluidHue
+    const depth = this.settings.rainbow ? Math.max(this.settings.fluidDepth, 22) : this.settings.fluidDepth
+    const tones = fluidToneColors(this.dark, hue, depth)
+    if (!this.settings.rainbow) return { ...SITE_FLUID_PARAMS, ...tones }
+    // Three stops 120° apart so the board reads as a drifting ribbon, not a
+    // single tint. Saturation stays modest so chat ink still wins.
+    const mid = fluidToneColors(this.dark, hue + 120, depth)
+    const far = fluidToneColors(this.dark, hue + 240, depth)
+    return { ...SITE_FLUID_PARAMS, color1: tones.color1, color2: mid.color2, color3: far.color3 }
+  }
+
+  /** Slow hue walk for the rainbow scene. Does not rewrite the stored knob. */
+  private syncRainbowDrift(): void {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const should = this.enabled && this.settings.rainbow && this.settings.background === 'fluid' && !reduced
+    if (!should) {
+      this.stopRainbowDrift()
+      return
+    }
+    if (this.rainbowRaf !== 0) return
+    this.rainbowHue = this.settings.fluidHue
+    let last = 0
+    const tick = (now: number): void => {
+      this.rainbowRaf = requestAnimationFrame(tick)
+      if (now - last < 80) return
+      last = now
+      this.rainbowHue = (this.rainbowHue + 0.35) % 360
+      this.applyFluidPalettes()
+    }
+    this.rainbowRaf = requestAnimationFrame(tick)
+  }
+
+  private stopRainbowDrift(): void {
+    if (this.rainbowRaf === 0) return
+    cancelAnimationFrame(this.rainbowRaf)
+    this.rainbowRaf = 0
   }
 
   private applyFluidPalettes(): void {

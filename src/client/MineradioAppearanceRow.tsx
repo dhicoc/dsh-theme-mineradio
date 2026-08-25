@@ -156,6 +156,7 @@ export function MineradioAppearanceRow(props: MineradioAppearanceRowComponentPro
   const videoBlur = useStore(s => s.videoBlur)
   const videoBrightness = useStore(s => s.videoBrightness)
   const perf = useStore(s => s.perf)
+  const rainbow = useStore(s => s.rainbow)
   const fileRef = useRef<HTMLInputElement | null>(null)
   const videoRef = useRef<HTMLInputElement | null>(null)
   const [openLooks, setOpenLooks] = useState(true)
@@ -254,13 +255,14 @@ export function MineradioAppearanceRow(props: MineradioAppearanceRowComponentPro
               value={matchScenePreset({
                 textStyle, blur, frost, fluidHue, fluidDepth,
                 dispersionHue, dispersionRefract, starDensity,
-                spotlight, press, audioReact, background,
+                spotlight, press, audioReact, background, rainbow,
               }) ?? ''}
               options={[
                 { id: 'studio', label: t('mineradio.sceneStudio') },
                 { id: 'deepsea', label: t('mineradio.sceneDeepsea') },
                 { id: 'midnight', label: t('mineradio.sceneMidnight') },
                 { id: 'mist', label: t('mineradio.sceneMist') },
+                { id: 'rainbow', label: t('mineradio.sceneRainbow') },
               ]}
               onSelect={applyScene}
             />
