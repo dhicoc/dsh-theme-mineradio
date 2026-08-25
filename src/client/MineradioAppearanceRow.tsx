@@ -17,11 +17,13 @@ import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import { fileToDataUrl, HueStrip, Knob, Segmented } from './MineradioControls.tsx'
 import { loadVideoHandle, saveVideoBlob, saveVideoHandle } from './wallpaper-store.ts'
 import type { createMineradioRowStore } from './settings-store.ts'
-import type { TextStyle } from './theme-layer.ts'
+import { matchScenePreset, type ScenePreset, type TextStyle } from './theme-layer.ts'
 import css from './MineradioAppearanceRow.module.css'
 
 /** Injected business face: every knob write except the master switch. */
 export interface MineradioAppearanceRowInjected {
+  /** Apply a named scene preset (existing knobs only). */
+  applyScene: (value: ScenePreset) => void
   /** Set the rendering mode. */
   setMode: (value: 'mica' | 'compat') => void
   /** Set the global text-ink preset. */
@@ -90,7 +92,7 @@ export type MineradioAppearanceRowComponentProps =
  */
 export function MineradioAppearanceRow(props: MineradioAppearanceRowComponentProps) {
   const {
-    t, setMode, setTextStyle, setBlur, setFrost, setFluidHue, setFluidDepth, setDispersionHue, setDispersionRefract, setBgBrightness,
+    t, applyScene, setMode, setTextStyle, setBlur, setFrost, setFluidHue, setFluidDepth, setDispersionHue, setDispersionRefract, setBgBrightness,
     setBackground, setWallpaper, setAutoTint, setWhale, setCritters, setMesh, setStarDensity, setSpotlight, setPress, setAudioReact,
     setWallpaperBlur, setWallpaperFrost, setWallpaperMask, setWallpaperMaskBlur, setWallpaperMaskOpacity, setVideoBlur, setVideoBrightness, authorizeVideo, useStore,
   } = props
@@ -205,6 +207,30 @@ export function MineradioAppearanceRow(props: MineradioAppearanceRowComponentPro
 
   return (
     <div className={css.group}>
+      {/* 场景：一键拧现有旋钮 */}
+      <div className={css.subGroup}>
+        <div className={css.subTitle}>{t('mineradio.scene')}</div>
+        <div className={css.controls}>
+          <div className={css.row}>
+            <Segmented
+              label={t('mineradio.scene')}
+              value={matchScenePreset({
+                textStyle, blur, frost, fluidHue, fluidDepth,
+                dispersionHue, dispersionRefract, starDensity,
+                spotlight, press, audioReact, background,
+              }) ?? ''}
+              options={[
+                { id: 'studio', label: t('mineradio.sceneStudio') },
+                { id: 'deepsea', label: t('mineradio.sceneDeepsea') },
+                { id: 'midnight', label: t('mineradio.sceneMidnight') },
+                { id: 'mist', label: t('mineradio.sceneMist') },
+              ]}
+              onSelect={applyScene}
+            />
+          </div>
+        </div>
+      </div>
+
       {/* 模式 */}
       <div className={css.subGroup}>
         <div className={css.subTitle}>{t('mineradio.mode')}</div>

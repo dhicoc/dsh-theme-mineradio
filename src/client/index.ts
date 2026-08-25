@@ -105,6 +105,10 @@ export function apply(ctx: ClientContext): void {
     appearanceBound = actions
     sync()
     return {
+      applyScene: (scene) => {
+        layer.applyScene(scene)
+        sync()
+      },
       setMode: (mode) => {
         layer.setMode(mode)
         sync()

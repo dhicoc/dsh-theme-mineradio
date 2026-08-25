@@ -358,6 +358,61 @@ export interface MineradioSettings {
   videoBrightness: number
 }
 
+/** One-click scene: a named bundle of existing knobs (never the wallpaper). */
+export type ScenePreset = 'studio' | 'deepsea' | 'midnight' | 'mist'
+
+/** Knob bundle for one scene. Wallpaper / video files stay untouched. */
+type SceneBundle = Pick<MineradioSettings,
+  | 'textStyle' | 'blur' | 'frost' | 'fluidHue' | 'fluidDepth'
+  | 'dispersionHue' | 'dispersionRefract' | 'starDensity'
+  | 'spotlight' | 'press' | 'audioReact' | 'background'
+>
+
+const SCENE_BUNDLES: Record<ScenePreset, SceneBundle> = {
+  studio: {
+    textStyle: 'champagne', blur: 22, frost: 50,
+    fluidHue: 44, fluidDepth: 22, dispersionHue: 44, dispersionRefract: 60,
+    starDensity: 60, spotlight: true, press: true, audioReact: false, background: 'fluid',
+  },
+  deepsea: {
+    textStyle: 'mint', blur: 24, frost: 48,
+    fluidHue: 166, fluidDepth: 28, dispersionHue: 166, dispersionRefract: 55,
+    starDensity: 70, spotlight: true, press: true, audioReact: false, background: 'fluid',
+  },
+  midnight: {
+    textStyle: 'rose', blur: 22, frost: 52,
+    fluidHue: 352, fluidDepth: 26, dispersionHue: 352, dispersionRefract: 55,
+    starDensity: 55, spotlight: true, press: true, audioReact: false, background: 'fluid',
+  },
+  mist: {
+    textStyle: 'neutral', blur: 26, frost: 78,
+    fluidHue: 44, fluidDepth: 18, dispersionHue: 44, dispersionRefract: 30,
+    starDensity: 20, spotlight: false, press: false, audioReact: false, background: 'fluid',
+  },
+}
+
+/** Which scene the current knobs match, or null after a manual tweak. */
+export function matchScenePreset(settings: Pick<MineradioSettings, keyof SceneBundle>): ScenePreset | null {
+  for (const id of Object.keys(SCENE_BUNDLES) as ScenePreset[]) {
+    const bundle = SCENE_BUNDLES[id]
+    if (
+      settings.textStyle === bundle.textStyle
+      && settings.blur === bundle.blur
+      && settings.frost === bundle.frost
+      && settings.fluidHue === bundle.fluidHue
+      && settings.fluidDepth === bundle.fluidDepth
+      && settings.dispersionHue === bundle.dispersionHue
+      && settings.dispersionRefract === bundle.dispersionRefract
+      && settings.starDensity === bundle.starDensity
+      && settings.spotlight === bundle.spotlight
+      && settings.press === bundle.press
+      && settings.audioReact === bundle.audioReact
+      && settings.background === bundle.background
+    ) return id
+  }
+  return null
+}
+
 /** Shipped defaults — what a first-time install sees (the tuned look). */
 const SETTINGS_DEFAULTS: MineradioSettings = {
   mode: 'mica',
@@ -832,6 +887,43 @@ export class MineradioLayer {
       videoBlur: readSetting('videoBlur'),
       videoBrightness: readSetting('videoBrightness'),
     }
+  }
+
+  /** Apply one named scene. Wallpaper / video files stay as they are. */
+  applyScene(preset: ScenePreset): void {
+    const bundle = SCENE_BUNDLES[preset]
+    this.settings.textStyle = bundle.textStyle
+    this.settings.blur = bundle.blur
+    this.settings.frost = bundle.frost
+    this.settings.fluidHue = bundle.fluidHue
+    this.settings.fluidDepth = bundle.fluidDepth
+    this.settings.dispersionHue = bundle.dispersionHue
+    this.settings.dispersionRefract = bundle.dispersionRefract
+    this.settings.starDensity = bundle.starDensity
+    this.settings.spotlight = bundle.spotlight
+    this.settings.press = bundle.press
+    this.settings.audioReact = bundle.audioReact
+    this.settings.background = bundle.background
+    writeTextStyle(bundle.textStyle)
+    writeSetting('blur', bundle.blur)
+    writeSetting('frost', bundle.frost)
+    writeSetting('fluidHue', bundle.fluidHue)
+    writeSetting('fluidDepth', bundle.fluidDepth)
+    writeSetting('dispersionHue', bundle.dispersionHue)
+    writeSetting('dispersionRefract', bundle.dispersionRefract)
+    writeSetting('starDensity', bundle.starDensity)
+    writeSpotlight(bundle.spotlight)
+    writePress(bundle.press)
+    writeAudioReact(bundle.audioReact)
+    writeBackground(bundle.background)
+    if (!this.enabled) return
+    this.applySettings()
+    this.applyTokens()
+    this.applyFluidPalettes()
+    this.dispersion?.setTint(this.dispersionTintHue())
+    this.dispersion?.setRefraction(bundle.dispersionRefract)
+    this.starRiverHandle?.setDensity(bundle.starDensity)
+    this.syncAudioReact()
   }
 
   /** Flip the layer: persist, then apply or retract every owned effect. */

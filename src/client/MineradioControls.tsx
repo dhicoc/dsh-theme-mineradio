@@ -58,7 +58,8 @@ export interface SegmentedOption<T extends string> {
 export interface SegmentedProps<T extends string> {
   /** Accessible name for the button group. */
   label: string
-  value: T
+  /** Current id, or '' when no option is selected (manual tweak). */
+  value: T | ''
   options: readonly SegmentedOption<T>[]
   onSelect: (value: T) => void
 }
