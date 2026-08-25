@@ -630,6 +630,56 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%25' height='100%25' fill='none' rx='24' ry='24' stroke='black' stroke-width='2' stroke-dasharray='4 4'/%3E%3C/svg%3E");
 }
 
+/* On Air: a studio lamp on the composer rim while a turn is live. Slow
+   enough to read as a light, not a VU meter. Fused slab uses the inputbar
+   rim; unfused uses the card. No setting — it is the radio being on. */
+[data-dsh-aqua][data-dsh-float] [data-dsh-inputbar][data-dsh-on-air] [data-composer-card] {
+  animation: dsh-mineradio-on-air 3.6s ease-in-out infinite;
+}
+
+[data-dsh-aqua][data-dsh-float] [data-dsh-inputbar][data-dsh-on-air]:has([data-dsh-stats]) {
+  animation: dsh-mineradio-on-air 3.6s ease-in-out infinite;
+}
+
+[data-dsh-aqua][data-dsh-float] [data-dsh-inputbar][data-dsh-on-air]:has([data-dsh-stats]) [data-composer-card] {
+  animation: none;
+}
+
+@keyframes dsh-mineradio-on-air {
+  0%, 100% {
+    box-shadow:
+      var(--dsh-aqua-glass-shadow-dark, 0 22px 64px rgb(0 0 0 / 0.30)),
+      0 0 0 1px rgb(244 210 138 / 0.10),
+      0 0 18px rgb(244 210 138 / 0.08);
+  }
+  50% {
+    box-shadow:
+      var(--dsh-aqua-glass-shadow-dark, 0 22px 64px rgb(0 0 0 / 0.30)),
+      0 0 0 1px rgb(244 210 138 / 0.34),
+      0 0 28px rgb(244 210 138 / 0.22);
+  }
+}
+
+html:not(:has(body[data-ds-dark-theme])) [data-dsh-aqua][data-dsh-float] [data-dsh-inputbar][data-dsh-on-air] [data-composer-card],
+html:not(:has(body[data-ds-dark-theme])) [data-dsh-aqua][data-dsh-float] [data-dsh-inputbar][data-dsh-on-air]:has([data-dsh-stats]) {
+  animation-name: dsh-mineradio-on-air-light;
+}
+
+@keyframes dsh-mineradio-on-air-light {
+  0%, 100% {
+    box-shadow:
+      var(--dsh-aqua-glass-shadow-light, 0 18px 44px rgb(38 26 8 / 0.12)),
+      0 0 0 1px rgb(122 86 28 / 0.16),
+      0 0 16px rgb(154 111 44 / 0.10);
+  }
+  50% {
+    box-shadow:
+      var(--dsh-aqua-glass-shadow-light, 0 18px 44px rgb(38 26 8 / 0.12)),
+      0 0 0 1px rgb(122 86 28 / 0.40),
+      0 0 24px rgb(154 111 44 / 0.22);
+  }
+}
+
 /* Block family (code / terminal / diff / read / web / search): the corner
    variables ride the same elements, so banners and footers follow. */
 [data-dsh-float] [class*='block'] {
@@ -1245,7 +1295,9 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   [data-dsh-float] [data-tool],
   [data-dsh-float] [role='dialog'],
   [data-dsh-aqua] [data-dsh-aqua-ambient],
-  [data-dsh-aqua] [data-aqua-critter] {
+  [data-dsh-aqua] [data-aqua-critter],
+  [data-dsh-aqua] [data-dsh-inputbar][data-dsh-on-air],
+  [data-dsh-aqua] [data-dsh-inputbar][data-dsh-on-air] [data-composer-card] {
     animation: none;
   }
 

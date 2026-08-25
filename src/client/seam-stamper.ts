@@ -69,6 +69,17 @@ function stamp(seam: Seam): void {
 
 function stampAll(): void {
   for (const seam of SEAMS) stamp(seam)
+  stampOnAir()
+}
+
+/** Studio lamp: the composer shows a stop button only while a turn is live. */
+function stampOnAir(): void {
+  const bar = document.querySelector('[data-dsh-inputbar]')
+  if (bar === null) return
+  const live = bar.querySelector(
+    'button[aria-label="停止生成"], button[aria-label="Stop generating"]',
+  ) !== null
+  bar.toggleAttribute('data-dsh-on-air', live)
 }
 
 /**
