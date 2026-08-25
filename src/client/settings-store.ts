@@ -4,7 +4,7 @@
  * the only writer; the row component reads via props.useStore.
  */
 import { defineStore, type EngineStoreHandle } from '@deepseek-ai/dsh-client-runtime/client'
-import type { TextStyle } from './theme-layer.ts'
+import type { PerfTier, TextStyle } from './theme-layer.ts'
 
 /** Store state mirrored from the Mineradio settings scope. */
 export interface MineradioRowState {
@@ -64,6 +64,8 @@ export interface MineradioRowState {
   videoBlur: number
   /** Video wallpaper brightness, 0-100. */
   videoBrightness: number
+  /** Performance gate. */
+  perf: PerfTier
   /** Monotonic revision; -1 until first sync so revision 0 lands as a change. */
   revision: number
 }
@@ -98,6 +100,7 @@ export interface MineradioSettingsPayload {
   wallpaperMaskOpacity: number
   videoBlur: number
   videoBrightness: number
+  perf: PerfTier
 }
 
 /** Declared action shape giving the exported factory a stable return type. */
@@ -140,6 +143,7 @@ export function createMineradioRowStore(): EngineStoreHandle<MineradioRowState, 
       wallpaperMaskOpacity: 62,
       videoBlur: 6,
       videoBrightness: 48,
+      perf: 'balanced',
       revision: -1,
     }),
     actions: {
@@ -173,6 +177,7 @@ export function createMineradioRowStore(): EngineStoreHandle<MineradioRowState, 
         d.wallpaperMaskOpacity = next.wallpaperMaskOpacity
         d.videoBlur = next.videoBlur
         d.videoBrightness = next.videoBrightness
+        d.perf = next.perf
         d.revision = revision
       },
     },

@@ -17,13 +17,15 @@ import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import { fileToDataUrl, HueStrip, Knob, Segmented } from './MineradioControls.tsx'
 import { loadVideoHandle, saveVideoBlob, saveVideoHandle } from './wallpaper-store.ts'
 import type { createMineradioRowStore } from './settings-store.ts'
-import { matchScenePreset, type ScenePreset, type TextStyle } from './theme-layer.ts'
+import { matchScenePreset, type PerfTier, type ScenePreset, type TextStyle } from './theme-layer.ts'
 import css from './MineradioAppearanceRow.module.css'
 
 /** Injected business face: every knob write except the master switch. */
 export interface MineradioAppearanceRowInjected {
   /** Apply a named scene preset (existing knobs only). */
   applyScene: (value: ScenePreset) => void
+  /** Set the performance gate. */
+  setPerf: (value: PerfTier) => void
   /** Set the rendering mode. */
   setMode: (value: 'mica' | 'compat') => void
   /** Set the global text-ink preset. */
@@ -92,7 +94,7 @@ export type MineradioAppearanceRowComponentProps =
  */
 export function MineradioAppearanceRow(props: MineradioAppearanceRowComponentProps) {
   const {
-    t, applyScene, setMode, setTextStyle, setBlur, setFrost, setFluidHue, setFluidDepth, setDispersionHue, setDispersionRefract, setBgBrightness,
+    t, applyScene, setPerf, setMode, setTextStyle, setBlur, setFrost, setFluidHue, setFluidDepth, setDispersionHue, setDispersionRefract, setBgBrightness,
     setBackground, setWallpaper, setAutoTint, setWhale, setCritters, setMesh, setStarDensity, setSpotlight, setPress, setAudioReact,
     setWallpaperBlur, setWallpaperFrost, setWallpaperMask, setWallpaperMaskBlur, setWallpaperMaskOpacity, setVideoBlur, setVideoBrightness, authorizeVideo, useStore,
   } = props
@@ -124,6 +126,7 @@ export function MineradioAppearanceRow(props: MineradioAppearanceRowComponentPro
   const wallpaperMaskOpacity = useStore(s => s.wallpaperMaskOpacity)
   const videoBlur = useStore(s => s.videoBlur)
   const videoBrightness = useStore(s => s.videoBrightness)
+  const perf = useStore(s => s.perf)
   const fileRef = useRef<HTMLInputElement | null>(null)
   const videoRef = useRef<HTMLInputElement | null>(null)
 
@@ -226,6 +229,25 @@ export function MineradioAppearanceRow(props: MineradioAppearanceRowComponentPro
                 { id: 'mist', label: t('mineradio.sceneMist') },
               ]}
               onSelect={applyScene}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 性能档：只关门控，不改场景旋钮 */}
+      <div className={css.subGroup}>
+        <div className={css.subTitle}>{t('mineradio.perf')}</div>
+        <div className={css.controls}>
+          <div className={css.row}>
+            <Segmented
+              label={t('mineradio.perf')}
+              value={perf}
+              options={[
+                { id: 'performance', label: t('mineradio.perfPerformance') },
+                { id: 'balanced', label: t('mineradio.perfBalanced') },
+                { id: 'vivid', label: t('mineradio.perfVivid') },
+              ]}
+              onSelect={setPerf}
             />
           </div>
         </div>

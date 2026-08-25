@@ -356,7 +356,12 @@ export interface MineradioSettings {
   videoBlur: number
   /** Video wallpaper brightness, 0-100 (100 = fully lit, 0 = deepest dim). */
   videoBrightness: number
+  /** Performance gate: which motion layers actually run. Orthogonal to scenes. */
+  perf: PerfTier
 }
+
+/** Performance gate. Scenes keep their knob values; this only mounts layers. */
+export type PerfTier = 'performance' | 'balanced' | 'vivid'
 
 /** One-click scene: a named bundle of existing knobs (never the wallpaper). */
 export type ScenePreset = 'studio' | 'deepsea' | 'midnight' | 'mist'
@@ -441,6 +446,7 @@ const SETTINGS_DEFAULTS: MineradioSettings = {
   wallpaperMaskOpacity: 62,
   videoBlur: 6,
   videoBrightness: 45,
+  perf: 'balanced',
 }
 
 /** Numeric knob keys and their localStorage names. */
@@ -474,6 +480,26 @@ const MESH_KEY = 'dsh.ui-mineradio.mesh'
 const SPOTLIGHT_KEY = 'dsh.ui-mineradio.spotlight'
 const PRESS_KEY = 'dsh.ui-mineradio.press'
 const AUDIO_REACT_KEY = 'dsh.ui-mineradio.audioReact'
+const PERF_KEY = 'dsh.ui-mineradio.perf'
+
+/** Read the performance gate (absent/invalid means balanced). */
+function readPerf(): PerfTier {
+  try {
+    const stored = localStorage.getItem(PERF_KEY)
+    return stored === 'performance' || stored === 'vivid' ? stored : 'balanced'
+  } catch {
+    return 'balanced'
+  }
+}
+
+/** Persist the performance gate. */
+function writePerf(value: PerfTier): void {
+  try {
+    localStorage.setItem(PERF_KEY, value)
+  } catch {
+    /* in-memory state still applies */
+  }
+}
 
 /** Clamp a numeric knob into its sane range. */
 function clampSetting(key: NumericKey, value: number): number {
@@ -886,7 +912,18 @@ export class MineradioLayer {
       wallpaperMaskOpacity: readSetting('wallpaperMaskOpacity'),
       videoBlur: readSetting('videoBlur'),
       videoBrightness: readSetting('videoBrightness'),
+      perf: readPerf(),
     }
+  }
+
+  /** Set the performance gate (does not rewrite scene knobs). */
+  setPerf(value: PerfTier): void {
+    if (value === this.settings.perf) return
+    this.settings.perf = value
+    writePerf(value)
+    if (!this.enabled) return
+    this.applySettings()
+    this.syncMotionLayers()
   }
 
   /** Apply one named scene. Wallpaper / video files stay as they are. */
@@ -924,6 +961,7 @@ export class MineradioLayer {
     this.dispersion?.setRefraction(bundle.dispersionRefract)
     this.starRiverHandle?.setDensity(bundle.starDensity)
     this.syncAudioReact()
+    this.syncMotionLayers()
   }
 
   /** Flip the layer: persist, then apply or retract every owned effect. */
@@ -1227,13 +1265,13 @@ export class MineradioLayer {
 
     // Cursor spotlight and hover press ride the floating glass only —
     // compat keeps the stock layout, so neither effect applies there.
-    document.documentElement.toggleAttribute(SPOTLIGHT_ATTRIBUTE, !compat && this.settings.spotlight)
-    document.documentElement.toggleAttribute(PRESS_ATTRIBUTE, !compat && this.settings.press)
+    document.documentElement.toggleAttribute(SPOTLIGHT_ATTRIBUTE, !compat && this.settings.spotlight && this.allowHoverFx())
+    document.documentElement.toggleAttribute(PRESS_ATTRIBUTE, !compat && this.settings.press && this.allowHoverFx())
 
     // Backdrop source: flip the ambient container between fluid and wallpaper.
     const ambient = document.querySelector<HTMLElement>('[data-dsh-aqua-ambient]')
     if (ambient !== null) ambient.dataset.background = this.settings.background
-    if (ambient !== null) ambient.dataset.critters = this.settings.critters ? 'on' : 'off'
+    if (ambient !== null) ambient.dataset.critters = this.settings.critters && this.allowDecor() ? 'on' : 'off'
     // The wallpaper may be an image or a video: images and small videos are
     // data URLs; large videos are `idb:<id>` markers (blob in IndexedDB);
     // File System Access videos are `fsa:<name>` markers (the handle lives
@@ -1453,59 +1491,99 @@ export class MineradioLayer {
     document.documentElement.setAttribute(MINERADIO_ATTRIBUTE, '')
     ensureAmbientScene()
     ensurePageFades()
-    this.syncStarRiver()
-    this.startCinemaDrift()
-    this.startGlassDispersion()
-    this.startSpecularParallax()
     this.applySettings()
     this.applyTokens()
     this.mountFluid()
     this.startSeamStamper()
     this.startSpotlightFeed()
+    this.syncMotionLayers()
+  }
+
+  /** Performance / balanced keep the last fluid frame; vivid runs the loop. */
+  private allowFluidLoop(): boolean {
+    return this.settings.perf === 'vivid'
+  }
+
+  /** Balanced + vivid keep stars / drift / dispersion / specular. */
+  private allowMotionFx(): boolean {
+    return this.settings.perf !== 'performance'
+  }
+
+  /** Only vivid mounts the optional extras (whale / mesh / audio). */
+  private allowDecor(): boolean {
+    return this.settings.perf === 'vivid'
+  }
+
+  /** Hover glow / tilt stay off in the performance gate. */
+  private allowHoverFx(): boolean {
+    return this.settings.perf !== 'performance'
+  }
+
+  /** Mount or drop motion layers to match the performance gate. */
+  private syncMotionLayers(): void {
+    this.syncStarRiver()
+    this.syncCinemaDrift()
+    this.syncGlassDispersion()
+    this.syncSpecularParallax()
     this.syncWhale()
     this.syncMesh()
     this.syncAudioReact()
+    this.mainFluid?.setRunning(this.allowFluidLoop())
   }
 
-  /** Mount the Mineradio star-river particle stage (always on with the layer:
-   *  it is the skin's signature motion, like the player's backdrop). */
+  /** Mount the Mineradio star-river particle stage when the gate allows it. */
   private syncStarRiver(): void {
-    if (!this.enabled) return
-    if (this.starRiverHandle !== undefined) return
-    const ambient = document.querySelector<HTMLElement>('[data-dsh-aqua-ambient]')
-    if (ambient === null) return
-    this.starRiverHandle = mountStarRiver(ambient, { dark: this.dark, density: this.settings.starDensity })
+    if (this.enabled && this.allowMotionFx()) {
+      if (this.starRiverHandle !== undefined) return
+      const ambient = document.querySelector<HTMLElement>('[data-dsh-aqua-ambient]')
+      if (ambient === null) return
+      this.starRiverHandle = mountStarRiver(ambient, { dark: this.dark, density: this.settings.starDensity })
+      return
+    }
+    this.starRiverHandle?.dispose()
+    this.starRiverHandle = undefined
   }
 
-  /** Start the cinematic camera drift over the fluid + star-river layers
-   *  (idempotent per mount; the subtle parallax "breathe" of the backdrop). */
-  private startCinemaDrift(): void {
-    if (!this.enabled) return
-    if (this.cinemaDrift !== undefined) return
-    const ambient = document.querySelector<HTMLElement>('[data-dsh-aqua-ambient]')
-    if (ambient === null) return
-    this.cinemaDrift = startCinemaDrift(ambient)
+  /** Start or stop the cinematic camera drift. */
+  private syncCinemaDrift(): void {
+    if (this.enabled && this.allowMotionFx()) {
+      if (this.cinemaDrift !== undefined) return
+      const ambient = document.querySelector<HTMLElement>('[data-dsh-aqua-ambient]')
+      if (ambient === null) return
+      this.cinemaDrift = startCinemaDrift(ambient)
+      return
+    }
+    this.cinemaDrift?.dispose()
+    this.cinemaDrift = undefined
   }
 
-  /** Start the glass chromatic-dispersion filter (idempotent per mount). */
-  private startGlassDispersion(): void {
-    if (!this.enabled) return
-    if (this.dispersion !== undefined) return
-    this.dispersion = startGlassDispersion()
-    this.dispersion.setTint(this.dispersionTintHue())
-    this.dispersion.setRefraction(this.settings.dispersionRefract)
+  /** Start or stop the glass chromatic-dispersion filter. */
+  private syncGlassDispersion(): void {
+    if (this.enabled && this.allowMotionFx()) {
+      if (this.dispersion !== undefined) return
+      this.dispersion = startGlassDispersion()
+      this.dispersion.setTint(this.dispersionTintHue())
+      this.dispersion.setRefraction(this.settings.dispersionRefract)
+      return
+    }
+    this.dispersion?.dispose()
+    this.dispersion = undefined
   }
 
-  /** Start the specular-highlight cursor parallax (idempotent per mount). */
-  private startSpecularParallax(): void {
-    if (!this.enabled) return
-    if (this.specularParallaxDisposer !== undefined) return
-    this.specularParallaxDisposer = startSpecularParallax()
+  /** Start or stop the specular-highlight cursor parallax. */
+  private syncSpecularParallax(): void {
+    if (this.enabled && this.allowHoverFx()) {
+      if (this.specularParallaxDisposer !== undefined) return
+      this.specularParallaxDisposer = startSpecularParallax()
+      return
+    }
+    this.specularParallaxDisposer?.()
+    this.specularParallaxDisposer = undefined
   }
 
   /** Mount or drop the particle whale to match enabled + the whale flag. */
   private syncWhale(): void {
-    if (this.enabled && this.settings.whale) {
+    if (this.enabled && this.settings.whale && this.allowDecor()) {
       if (this.whaleHandle !== undefined) return
       const ambient = document.querySelector<HTMLElement>('[data-dsh-aqua-ambient]')
       if (ambient === null) return
@@ -1518,7 +1596,7 @@ export class MineradioLayer {
 
   /** Mount or drop the interactive mesh to match enabled + the mesh flag. */
   private syncMesh(): void {
-    if (this.enabled && this.settings.mesh) {
+    if (this.enabled && this.settings.mesh && this.allowDecor()) {
       if (this.meshHandle !== undefined) return
       const ambient = document.querySelector<HTMLElement>('[data-dsh-aqua-ambient]')
       if (ambient === null) return
@@ -1535,7 +1613,7 @@ export class MineradioLayer {
   private syncAudioReact(): void {
     const root = document.documentElement
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const shouldRun = this.enabled && this.settings.audioReact && !reducedMotion
+    const shouldRun = this.enabled && this.settings.audioReact && this.allowDecor() && !reducedMotion
     if (shouldRun) {
       if (this.audioHandle !== undefined) return
       root.dataset.dshAquaAudioStatus = 'starting'

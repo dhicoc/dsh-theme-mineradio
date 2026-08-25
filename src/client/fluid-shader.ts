@@ -208,6 +208,8 @@ export interface FluidShaderHandle {
   /** Audio reactivity: bass energy 0..1 speeds the flow and amplifies the
    *  turbulence (ripple amplitude). */
   setAudioLow: (level: number) => void
+  /** Pause or resume the simulation loop. A paused board keeps the last frame. */
+  setRunning: (on: boolean) => void
   /** Stop the loop and release listeners. */
   dispose: () => void
 }
@@ -486,6 +488,18 @@ export function attachFluidShader(canvas: HTMLCanvasElement, params: FluidParams
     },
     setAudioLow: (level: number) => {
       audioLow = Math.max(0, Math.min(1, level))
+    },
+    setRunning: (on: boolean) => {
+      if (on) {
+        if (running) return
+        running = true
+        previous = 0
+        raf = requestAnimationFrame(frame)
+        return
+      }
+      if (!running) return
+      running = false
+      cancelAnimationFrame(raf)
     },
     dispose: () => {
       cancelAnimationFrame(raf)

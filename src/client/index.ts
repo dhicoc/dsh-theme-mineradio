@@ -77,6 +77,7 @@ export function apply(ctx: ClientContext): void {
       wallpaperMaskOpacity: s.wallpaperMaskOpacity,
       videoBlur: s.videoBlur,
       videoBrightness: s.videoBrightness,
+      perf: s.perf,
     }
   }
   const sync = (): void => {
@@ -107,6 +108,10 @@ export function apply(ctx: ClientContext): void {
     return {
       applyScene: (scene) => {
         layer.applyScene(scene)
+        sync()
+      },
+      setPerf: (perf) => {
+        layer.setPerf(perf)
         sync()
       },
       setMode: (mode) => {
