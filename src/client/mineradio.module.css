@@ -457,6 +457,25 @@
   box-shadow: var(--dsh-aqua-glass-shadow-dark);
 }
 
+/* Session / workspace HoverCards (the 244px preview beside the rows):
+   stock paints them as a solid #2C2C2E slab (--dsw-hovercard-bg), which
+   reads as a sticker over the glass. Full menu-grade family material —
+   they are content cards, not micro-chips. Fixed positioning untouched.
+   (Class hash _card_1b2ny_13; the _root wrapper around the row stays
+   untouched — only the floating card is re-skinned.) */
+[data-dsh-float] [class*='_card_1b2ny_13'] {
+  background: var(--dsh-aqua-glass-card-light);
+  border: 1px solid rgba(122, 86, 28, 0.30);
+  box-shadow: var(--dsh-aqua-glass-shadow-light);
+  backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [class*='_card_1b2ny_13'] {
+  background: var(--dsh-aqua-glass-card-dark);
+  border-color: rgba(0, 245, 212, 0.20);
+  box-shadow: var(--dsh-aqua-glass-shadow-dark);
+}
+
 /* Buttons (component roots carry the `button`-named class; icon circles
    carry `iconButton`; the sidebar search circle is its own family). */
 [data-dsh-float] button[class*='button'] {
