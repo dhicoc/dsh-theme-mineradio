@@ -437,6 +437,26 @@
   border-radius: 8px;
 }
 
+/* Tooltips join the family: stock renders them as an opaque
+   --dsw-alias-tooltip-bg chip with static bluish-white ink, which floats
+   like a sticker over the glass. Same material as the menus, thinned for a
+   micro-surface (72% card fill, 12px blur), warm ink off the alias ladder.
+   The data-side transform is left untouched. */
+[data-dsh-float] [role='tooltip'] {
+  background: color-mix(in srgb, var(--dsh-aqua-glass-card-light) 72%, transparent);
+  border: 1px solid rgba(122, 86, 28, 0.28);
+  box-shadow: var(--dsh-aqua-glass-shadow-light);
+  color: var(--dsw-alias-label-primary);
+  padding: 4px 10px;
+  backdrop-filter: blur(12px) saturate(1.18) brightness(1.05);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [role='tooltip'] {
+  background: color-mix(in srgb, var(--dsh-aqua-glass-card-dark) 66%, transparent);
+  border-color: rgba(0, 245, 212, 0.20);
+  box-shadow: var(--dsh-aqua-glass-shadow-dark);
+}
+
 /* Buttons (component roots carry the `button`-named class; icon circles
    carry `iconButton`; the sidebar search circle is its own family). */
 [data-dsh-float] button[class*='button'] {
