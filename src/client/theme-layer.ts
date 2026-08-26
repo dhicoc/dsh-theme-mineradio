@@ -19,6 +19,7 @@ import { fluidToneColors, HUE_BASE } from './fluid-tones.ts'
 import { deleteVideoBlob, loadVideoBlob, loadVideoHandle } from './wallpaper-store.ts'
 import { attachFluidInteractions } from './fluid-interactions.ts'
 import { startSeamStamper } from './seam-stamper.ts'
+import { startStationDial } from './station-dial.ts'
 import { mountWhale, type WhaleHandle } from './whale.ts'
 import { mountMesh, type MeshHandle } from './mesh.ts'
 import { startSpotlight, SPOTLIGHT_ATTRIBUTE, PRESS_ATTRIBUTE } from './spotlight.ts'
@@ -828,6 +829,9 @@ export class MineradioLayer {
   /** Live rainbow hue, only while the rainbow scene is on. Not persisted. */
   private rainbowHue = 0
   private rainbowRaf = 0
+  /** Station dial: per-workspace hue offset, glided by station-dial.ts. */
+  private stationOffset = 0
+  private stationDisposer: (() => void) | undefined
   private readonly ctx: Context
 
   /**
@@ -1418,7 +1422,7 @@ export class MineradioLayer {
       && this.settings.wallpaper !== '' && this.extractedHue !== undefined) {
       return this.extractedHue
     }
-    return ((this.settings.fluidHue + HUE_BASE) % 360 + 360) % 360
+    return (((this.settings.fluidHue + HUE_BASE) + this.stationOffset) % 360 + 360) % 360
   }
 
   /** The dispersion edge-tint hue (auto-extracted, or the user's knob). */
@@ -1427,7 +1431,7 @@ export class MineradioLayer {
       && this.settings.wallpaper !== '' && this.extractedHue !== undefined) {
       return this.extractedHue
     }
-    return this.settings.dispersionHue
+    return ((this.settings.dispersionHue + this.stationOffset) % 360 + 360) % 360
   }
 
   /** Write the hue-driven accent vars (spotlight glow + bloom + dispersion). */
@@ -1531,6 +1535,13 @@ export class MineradioLayer {
     this.mountFluid()
     this.startSeamStamper()
     this.startSpotlightFeed()
+    if (this.stationDisposer === undefined) {
+      this.stationDisposer = startStationDial((offset) => {
+        this.stationOffset = offset
+        this.applyFluidPalettes()
+        this.applyAccentTint()
+      })
+    }
     this.syncMotionLayers()
     this.syncRainbowDrift()
   }
@@ -1707,6 +1718,9 @@ export class MineradioLayer {
     this.meshHandle = undefined
     this.audioHandle?.dispose()
     this.audioHandle = undefined
+    this.stationDisposer?.()
+    this.stationDisposer = undefined
+    this.stationOffset = 0
     this.stopRainbowDrift()
     document.documentElement.style.removeProperty('--dsh-aqua-audio-glow')
     delete document.documentElement.dataset.dshAquaAudioEnv
@@ -1756,7 +1770,9 @@ export class MineradioLayer {
   private fluidParams(): FluidParams {
     // Continuous hue + depth drive the palette through HSL interpolation —
     // the depth lives in the colors, so the canvas needs no global filter.
-    const hue = this.settings.rainbow ? this.rainbowHue : this.settings.fluidHue
+    // The station offset rides on top of whichever hue source is live — the
+    // stored knob never moves, so scenes and presets stay byte-stable.
+    const hue = (((this.settings.rainbow ? this.rainbowHue : this.settings.fluidHue) + this.stationOffset) % 360 + 360) % 360
     const depth = this.settings.rainbow ? Math.max(this.settings.fluidDepth, 22) : this.settings.fluidDepth
     const tones = fluidToneColors(this.dark, hue, depth)
     if (!this.settings.rainbow) return { ...SITE_FLUID_PARAMS, ...tones }

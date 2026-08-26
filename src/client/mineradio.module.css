@@ -680,6 +680,42 @@ html:not(:has(body[data-ds-dark-theme])) [data-dsh-aqua][data-dsh-float] [data-d
   }
 }
 
+/* Station dial: the brand row's frequency window. Each workspace tunes its
+   own hue; the window shows the live frequency (`FM 044`) and flickers
+   softly while the dial glides to another workspace's stop. */
+[data-dsh-aqua] [data-dsh-wordmark] {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+[data-dsh-aqua] [data-dsh-station-tuner] {
+  font: 600 10.5px/1 ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  letter-spacing: 0.08em;
+  color: rgb(244 210 138 / 0.78);
+  padding: 3px 7px 2px;
+  border: 1px solid rgb(244 210 138 / 0.22);
+  border-radius: 999px;
+  background: rgb(244 210 138 / 0.06);
+  text-shadow: 0 0 12px rgb(244 210 138 / 0.35);
+}
+
+html:not(:has(body[data-ds-dark-theme])) [data-dsh-aqua] [data-dsh-station-tuner] {
+  color: rgb(122 86 28 / 0.85);
+  border-color: rgb(122 86 28 / 0.30);
+  background: rgb(154 111 44 / 0.08);
+  text-shadow: none;
+}
+
+[data-dsh-aqua] [data-dsh-station-tuner][data-dsh-tuning] {
+  animation: dsh-mineradio-tuning 700ms steps(2, jump-none) infinite;
+}
+
+@keyframes dsh-mineradio-tuning {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 /* Block family (code / terminal / diff / read / web / search): the corner
    variables ride the same elements, so banners and footers follow. */
 [data-dsh-float] [class*='block'] {
@@ -1297,7 +1333,8 @@ html:not(:has(body[data-ds-dark-theme])) [data-dsh-aqua][data-dsh-float] [data-d
   [data-dsh-aqua] [data-dsh-aqua-ambient],
   [data-dsh-aqua] [data-aqua-critter],
   [data-dsh-aqua] [data-dsh-inputbar][data-dsh-on-air],
-  [data-dsh-aqua] [data-dsh-inputbar][data-dsh-on-air] [data-composer-card] {
+  [data-dsh-aqua] [data-dsh-inputbar][data-dsh-on-air] [data-composer-card],
+  [data-dsh-aqua] [data-dsh-station-tuner][data-dsh-tuning] {
     animation: none;
   }
 
