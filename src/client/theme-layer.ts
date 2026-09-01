@@ -671,14 +671,15 @@ function writeWallpaperMask(value: boolean): void {
   }
 }
 
-/** Read the particle-whale flag (absent means off — the star river is the
- *  default particle stage; the whale is an opt-in extra). */
+/** Read the particle-whale flag (absent means ON — the champagne-gold whale
+ *  is the theme's centerpiece; a missing key on fresh install or after the
+ *  decoration migration shows it rather than hiding it). */
 function readWhale(): boolean {
   try {
     const raw = localStorage.getItem(WHALE_KEY)
-    return raw === null ? false : raw === 'true'
+    return raw === null ? true : raw === 'true'
   } catch {
-    return false
+    return true
   }
 }
 
@@ -1628,9 +1629,11 @@ export class MineradioLayer {
     this.specularParallaxDisposer = undefined
   }
 
-  /** Mount or drop the particle whale to match enabled + the whale flag. */
+  /** Mount or drop the particle whale to match enabled + the whale flag.
+   *  Gated on allowMotionFx (balanced and vivid), not the vivid-only
+   *  allowDecor, so the golden whale rides along on the default tier. */
   private syncWhale(): void {
-    if (this.enabled && this.settings.whale && this.allowDecor()) {
+    if (this.enabled && this.settings.whale && this.allowMotionFx()) {
       if (this.whaleHandle !== undefined) return
       const ambient = document.querySelector<HTMLElement>('[data-dsh-aqua-ambient]')
       if (ambient === null) return
