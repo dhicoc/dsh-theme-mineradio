@@ -1063,6 +1063,32 @@ html:not(:has(body[data-ds-dark-theme])) [data-dsh-aqua] [data-dsh-station-tuner
   background: var(--dsh-aqua-glass-card-dark);
 }
 
+/* ---------- rc.2 (Tauri desktop) archived-session toolbar: the dsh-tauri
+   session plugin paints the toolbar an opaque --dsw-alias-bg-base slab
+   (#08090B), hiding the settings glass underneath. Clear it so the glass
+   reads through; the search / sort-select controls drop to the standard
+   layer-3 fill with token ink. [class*] selectors keep the CSS-module pass
+   from hashing the host plugin's class names. ---------- */
+[data-dsh-aqua] [class*='dsh-tauri-session-toolbar'] {
+  background: transparent;
+  border-color: var(--dsw-alias-border-l2);
+}
+[data-dsh-aqua] [class*='dsh-tauri-session-toolbar'] [class*='dsh-tauri-session-search'],
+[data-dsh-aqua] [class*='dsh-tauri-session-toolbar'] [class*='dsh-tauri-session-menu-select'] {
+  background: var(--dsw-alias-bg-layer-3);
+  border: 1px solid var(--dsw-alias-border-l2);
+  color: var(--dsw-alias-label-primary);
+}
+[data-dsh-aqua] [class*='dsh-tauri-session-toolbar'] [class*='dsh-tauri-session-search'] input,
+[data-dsh-aqua] [class*='dsh-tauri-session-toolbar'] [class*='dsh-tauri-session-search'] input::placeholder {
+  color: var(--dsw-alias-label-primary);
+  opacity: 1;
+}
+[data-dsh-aqua] [class*='dsh-tauri-session-toolbar'] [class*='dsh-tauri-session-menu-select'] span,
+[data-dsh-aqua] [class*='dsh-tauri-session-toolbar'] [class*='dsh-tauri-session-menu-select'] svg {
+  color: var(--dsw-alias-label-secondary);
+}
+
 /* ---------- Sidebar: the selected session gets an accent bar and a soft halo. ---------- */
 [data-dsh-float] [role='treeitem'][aria-selected='true'] {
   box-shadow:
