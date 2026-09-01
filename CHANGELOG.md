@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.3.3 (2026-09-01)
+
+- **粒子金鲸恢复 + 金色化**：浅色模式下鲸鱼粒子原是中性灰 + 低透明度（multiply 混合后几乎不可见），现改为两种模式统一的香槟金色粒子，并提高浅色模式的基础透明度——深色下金色发光（screen），浅色下深金可见（multiply）
+
 ## v2.3.2 (2026-09-01)
 
 - **适配 dsh 0.1.1-rc.2**：客户端运行时 `@deepseek-ai/dsh-client-store` → `@deepseek-ai/dsh-client-runtime/client`（rc 分支用 runtime 命名，没有 store）；dev/peer 依赖对齐 `0.1.1-rc.2`，`dsh.client.inject` 同步。设置面板**恢复家族玻璃**：Tauri 桌面版设置页不再是 `role=dialog`（主题旧选择器全部失效），改为挂 `data-slot-sidebar="dsh-tauri-ui"` 的 shell overlay，玻璃配方选择器随之适配（注意规避 build 的 CSS-module 对属性值内点的误 hash）。`slots.inject` 去掉已废弃的第 3 参。TS 5.9 类型修复：补 File System Access 权限方法全局声明、两处返回句柄补 `setRunning`、station-dial 去掉恒假分支

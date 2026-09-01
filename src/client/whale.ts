@@ -248,12 +248,16 @@ export function mountWhale(host: HTMLElement, dark: boolean): WhaleHandle {
       // (multiply-blended by CSS over the light backdrop).
       const dist = Math.sqrt(px * px + py * py)
       const glow = smoothstep(8, 0, dist) * 0.3 * assembly
-      const baseAlpha = 0.45 + 0.3 * assembly
+      const baseAlpha = (darkMode ? 0.45 : 0.62) + 0.3 * assembly
       const shimmer = Math.sin(time * 1.5 + px * 5 + py * 3) * 0.1 + 0.9
       const alpha = p.opacity * (baseAlpha + glow) * shimmer * Math.min(vLight, 1)
-      const br = darkMode ? 0.75 : 0.42
-      const bg = darkMode ? 0.8 : 0.44
-      const bb = darkMode ? 0.9 : 0.47
+      // Champagne-gold particles in BOTH schemes — screen-blended (glowing)
+      // over the dark backdrop, multiply-blended (deep gold) over the light
+      // one — so the whale stays the theme's golden centerpiece instead of
+      // fading to a near-invisible gray on the light surface.
+      const br = darkMode ? 0.85 : 0.68
+      const bg = darkMode ? 0.66 : 0.50
+      const bb = darkMode ? 0.26 : 0.16
       const r = Math.min(255, Math.round((br * assembly + glow * 0.2) * vLight * 255))
       const g = Math.min(255, Math.round((bg * assembly + glow * 0.3) * vLight * 255))
       const b = Math.min(255, Math.round((bb * assembly + glow * 0.5) * vLight * 255))
