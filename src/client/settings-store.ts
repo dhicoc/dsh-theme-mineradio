@@ -3,7 +3,7 @@
  * knobs and the backdrop source). The plugin's apply-world change listener is
  * the only writer; the row component reads via props.useStore.
  */
-import { defineStore, type EngineStoreHandle } from '@deepseek-ai/dsh-client-store'
+import { defineStore, type EngineStoreHandle } from '@deepseek-ai/dsh-client-runtime/client'
 import type { PerfTier, TextStyle } from './theme-layer.ts'
 
 /** Store state mirrored from the Mineradio settings scope. */

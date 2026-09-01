@@ -139,7 +139,9 @@ export function startStationDial(onOffset: (offset: number) => void): () => void
   const retune = (name: string): void => {
     const target = offsetFor(name)
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reduced || TUNE_MS === 0) {
+    // TUNE_MS is a compile-time constant (2200) so the animation-off branch is
+    // unreachable; the reduce check alone decides the instant-settle path.
+    if (reduced) {
       paintTuner(freqLabel(target), false)
       settle(target)
       return

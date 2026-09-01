@@ -172,10 +172,11 @@ export function MineradioAppearanceRow(props: MineradioAppearanceRowComponentPro
    *  file authorization, so later visits re-read the ORIGINAL file with no
    *  storage copy. Other browsers fall back to the plain file input. */
   const pickVideo = (): void => {
-    if (window.showOpenFilePicker !== undefined) {
+    const openPicker = window.showOpenFilePicker
+    if (openPicker !== undefined) {
       void (async () => {
         try {
-          const [handle] = await window.showOpenFilePicker({
+          const [handle] = await openPicker({
             multiple: false,
             types: [{ description: 'Video', accept: { 'video/*': ['.mp4', '.webm', '.ogg', '.mov', '.m4v', '.mkv'] } }],
           })

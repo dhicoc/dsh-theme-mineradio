@@ -242,5 +242,5 @@ export function apply(ctx: Context): void {
     store: appearanceStore,
     locale: NS,
     inject: appearanceInjected,
-  }, MineradioAppearanceRow), { key: 'mineradio' })
+  }, MineradioAppearanceRow))
 }

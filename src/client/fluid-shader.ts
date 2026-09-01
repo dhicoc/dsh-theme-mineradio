@@ -231,6 +231,7 @@ export function attachFluidShader(canvas: HTMLCanvasElement, params: FluidParams
       setParams: () => {},
       stir: () => {},
       setAudioLow: () => {},
+      setRunning: () => {},
       dispose: () => {},
     }
   }
@@ -270,6 +271,7 @@ export function attachFluidShader(canvas: HTMLCanvasElement, params: FluidParams
       setParams: () => {},
       stir: () => {},
       setAudioLow: () => {},
+      setRunning: () => {},
       dispose: () => {},
     }
   }

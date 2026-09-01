@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.3.2 (2026-09-01)
+
+- **适配 dsh 0.1.1-rc.2**：客户端运行时 `@deepseek-ai/dsh-client-store` → `@deepseek-ai/dsh-client-runtime/client`（rc 分支用 runtime 命名，没有 store）；dev/peer 依赖对齐 `0.1.1-rc.2`，`dsh.client.inject` 同步。设置面板**恢复家族玻璃**：Tauri 桌面版设置页不再是 `role=dialog`（主题旧选择器全部失效），改为挂 `data-slot-sidebar="dsh-tauri-ui"` 的 shell overlay，玻璃配方选择器随之适配（注意规避 build 的 CSS-module 对属性值内点的误 hash）。`slots.inject` 去掉已废弃的第 3 参。TS 5.9 类型修复：补 File System Access 权限方法全局声明、两处返回句柄补 `setRunning`、station-dial 去掉恒假分支
+
 ## v2.3.1 (2026-08-31)
 
 - **适配 dsh 0.1.2-alpha.2**：客户端运行时从 `@deepseek-ai/dsh-client-runtime` 迁到改名后的 `@deepseek-ai/dsh-client-store`（新版核心不再提供旧包）；`ClientContext` 换用 cordis 的 `Context`。`dsh.client.inject`、peer/dev 依赖全部对齐 alpha.2（`^0.1.2-alpha.2` / `@deepseek-ai/cordis@4.0.2`）。构建改为仓库自带的 esbuild 脚本（`build-tools/build-client.mjs`，不再依赖 monorepo），补了 `ctx.slots` 本地类型增强

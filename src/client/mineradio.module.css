@@ -1047,6 +1047,22 @@ html:not(:has(body[data-ds-dark-theme])) [data-dsh-aqua] [data-dsh-station-tuner
   box-shadow: var(--dsh-aqua-glass-shadow-dark);
 }
 
+/* ---------- rc.2 (Tauri desktop) settings overlay: the settings surface is
+   no longer a role=dialog — it mounts as a full-viewport shell overlay slot
+   (the dsh-tauri-ui settings root carries `data-slot-sidebar="dsh-tauri-ui"`).
+   Same glass recipe as the panes, minus the raised border/radius/shadow since
+   it spans the frame edge to edge. NOTE: the selector avoids dotted attribute
+   values (e.g. `data-slot="shell.overlay"`) — the build's CSS-module pass
+   would treat the dot as a class. ---------- */
+[data-dsh-aqua] body [data-slot-sidebar='dsh-tauri-ui'] {
+  background: var(--dsh-aqua-glass-card-light);
+  backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04);
+}
+
+[data-dsh-aqua] body[data-ds-dark-theme] [data-slot-sidebar='dsh-tauri-ui'] {
+  background: var(--dsh-aqua-glass-card-dark);
+}
+
 /* ---------- Sidebar: the selected session gets an accent bar and a soft halo. ---------- */
 [data-dsh-float] [role='treeitem'][aria-selected='true'] {
   box-shadow:
