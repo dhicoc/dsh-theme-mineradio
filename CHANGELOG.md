@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.3.1 (2026-08-31)
+
+- **适配 dsh 0.1.2-alpha.2**：客户端运行时从 `@deepseek-ai/dsh-client-runtime` 迁到改名后的 `@deepseek-ai/dsh-client-store`（新版核心不再提供旧包）；`ClientContext` 换用 cordis 的 `Context`。`dsh.client.inject`、peer/dev 依赖全部对齐 alpha.2（`^0.1.2-alpha.2` / `@deepseek-ai/cordis@4.0.2`）。构建改为仓库自带的 esbuild 脚本（`build-tools/build-client.mjs`，不再依赖 monorepo），补了 `ctx.slots` 本地类型增强
+
 ## Unreleased
 
 - **斜杠菜单入家族**：输入 `/` 的命令候选列表（`role='listbox'` 的 `_menu`）原是 `--dsw-specific-menu` 实心板，现与菜单同配方家族玻璃；「命令」分组标题的黑条一并透明化，候选项悬停补了暖光圈

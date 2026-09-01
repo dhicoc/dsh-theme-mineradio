@@ -9,7 +9,7 @@
  * One click on the master switch returns the stock UI (every layer is an
  * effect, disposed on flip).
  */
-import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context } from '@deepseek-ai/cordis'
 import type { BoundActions } from '@deepseek-ai/dsh-client-ui-slots'
 // Type-only: pulls the `settings.plugin.item` SlotMap merge.
 import type {} from '@deepseek-ai/dsh-client-ui-settings-plugins/client'
@@ -32,7 +32,7 @@ export const inject = ['theme', 'slots', 'locale']
  * Client plugin body.
  * @param ctx - client cordis context.
  */
-export function apply(ctx: ClientContext): void {
+export function apply(ctx: Context): void {
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-mineradio: settings dictionaries')
 
   // The layer owns its lifecycle: enable flag, token stack, and CSS attribute
@@ -229,7 +229,6 @@ export function apply(ctx: ClientContext): void {
   ctx.slots.inject('settings.plugin.item', () => ctx.slots.register({
     name: 'settings.plugin.item',
     key: 'mineradio',
-    order: 5,
     store: pluginStore,
     locale: NS,
     inject: pluginInjected,

@@ -1,7 +1,7 @@
 {
   "name": "dsh-theme-mineradio",
   "description": "Mineradio: a cinematic private-visual-radio glass theme for the Web surface — champagne glow, fluid or wallpaper backdrop, unified corners, and motion",
-  "version": "2.2.9",
+  "version": "2.3.1",
   "publishConfig": {
     "access": "public"
   },
@@ -34,7 +34,7 @@
     },
     "client": {
       "inject": [
-        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-store",
         "@deepseek-ai/dsh-client-locale",
         "@deepseek-ai/dsh-client-ui-theme",
         "@deepseek-ai/dsh-client-ui-settings",
@@ -45,37 +45,40 @@
     }
   },
   "scripts": {
-    "bundle": "tsdown",
-    "watch": "tsdown --watch"
+    "build": "node build-tools/build-client.mjs",
+    "bundle": "node build-tools/build-client.mjs",
+    "typecheck": "tsc --noEmit",
+    "watch": "node build-tools/build-client.mjs"
   },
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-client-locale": "^0.1.0-rc.5",
-    "@deepseek-ai/dsh-client-runtime": "^0.1.0-rc.5",
-    "@deepseek-ai/dsh-client-ui-primitives": "^0.1.0-rc.5",
-    "@deepseek-ai/dsh-client-ui-settings": "^0.1.0-rc.5",
-    "@deepseek-ai/dsh-client-ui-settings-plugins": "^0.1.0-rc.5",
-    "@deepseek-ai/dsh-client-ui-slots": "^0.1.0-rc.5",
-    "@deepseek-ai/dsh-client-ui-theme": "^0.1.0-rc.5",
-    "@deepseek-ai/dsh-invariants": "^0.1.0-rc.5",
     "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-client-locale": "^0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-store": "^0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-primitives": "^0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-settings": "^0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-settings-plugins": "^0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-slots": "^0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-theme": "^0.1.2-alpha.2",
+    "@deepseek-ai/dsh-invariants": "^0.1.2-alpha.2",
     "react": "^18.2.0"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-client-locale": "workspace:^",
-    "@deepseek-ai/dsh-client-runtime": "workspace:^",
-    "@deepseek-ai/dsh-client-test-runtime": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-primitives": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-settings": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-settings-plugins": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-slots": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-theme": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@testing-library/react": "^16.1.0",
+    "@deepseek-ai/cordis": "4.0.2",
+    "@deepseek-ai/dsh-client-locale": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-store": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-primitives": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-settings": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-settings-plugins": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-slots": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-theme": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-invariants": "0.1.2-alpha.2",
     "@types/react": "~18.3.1",
-    "@deepseek-ai/cordis": "workspace:^",
+    "@types/react-dom": "~18.3.1",
+    "esbuild": "^0.25.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "typescript": "^5.6.0"
   },
   "files": [
     "cordis.patch.yml",
