@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.3.8 (2026-09-05)
+
+- **Jobs / 命令 PopupSelect / Cordis / HoverCard 入家族**：Jobs 下拉是无 `role` 的 `ul._menu`；斜杠命令后的候选卡外壳是 `_card`（内层才是 `listbox`）；Cordis 插件面板是 `data-cordis-panel`。三者原先都是 `--dsw-specific-menu` 实心板。会话/工作区 HoverCard 不再钉死 `_card_1b2ny_13` 哈希（portal 到 `body` 的 `_card`）。桌面设置 overlay 的原生 `<select>` 与目标条编辑框一并清掉实心底。
+
 ## v2.3.7 (2026-09-05)
 
 - **斜杠触发菜单入家族**：输入 `/` 的候选下拉现是 `data-trigger-menu` 外壳 + 内层 `_viewport` 才是 `role=listbox`。旧选择器 `[role=listbox][class*=menu]` 打不中外壳，stock `--dsw-specific-menu` 实心底还在。现按稳定属性套家族玻璃，并清掉「指令」分组标题底板。
