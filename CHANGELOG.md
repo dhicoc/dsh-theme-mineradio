@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.3.7 (2026-09-05)
+
+- **斜杠触发菜单入家族**：输入 `/` 的候选下拉现是 `data-trigger-menu` 外壳 + 内层 `_viewport` 才是 `role=listbox`。旧选择器 `[role=listbox][class*=menu]` 打不中外壳，stock `--dsw-specific-menu` 实心底还在。现按稳定属性套家族玻璃，并清掉「指令」分组标题底板。
+
 ## v2.3.6 (2026-09-05)
 
 - **按主机自动匹配 store 引擎**：一份包同时兼容 `dsh-client-store`（DSH Desktop 0.7.x / host `0.1.2-alpha.1`）和 `dsh-client-runtime`（`0.1.1-rc.2+`）。客户端在 ModuleLoader `require` 上探测，缺哪个包就跳过哪个，不再静态 `require` 打崩整页 `Failed to load plugins`。`dsh.client.inject` 同时声明两个引擎，主机图里没有的那条边会被跳过。

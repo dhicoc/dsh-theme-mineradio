@@ -1109,11 +1109,14 @@ html:not(:has(body[data-ds-dark-theme])) [data-dsh-aqua] [data-dsh-station-tuner
    (family gradient + specular rim + blur knob). They sit over chat text, so
    the readable frost comes from real backdrop blur (the composer veil above
    lets them sample the transcript) — not a near-opaque flat slab. The slash
-   command picker is a listbox wearing the same `_menu` class, so it rides
-   along. */
+   command picker used to be a listbox wearing `_menu`; current DSH puts
+   `role=listbox` on the inner `_viewport` and the shell is
+   `data-trigger-menu` with stock `--dsw-specific-menu`. Match the stable
+   attribute so the plate itself is family glass. */
 [data-dsh-float] [role='menu'],
 [data-dsh-float] [role='tree'][class*='menu'],
-[data-dsh-float] [role='listbox'][class*='menu'] {
+[data-dsh-float] [role='listbox'][class*='menu'],
+[data-dsh-float] [data-trigger-menu] {
   background: var(--dsh-aqua-glass-card-light);
   border: 1px solid rgba(122, 86, 28, 0.34);
   box-shadow: var(--dsh-aqua-glass-shadow-light);
@@ -1125,7 +1128,8 @@ html:not(:has(body[data-ds-dark-theme])) [data-dsh-aqua] [data-dsh-station-tuner
    muddy and the blur scrambled its fixed-position layout. */
 [data-dsh-float] body[data-ds-dark-theme] [role='menu'],
 [data-dsh-float] body[data-ds-dark-theme] [role='tree'][class*='menu'],
-[data-dsh-float] body[data-ds-dark-theme] [role='listbox'][class*='menu'] {
+[data-dsh-float] body[data-ds-dark-theme] [role='listbox'][class*='menu'],
+[data-dsh-float] body[data-ds-dark-theme] [data-trigger-menu] {
   background: var(--dsh-aqua-glass-card-dark);
   border-color: rgba(0, 245, 212, 0.22);
   box-shadow: var(--dsh-aqua-glass-shadow-dark);
@@ -1136,7 +1140,8 @@ html:not(:has(body[data-ds-dark-theme])) [data-dsh-aqua] [data-dsh-station-tuner
    strip on the glass. Drop the plate; ink follows the theme ladder. Same
    for the slash-command picker's group titles. */
 [data-dsh-float] [role='menu'] [class*='groupTitle'],
-[data-dsh-float] [role='listbox'][class*='menu'] [class*='groupTitle'] {
+[data-dsh-float] [role='listbox'][class*='menu'] [class*='groupTitle'],
+[data-dsh-float] [data-trigger-menu] [class*='groupTitle'] {
   background: transparent;
   color: var(--dsw-alias-label-secondary);
 }
