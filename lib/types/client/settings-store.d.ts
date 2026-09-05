@@ -3,7 +3,7 @@
  * knobs and the backdrop source). The plugin's apply-world change listener is
  * the only writer; the row component reads via props.useStore.
  */
-import { type EngineStoreHandle } from '@deepseek-ai/dsh-client-runtime/client';
+import { type EngineStoreHandle } from './host-store.ts';
 import type { PerfTier, TextStyle } from './theme-layer.ts';
 /** Store state mirrored from the Mineradio settings scope. */
 export interface MineradioRowState {
@@ -105,7 +105,7 @@ export interface MineradioSettingsPayload {
 }
 /** Declared action shape giving the exported factory a stable return type. */
 type MineradioRowActions = {
-    sync: (draft: MineradioRowState, next: MineradioSettingsPayload, revision: number) => void;
+    sync: (next: MineradioSettingsPayload, revision: number) => void;
 };
 /**
  * Declares the Mineradio row state and write surface.

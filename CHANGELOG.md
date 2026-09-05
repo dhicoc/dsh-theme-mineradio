@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.3.6 (2026-09-05)
+
+- **按主机自动匹配 store 引擎**：一份包同时兼容 `dsh-client-store`（DSH Desktop 0.7.x / host `0.1.2-alpha.1`）和 `dsh-client-runtime`（`0.1.1-rc.2+`）。客户端在 ModuleLoader `require` 上探测，缺哪个包就跳过哪个，不再静态 `require` 打崩整页 `Failed to load plugins`。`dsh.client.inject` 同时声明两个引擎，主机图里没有的那条边会被跳过。
+- **队列消息标签入家族**：composer 上方排队消息条（`data-queue-dock` 的 QueueDock）原是 `--dsw-specific-tip` 实心底 + 发丝描边伪元素，现改成与顶栏/发送栏同一套家族玻璃（渐变填充 + 镜面内缘 + 模糊度旋钮），并拆掉 stock `::after` 描边以免叠出硬框。
+
 ## v2.3.5 (2026-09-01)
 
 - **归档页会话工具栏透明化**：dsh-tauri-session 插件把工具栏画成不透明深底（`--dsw-alias-bg-base` #08090B），盖住设置玻璃；现清为透明让玻璃透出，搜索框 / 排序下拉改用 layer-3 token 填充与 token 墨色

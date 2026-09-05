@@ -112,8 +112,14 @@ async function main() {
   factory: (require) => {
     var module = { exports: {} };
     var exports = module.exports;
+    var previousRequire = globalThis.__dshRequire;
+    globalThis.__dshRequire = require;
+    try {
 ${core}
-    return module.exports;
+      return module.exports;
+    } finally {
+      globalThis.__dshRequire = previousRequire;
+    }
   }
 });
 `

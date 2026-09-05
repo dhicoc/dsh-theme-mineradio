@@ -68,6 +68,8 @@ dsh plugin --profile web add dsh-theme-mineradio
 
 Or search **dsh-theme-mineradio** in Settings → Plugin market. That installs the prebuilt npm package (`lib/` already bundled). There is **no** `prepare` / `postinstall` script.
 
+From 2.3.6 the theme probes the host at load: it uses `@deepseek-ai/dsh-client-runtime` when present (DSH `0.1.1-rc.2+`) and falls back to `@deepseek-ai/dsh-client-store` (DSH Desktop 0.7.x / `0.1.2-alpha.1`). Do not pin 2.3.1 for old desktops and 2.3.5 for new ones — one latest build runs on both.
+
 Do not install with `github:dhicoc/dsh-theme-mineradio` or `dsh plugin add https://github.com/dhicoc/dsh-theme-mineradio`. A git / tarball spec makes pnpm block "build scripts", and market updates then fail. If you already have the git spec, switch to npm:
 
 ```powershell

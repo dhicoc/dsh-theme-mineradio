@@ -1162,6 +1162,30 @@ html:not(:has(body[data-ds-dark-theme])) [data-dsh-aqua] [data-dsh-station-tuner
   box-shadow: var(--dsh-aqua-glass-shadow-dark);
 }
 
+/* Queue-message tag (composer QueueDock). Stock panel fill is the same
+   --dsw-specific-tip slab as the todo/goal strips, but the seam is the
+   stable `data-queue-dock` attribute — hashed `_dock/_panel` classes do
+   not match the older composer-dock selector. One item is the row itself;
+   many items collapse to a count header. Both sit in `.panel`. Kill the
+   stock 1px border-l1 ::after plate so the family hairline/specular rim
+   is the only edge. */
+[data-dsh-float] [data-queue-dock] > [class*='_panel'] {
+  background: var(--dsh-aqua-glass-card-light);
+  border-color: rgba(122, 86, 28, 0.34);
+  box-shadow: var(--dsh-aqua-glass-shadow-light);
+  backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04);
+}
+
+[data-dsh-float] [data-queue-dock] > [class*='_panel']::after {
+  border-color: transparent;
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [data-queue-dock] > [class*='_panel'] {
+  background: var(--dsh-aqua-glass-card-dark);
+  border-color: rgba(0, 245, 212, 0.22);
+  box-shadow: var(--dsh-aqua-glass-shadow-dark);
+}
+
 /* ---------- Page edge fades: 5px gradient blur bands pinned to the top and
    bottom of the viewport. They sit BELOW the floating glass (the header
    card, composer card, and sidebar card hold z-index 8) but ABOVE the

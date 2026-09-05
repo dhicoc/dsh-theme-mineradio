@@ -68,6 +68,8 @@ dsh plugin --profile web add dsh-theme-mineradio
 
 或在设置 → 插件市场搜索 **dsh-theme-mineradio**。装的是 npm 上的预构建包（`lib/` 已打好），**没有** `prepare` / `postinstall`。
 
+2.3.6 起主题会在加载时探测主机：有 `@deepseek-ai/dsh-client-runtime` 就用它（DSH `0.1.1-rc.2+`），没有则回落到 `@deepseek-ai/dsh-client-store`（DSH Desktop 0.7.x / `0.1.2-alpha.1`）。不要再为旧桌面钉死 2.3.1、为新桌面钉死 2.3.5——一份 latest 两边都能跑。
+
 不要写成 `github:dhicoc/dsh-theme-mineradio` 或 `dsh plugin add https://github.com/dhicoc/dsh-theme-mineradio`。git / tarball 源会让 pnpm 拦「构建脚本」，市场更新也会失败。已经是 git 源的，改成 npm 即可：
 
 ```powershell
