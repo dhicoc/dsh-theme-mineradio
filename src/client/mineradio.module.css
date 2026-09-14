@@ -1455,6 +1455,260 @@ html:not(:has(body[data-ds-dark-theme])) [data-dsh-aqua] [data-dsh-station-tuner
   background-color: transparent !important;
 }
 
+/* ---------- dsh-better-sidebar: panels join the glass family ----------
+   better-sidebar mounts a viewport-fixed host ([data-dsh-panel-host],
+   z-index 25) and paints its right panel / bottom panel with opaque token
+   fills (z-index 40 inside the host). Skin both panels with the SAME
+   recipe as the sidebar column — gradient glass fill, specular rim, and
+   blur-knob frost — so the plugin's surfaces read as one family with the
+   host chrome (frost and blur ride the same --dsh-aqua-frost /
+   --dsh-aqua-blur knobs as the left sidebar). The frost lives on a
+   ::before veil (a real backdrop-filter on the panel would re-anchor its
+   fixed descendants and clip them under overflow:hidden). [class*=]
+   selectors keep the CSS-module pass from hashing the plugin's names.
+   Desktop only (>=768px): narrow viewports keep the plugin's full-bleed
+   drawer layout untouched, and the floating margin would mis-seat the
+   toggle cluster there. */
+@media (min-width: 768px) {
+  [data-dsh-aqua][data-dsh-float] [data-dsh-panel-host] > [class*='panel'],
+  [data-dsh-aqua][data-dsh-float] [data-dsh-panel-host] > [class*='bottomPanel'] {
+    margin: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.26);
+    border-top-color: rgba(255, 255, 255, 0.50);
+    border-radius: 20px;
+    background: var(--dsh-aqua-glass-card-light);
+    box-shadow: 0 22px 64px rgb(38 26 8 / 0.16);
+    overflow: hidden;
+  }
+
+  [data-dsh-aqua][data-dsh-float] [data-dsh-panel-host] > [class*='panel']::before,
+  [data-dsh-aqua][data-dsh-float] [data-dsh-panel-host] > [class*='bottomPanel']::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04);
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  [data-dsh-aqua][data-dsh-float] body[data-ds-dark-theme] [data-dsh-panel-host] > [class*='panel'],
+  [data-dsh-aqua][data-dsh-float] body[data-ds-dark-theme] [data-dsh-panel-host] > [class*='bottomPanel'] {
+    border-color: rgba(255, 255, 255, 0.16);
+    border-top-color: rgba(255, 255, 255, 0.30);
+    background: var(--dsh-aqua-glass-card-dark);
+    box-shadow: 0 22px 64px rgb(0 0 0 / 0.30), 0 0 34px rgb(0 245 212 / 0.052), inset 0 -24px 58px rgb(0 0 0 / 0.16);
+  }
+
+  /* The open right panel floats 12px off the edges; the plugin's toggle
+     cluster is pinned to the viewport corner, so it must ride the same
+     12px offset to stay seated in the panel's tab strip. */
+  [data-dsh-aqua][data-dsh-float] body:not([data-dsh-sidebar-collapsed]) [data-dsh-panel-host] [data-dsh-toggle-cluster] {
+    top: calc(3px + 12px);
+    right: calc(10px + 12px);
+  }
+}
+
+/* ---------- Layer fix: settings dialog above the sidebar panels ----------
+   DSH renders the settings dialog as a viewport-fixed overlay (z-index
+   1000) INSIDE the sidebar column, and the float rules give that column
+   z-index 9 — a stacking context that traps the dialog below
+   better-sidebar's host layer (z-index 25 / panels 40). While a dialog is
+   open, raise the column above the host so the dialog never slides under
+   the plugin panels. */
+[data-dsh-aqua][data-dsh-float] [class*='sidebarCol']:has([role='dialog']),
+[data-dsh-aqua][data-dsh-float] [class*='sidebarCol']:has([class*='overlay']) {
+  z-index: 50;
+}
+
+/* ---------- Layer fix (structural): panels below the sidebar column ----------
+   The settings dialog mounts inside the sidebar column, whose float-mode
+   stacking context (z-index 9) traps the dialog's z-index 1000 — so the
+   dialog can only win against better-sidebar's host layer through the
+   sidebar column's own layer. The :has() rules above raise the column while
+   a dialog is open, but their match timing is not guaranteed on the first
+   open after a page load. Structural guarantee instead: on desktop, hold
+   the sidebar column at z-index 10 (constant) and drop the plugin host
+   layer to z-index 9 (from 25) — the dialog always stacks above the panels
+   with no dynamic matching, while the host stays above the session header
+   card (z-index 8, where the plugin's expand/collapse cluster sits) so the
+   toggle buttons are never hidden behind the header. Overlay layers
+   (z 20), the app overlay stack (100+) and ui-cordis (30) all still sit
+   above the host, matching the plugin's own intent. Narrow drawers stay on
+   the stock host layer (they cover the full viewport by design). */
+@media (min-width: 768px) {
+  [data-dsh-aqua][data-dsh-float] [class*='sidebarCol'] {
+    z-index: 10;
+  }
+
+  [data-dsh-aqua][data-dsh-float] [data-dsh-panel-host] {
+    z-index: 9;
+  }
+}
+
+/* ---------- Layout push follows the float gap ----------
+   better-sidebar reserves layout for an open panel by writing
+   --dsh-sidebar-width/--dsh-sidebar-height (frame padding / center column
+   margin). The floating glass panels sit 12px INSIDE the reserved edge, so
+   the conversation scrollbar (pinned to the reserved edge) would slide
+   under the panel. Extend the push by the same 12px while a panel is
+   actually open, keeping the scrollbar clear of the glass. */
+[data-dsh-aqua][data-dsh-float] body:has([data-dsh-panel-host] > [class*='panel']:not([class*='panelHidden'])) #root [data-dsh-frame] {
+  padding-right: calc(var(--dsh-sidebar-width, 0px) + 12px);
+}
+
+[data-dsh-aqua][data-dsh-float] body:has([data-dsh-panel-host] > [class*='panel']:not([class*='panelHidden'])) #root [data-dsh-frame] > [data-side='details'] {
+  transform: translateX(calc(0px - var(--dsh-sidebar-width, 0px) - 12px));
+}
+
+[data-dsh-aqua][data-dsh-float] body:has([data-dsh-panel-host] > [class*='bottomPanel']:not([class*='bottomPanelHidden'])) #root [data-dsh-center-col] {
+  margin-bottom: calc(var(--dsh-sidebar-height, 0px) + 12px);
+}
+
+/* ---------- better-sidebar 0.19.x: the right panel is now DSH's own sidebar ----------
+   From 0.19.0 the plugin stopped rendering the right panel. Its own host keeps
+   only the bottom panel (still covered by the 0.18.x rules above), and the
+   right column is DSH's native Sidebar (`dsh-client-ui-sidebar-right`), whose
+   floating windows are mounted by dockkit's FloatLayer. The plugin says so
+   itself: "The right column is DSH's native Sidebar, so no width is written."
+   That float box is `[data-dockkit-float]` — a viewport-fixed, user-draggable
+   surface with a native 20px radius and an OPAQUE `--dsw-alias-bg-layer-2`
+   fill, which is why the panel read as a solid slab again.
+
+   Two deliberate differences from the 0.18.x panel recipe above:
+   - no `margin`: the box positions itself with inline left/top/width/height
+     and is dragged/resized by the user, so an added margin would offset the
+     drag geometry (and the 20px radius is already native);
+   - `box-sizing: border-box` before the rim: the shell ships no global
+     border-box reset, so a bare 1px border would widen the box by 2px and
+     drift the resize geometry;
+   - the frost still rides a ::before veil: the box is `overflow: hidden`, so a
+     real backdrop-filter on it would clip its own descendants. */
+@media (min-width: 768px) {
+  [data-dsh-aqua][data-dsh-float] [data-dockkit-float] {
+    box-sizing: border-box;
+    border: 1px solid rgba(255, 255, 255, 0.26);
+    border-top-color: rgba(255, 255, 255, 0.50);
+    /* The glass tokens are HIGHLIGHTS, not fills: at the shipped default frost
+       (14) the theme layer scales --dsh-aqua-frost to 0.28, landing every stop
+       near alpha 0.22. So the box carries its own layer, and that layer rides
+       the SAME knob every other surface of the theme uses -
+       --dsh-aqua-surface-frost, written as (frost + 20 points) / 50 - so this
+       panel tracks the frost slider exactly like the cards and beads do,
+       instead of a hardcoded alpha. dockkit paints no fill anywhere else here:
+       neither the header nor the body has one. */
+    background: var(--dsw-alias-bg-layer-2);
+    background:
+      var(--dsh-aqua-glass-card-light, none),
+      color-mix(in srgb, rgb(255 255 255) calc(62% * var(--dsh-aqua-surface-frost, 1)), transparent);
+    box-shadow: 0 22px 64px rgb(38 26 8 / 0.16);
+  }
+
+  [data-dsh-aqua][data-dsh-float] [data-dockkit-float]::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04);
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  [data-dsh-aqua][data-dsh-float] body[data-ds-dark-theme] [data-dockkit-float] {
+    border-color: rgba(255, 255, 255, 0.08);
+    border-top-color: rgba(255, 255, 255, 0.30);
+    background: var(--dsw-alias-bg-layer-2);
+    background:
+      var(--dsh-aqua-glass-card-dark, none),
+      color-mix(in srgb, rgb(42 46 56) calc(62% * var(--dsh-aqua-surface-frost, 1)), transparent);
+    box-shadow: 0 22px 64px rgb(0 0 0 / 0.30), 0 0 34px rgb(0 245 212 / 0.052), inset 0 -24px 58px rgb(0 0 0 / 0.16);
+  }
+
+  /* The docked (push) right panel is the one that shows up in normal use: DSH
+     reserves layout for it and slides it in from the right edge, so the stock
+     rule parks it flush against that edge (absolute, right 0, top 0, bottom 0)
+     and it reads as a docked column rather than the floating pane the 0.18.x
+     plugin panel was. Inset it on the three edges that column owns - the left
+     edge is the centre column's business, and the rule below reserves that gap
+     - then skin it with the same recipe and the same frost knob as the rest of
+     the theme. */
+  [data-dsh-aqua][data-dsh-float] [data-sidebar-right-panel] {
+    top: 12px;
+    bottom: 12px;
+    right: 12px;
+    /* Cap the width to the column instead of pushing the centre column around.
+       The composer is laid out with `margin: 0 auto` (its width comes from
+       --dsh-chat-content-width) while the bottom panel is positioned from the
+       column's border box, so narrowing the column moves them by DIFFERENT
+       amounts - the centred composer by 8px per side, the edge-anchored panel
+       by 16px on one side - and the terminal stops lining up with the composer.
+       Capping the panel leaves both of them untouched. */
+    max-width: calc(100% - 24px);
+    border: 1px solid rgba(122, 86, 28, 0.26);
+    border-top-color: rgba(255, 255, 255, 0.50);
+    border-radius: 20px;
+    overflow: hidden;
+    background: var(--dsw-alias-bg-base);
+    background:
+      var(--dsh-aqua-glass-card-light, none),
+      color-mix(in srgb, rgb(255 255 255) calc(62% * var(--dsh-aqua-surface-frost, 1)), transparent);
+    box-shadow: 0 22px 64px rgb(38 26 8 / 0.16);
+  }
+
+  [data-dsh-aqua][data-dsh-float] [data-sidebar-right-panel]::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04);
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  [data-dsh-aqua][data-dsh-float] body[data-ds-dark-theme] [data-sidebar-right-panel] {
+    border-color: rgba(255, 255, 255, 0.08);
+    border-top-color: rgba(255, 255, 255, 0.30);
+    background: var(--dsw-alias-bg-base);
+    background:
+      var(--dsh-aqua-glass-card-dark, none),
+      color-mix(in srgb, rgb(42 46 56) calc(62% * var(--dsh-aqua-surface-frost, 1)), transparent);
+    box-shadow: 0 22px 64px rgb(0 0 0 / 0.30), 0 0 34px rgb(0 245 212 / 0.052), inset 0 -24px 58px rgb(0 0 0 / 0.16);
+  }
+
+  /* Deliberately NO centre-column push here. The panel is capped inside its own
+     column instead (see the max-width above). Any push - padding OR margin -
+     moves the centred composer and the edge-anchored bottom panel by different
+     amounts, which is what broke the alignment between the terminal and the
+     composer above it. */
+}
+}
+
+/* ---------- Layer fix for 0.19.x: dockkit floats belong below the dialog too ----------
+   The 0.18.x layer fix above drops the plugin host to z-index 9 so the
+   settings dialog (trapped in the sidebar column's float-mode stacking
+   context at z-index 10) always wins. 0.19.x mounts the right panel in the
+   native float host, which ships at z-index 60 and would therefore sit above
+   that dialog — the same bug the 0.18.x fix addressed, through a new layer.
+   Hold the new host at the same 9 so one rule keeps every panel layer under
+   the dialog, while the session header card (z-index 8) stays below it. */
+@media (min-width: 768px) {
+  [data-dsh-aqua][data-dsh-float] [data-sidebar-right-float-host] {
+    z-index: 9;
+  }
+}
+
+/* ---------- Layout push follows the float gap (0.19.x anchors) ----------
+   0.19.x writes only --dsh-sidebar-height (the right column pushes layout
+   itself as DSH's native Sidebar), and the shell frame/center column now
+   carry CSS-module hashes instead of the 0.18.x data attributes. Same intent
+   as the rules above: while the bottom panel is open, keep the center column
+   clear of the 12px float gap the glass now sits inside. */
+@media (min-width: 768px) {
+  [data-dsh-aqua][data-dsh-float] body:has([data-dsh-panel-host] > [class*='bottomPanel']:not([class*='bottomPanelHidden'])) [class*='centerCol'] {
+    margin-bottom: calc(var(--dsh-sidebar-height, 0px) + 12px);
+  }
+}
+
 /* ---------- Reduced motion: keep the static look, drop every effect. ---------- */
 @media (prefers-reduced-motion: reduce) {
   [data-dsh-float] [data-phase='hero'],
