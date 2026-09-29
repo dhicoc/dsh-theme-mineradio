@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.5.0 (2026-09-30)
+
+- **三层漏斗覆盖架构（告别逐面打地鼠）**：新增 L0/L1 通配兜底层，插在全部精装规则之前——精装规则靠同特异度 + 源顺序保持最终话语权，通配层只接住它们没点名的面。**L0 骨架层**：`frame/Col/Body/Stack/Wrap/Layer/Seat/root` 等布局词根批量清掉 `--dsw-alias-bg-base` 实心填充（只清颜色分量、不上模糊，玻璃属于表面不属于骨架；stock 强意图如 composerSeat 渐变 scrim 以 (0,3,0) 特异度自然存活）；**L1 表面层**：`panel/card/bar/menu/dialog/popover/dropdown/sheet/drawer/modal/banner/tip/pill/toast` 等表面词根直接套**家族玻璃配方**（同一组 `--dsh-aqua-glass-card-*`/`glass-shadow-*` 变量），blur 走现有 `--dsh-aqua-blur` 旋钮的 60%，性能档（`data-dsh-aqua-perf='performance'`，由 applySettings 反射）下退化为纯染色。可读性词汇（code/terminal/markdown/scroll/progress）整列排除。所有通配规则 (0,2,0) 特异度用 `:is()` 锁定、黑名单用 `:where()` 零特异度——漏网面的代价从「丑陋实心板」降为「家族玻璃」，不再是 bug。
+- **表面审计器（自服务探测闭环）**：DevTools console 新增 `__mineradioAudit()` —— rAF 分片扫全树，凡「大面积 + computed 背景完全不透明」的元素即未适配面（自校准：主题已覆盖处全部 alpha<1），盖 `data-dsh-aqua-unthemed` 描金虚线框 + 按词根聚合 `console.table` + 报告自动进剪贴板；`__mineradioAudit(false)` 清除。开发循环从「截图报障 → 逆向 asar」变为「开审计 → 看报告 → 补词根」。
+
 ## v2.4.2 (2026-09-30)
 
 - **适配 DSH 0.2.0-rc.2 AppFrame**：新版三栏壳的中央栏在 Windows 标题栏壳（及 darwin）下自绘不透明 `--dsw-alias-bg-base` 底板（CSS-module 哈希类 `*_centerCol`），把氛围光/壁纸整个盖死——主题对其零规则。现按 `centerCol` 类名子串（与 `sidebarCol` 同一稳定策略）清为透明，框架透明规则照旧经 seam-stamper 盖章生效（rc.2 仍是 `sidebarCol` 直接父元素）。

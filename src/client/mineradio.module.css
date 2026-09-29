@@ -85,6 +85,63 @@
   background: transparent;
 }
 
+/* ---------- L0/L1 sweep: the catch-all floor ----------
+   The precise rules further down stay the LAST word (equal specificity +
+   later source order beats the sweep), while anything they don't name gets
+   a themed floor instead of a stock slab. :is() holds every rule at
+   (0,2,0) — level with stock surface rules, winning by injection order;
+   :where(...) blacklists add zero specificity. This is what retires the
+   per-release whack-a-mole: an un-adapted face now reads as frosted
+   champagne instead of an opaque `--dsw-alias-bg-base` slab. ---------- */
+
+/* L0 — layout bones. Stock paints the opaque base fill on structural
+   wrappers (the 0.2.0-rc.2 AppFrame centerCol did exactly this under the
+   Windows titlebar shell). CSS-module layout vocabulary survives
+   recompiles as class-name word roots, so lift the fill on the whole
+   family at once. Color component only — bones keep any background-image,
+   and no blur: glass belongs to surfaces, not to every wrapper. Strong
+   stock intent survives naturally: a rule like the composerSeat scrim
+   (0,3,0) outranks the sweep (0,2,0) and keeps its gradient. */
+[data-dsh-aqua]
+  :is([class*='frame'], [class*='Frame'], [class*='Col'], [class*='Body'], [class*='Stack'], [class*='Wrap'], [class*='Layer'], [class*='Seat'], [class*='container'], [class*='Container'], [class*='root'], [class*='Root'])
+  :where(:not([class*='scroll'], [class*='Scroll'])) {
+  background-color: transparent;
+}
+
+/* L1 — unknown surfaces. Any surface-vocabulary element takes the family
+   glass recipe (the same vars the precise rules consume). The blur rides
+   the existing knob at 60% and drops entirely in the performance gate.
+   Readability vocabulary (code / terminal / markdown / scrollbar /
+   progress) is excluded outright — those keep their stock fill. */
+[data-dsh-aqua]
+  :is([class*='panel'], [class*='Panel'], [class*='card'], [class*='Card'], [class*='bar'], [class*='Bar'], [class*='menu'], [class*='Menu'], [class*='dialog'], [class*='Dialog'], [class*='popover'], [class*='Popover'], [class*='dropdown'], [class*='Dropdown'], [class*='sheet'], [class*='Sheet'], [class*='drawer'], [class*='Drawer'], [class*='modal'], [class*='Modal'], [class*='banner'], [class*='Banner'], [class*='tip'], [class*='Tip'], [class*='pill'], [class*='Pill'], [class*='toast'], [class*='Toast'])
+  :where(:not([class*='code'], [class*='Code'], [class*='terminal'], [class*='Terminal'], [class*='xterm'], [class*='markdown'], [class*='Markdown'], [class*='scroll'], [class*='Scroll'], [class*='progress'], [class*='Progress'])) {
+  background: var(--dsh-aqua-glass-card-light);
+  box-shadow: var(--dsh-aqua-glass-shadow-light);
+  backdrop-filter: blur(calc(var(--dsh-aqua-blur, 24px) * 0.6)) saturate(1.12);
+}
+
+[data-dsh-aqua] body[data-ds-dark-theme]
+  :is([class*='panel'], [class*='Panel'], [class*='card'], [class*='Card'], [class*='bar'], [class*='Bar'], [class*='menu'], [class*='Menu'], [class*='dialog'], [class*='Dialog'], [class*='popover'], [class*='Popover'], [class*='dropdown'], [class*='Dropdown'], [class*='sheet'], [class*='Sheet'], [class*='drawer'], [class*='Drawer'], [class*='modal'], [class*='Modal'], [class*='banner'], [class*='Banner'], [class*='tip'], [class*='Tip'], [class*='pill'], [class*='Pill'], [class*='toast'], [class*='Toast'])
+  :where(:not([class*='code'], [class*='Code'], [class*='terminal'], [class*='Terminal'], [class*='xterm'], [class*='markdown'], [class*='Markdown'], [class*='scroll'], [class*='Scroll'], [class*='progress'], [class*='Progress'])) {
+  background: var(--dsh-aqua-glass-card-dark);
+  box-shadow: var(--dsh-aqua-glass-shadow-dark);
+}
+
+[data-dsh-aqua][data-dsh-aqua-perf='performance']
+  :is([class*='panel'], [class*='Panel'], [class*='card'], [class*='Card'], [class*='bar'], [class*='Bar'], [class*='menu'], [class*='Menu'], [class*='dialog'], [class*='Dialog'], [class*='popover'], [class*='Popover'], [class*='dropdown'], [class*='Dropdown'], [class*='sheet'], [class*='Sheet'], [class*='drawer'], [class*='Drawer'], [class*='modal'], [class*='Modal'], [class*='banner'], [class*='Banner'], [class*='tip'], [class*='Tip'], [class*='pill'], [class*='Pill'], [class*='toast'], [class*='Toast'])
+  :where(:not([class*='code'], [class*='Code'], [class*='terminal'], [class*='Terminal'], [class*='xterm'], [class*='markdown'], [class*='Markdown'], [class*='scroll'], [class*='Scroll'], [class*='progress'], [class*='Progress'])) {
+  backdrop-filter: none;
+}
+
+/* Surface audit (console: __mineradioAudit()): gold dashed outline on
+   every element the scanner flagged as an un-adapted opaque slab. Only
+   renders while the audit attribute is on <html>, so zero cost otherwise. */
+[data-dsh-aqua-audit] [data-dsh-aqua-unthemed] {
+  outline: 1px dashed rgb(244 210 138 / 0.9);
+  outline-offset: -1px;
+}
+
 /* The header card floats ABOVE the transcript: the scroll body slides up
    behind the frosted glass (negative margin) and its padding starts content
    below the card, so scrolling text passes under the header and stays

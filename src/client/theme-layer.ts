@@ -1265,6 +1265,11 @@ export class MineradioLayer {
   /** Write the knob-driven CSS variables and mode attributes onto <html>. */
   private applySettings(): void {
     const style = document.documentElement.style
+    // Reflect the performance gate for CSS-side gating (the L1 catch-all
+    // glass drops its backdrop blur under 'performance'; see the sweep in
+    // mineradio.module.css). Kept in applySettings so mount, tier changes,
+    // scene bundles and enable flips all ride the same write.
+    document.documentElement.setAttribute('data-dsh-aqua-perf', this.settings.perf)
     style.setProperty('--dsh-aqua-blur', `${this.settings.blur}px`)
     // Frost 0-100 → a 0-1.0 alpha multiplier (50 = 1x). It is CAPPED AT 1.0:
     // the dark surfaces mix `calc(X% * var(--dsh-aqua-frost))`, so any cap

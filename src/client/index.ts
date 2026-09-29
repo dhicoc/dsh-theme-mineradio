@@ -20,6 +20,7 @@ import { MineradioAppearanceRow, type MineradioAppearanceRowInjected } from './M
 import { createMineradioRowStore, type MineradioSettingsPayload } from './settings-store.ts'
 import { en, NS, zh } from './locales.ts'
 import { MineradioLayer } from './theme-layer.ts'
+import { runSurfaceAudit } from './surface-audit.ts'
 // Side-effect imports: the theme-layer stylesheet (unloaded with the plugin)
 // and the self-hosted font @font-face (no shell dependency).
 import './mineradio.module.css'
@@ -33,6 +34,21 @@ export const inject = ['theme', 'slots', 'locale']
  * @param ctx - client cordis context.
  */
 export function apply(ctx: Context): void {
+  // Dev-tool console API: `__mineradioAudit()` sweeps the live page for
+  // un-adapted opaque surfaces (stamps gold outlines + copies a report),
+  // `__mineradioAudit(false)` clears the stamps. Self-guarding: it warns
+  // and no-ops while the theme layer is off.
+  ;(window as unknown as Record<string, unknown>).__mineradioAudit = (clear?: boolean) => {
+    if (clear === false) {
+      for (const el of document.body.querySelectorAll('[data-dsh-aqua-unthemed]')) {
+        el.removeAttribute('data-dsh-aqua-unthemed')
+      }
+      document.documentElement.removeAttribute('data-dsh-aqua-audit')
+      return
+    }
+    return runSurfaceAudit()
+  }
+
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-mineradio: settings dictionaries')
 
   // The layer owns its lifecycle: enable flag, token stack, and CSS attribute
