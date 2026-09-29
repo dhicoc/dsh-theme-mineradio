@@ -1,0 +1,35 @@
+name: Publish to npm
+
+# 自动发布到 npm。两种触发方式（任一即可）：
+#   1. 在 GitHub 上创建一个 Release（published）——推荐，方便写变更说明；
+#   2. 推送一个形如 v2.4.0 的 tag（tag 必须与 package.json 的 version 一致）。
+#
+# 说明：lib/ 产物（含 minify 后的 lib/client.js）已随仓库提交，发布路径不构建、
+# 不安装依赖，因此不受 devDependencies 里新旧 client 包混线的 peer 解析影响。
+on:
+  release:
+    types: [published]
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    # 只需读代码；发布凭证通过 NODE_AUTH_TOKEN 传入，不需要写权限。
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Publish to npm
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
