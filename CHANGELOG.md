@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.4.2 (2026-09-30)
+
+- **适配 DSH 0.2.0-rc.2 AppFrame**：新版三栏壳的中央栏在 Windows 标题栏壳（及 darwin）下自绘不透明 `--dsw-alias-bg-base` 底板（CSS-module 哈希类 `*_centerCol`），把氛围光/壁纸整个盖死——主题对其零规则。现按 `centerCol` 类名子串（与 `sidebarCol` 同一稳定策略）清为透明，框架透明规则照旧经 seam-stamper 盖章生效（rc.2 仍是 `sidebarCol` 直接父元素）。
+- **右栏 details 玻璃复活**：rc.2 把 `detailsCol` 换成了带稳定 `data-rightbar-col` 属性的右栏轨道，旧的 details 盖章选择器落空；现补 `data-rightbar-col` 锚点 seam，`[data-dsh-details]` 透明规则在两种壳上都恢复。
+
 ## v2.3.8 (2026-09-05)
 
 - **Jobs / 命令 PopupSelect / Cordis / HoverCard 入家族**：Jobs 下拉是无 `role` 的 `ul._menu`；斜杠命令后的候选卡外壳是 `_card`（内层才是 `listbox`）；Cordis 插件面板是 `data-cordis-panel`。三者原先都是 `--dsw-specific-menu` 实心板。会话/工作区 HoverCard 不再钉死 `_card_1b2ny_13` 哈希（portal 到 `body` 的 `_card`）。桌面设置 overlay 的原生 `<select>` 与目标条编辑框一并清掉实心底。

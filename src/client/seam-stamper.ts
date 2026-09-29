@@ -34,8 +34,12 @@ const SEAMS: readonly Seam[] = [
   { attribute: 'data-dsh-surface', selector: 'button[class*="newSession"]' },
   // Trajectory view (the only composer-overlay view today).
   { attribute: 'data-dsh-trajectory', selector: '[data-conversation-composer-overlay]' },
-  // Details panel (topmost `root` under the details column).
+  // Details panel (topmost `root` under the details column). 0.1.x names the
+  // column `detailsCol`; 0.2.0-rc.2 replaced it with the rightbar track whose
+  // column element carries the stable `data-rightbar-col` attribute — keep
+  // both seams so the stamp resolves on either shell.
   { attribute: 'data-dsh-details', selector: '[class*="detailsCol"] [class*="root"]', first: true },
+  { attribute: 'data-dsh-details', selector: '[data-rightbar-col] [class*="root"]', first: true },
   // Composer bar root: the composer card's direct parent.
   { attribute: 'data-dsh-inputbar', selector: ':has(> [data-composer-card])' },
   // Composer attach "+" button.

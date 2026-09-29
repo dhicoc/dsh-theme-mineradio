@@ -71,6 +71,15 @@
   background: transparent;
 }
 
+/* DSH 0.2.0-rc.2: the AppFrame's center column paints its own opaque
+   `--dsw-alias-bg-base` fill under the Windows titlebar shell (and on
+   darwin), reading as a solid slab over the ambient glow. The stable part
+   of its CSS-module class survives recompiles as the `centerCol` substring
+   (same policy as `sidebarCol`), so lift the fill here. */
+[data-dsh-aqua] [class*='centerCol'] {
+  background: transparent;
+}
+
 [data-dsh-aqua] [data-phase],
 [data-dsh-aqua] [data-dsh-details] {
   background: transparent;
