@@ -193,7 +193,7 @@ export const MINERADIO_TOKEN_OVERRIDES: ThemeTokenOverrides = {
   '--dsw-specific-sidebar-nav-item-active': { light: 'rgba(244, 210, 138, 0.18)', dark: 'rgba(26, 29, 34, 0.55)' },
   '--dsw-specific-sidebar-nav-item-hover': { light: 'rgba(244, 210, 138, 0.12)', dark: 'rgba(21, 23, 28, 0.55)' },
   '--dsw-specific-sidebar-nav-item-active-accent': { light: CHAMPAGNE_DEEP, dark: CHAMPAGNE },
-  '--dsw-specific-input-major': { light: '#FFFFFF', dark: 'color-mix(in srgb, rgb(16 18 22) calc(55% * var(--dsh-aqua-frost, 1)), transparent)' },
+  '--dsw-specific-input-major': { light: 'rgba(255, 255, 255, 0.55)', dark: 'color-mix(in srgb, rgb(16 18 22) calc(55% * var(--dsh-aqua-frost, 1)), transparent)' },
   '--dsw-specific-login-input': { light: '#F2EAE0', dark: 'color-mix(in srgb, rgb(13 14 17) calc(55% * var(--dsh-aqua-frost, 1)), transparent)' },
   '--dsw-specific-menu': { light: '#F0E9DC', dark: 'color-mix(in srgb, rgb(21 23 28) 92%, transparent)' },
   '--dsw-specific-selector': { light: '#F0E9DC', dark: 'color-mix(in srgb, rgb(28 31 37) calc(55% * var(--dsh-aqua-frost, 1)), transparent)' },
