@@ -344,9 +344,17 @@ export function startSurfaceCover(): SurfaceCoverHandle {
     const vw = window.innerWidth
     const vh = window.innerHeight
     const ground = rect.width >= vw * GROUND_VIEWPORT_RATIO && rect.height >= vh * GROUND_VIEWPORT_RATIO
-    if (ground && veil === null) {
-      // Page ground: only the fill is lifted so the ambient backdrop reaches
-      // the eye — a gradient over the whole viewport would hide it.
+    const area = rect.width * rect.height
+    // Structural, in-flow slabs (the conversation column is `.Dc7zOa_root`,
+    // painted with `--dsw-alias-bg-base`; the frame columns too) are the
+    // fluid's window — the L0 skeleton layer lifts their stock fill so the
+    // ambient backdrop shows through. Filming them, even with the light veil,
+    // puts a plate back over the fluid: that IS the "ink fill" look. Overlays
+    // (fixed/absolute: dialogs, popovers) keep the film — they need a body.
+    const position = computed.position
+    const inFlow = position === 'static' || position === 'relative'
+    const structural = ground || (area > vw * vh * LARGE_AREA_RATIO && inFlow)
+    if (structural && veil === null) {
       el.setAttribute(COVER_BONE_ATTRIBUTE, '')
       bones += 1
       return
@@ -354,18 +362,13 @@ export function startSurfaceCover(): SurfaceCoverHandle {
     if (veil === null) el.setAttribute(COVER_SURFACE_ATTRIBUTE, '')
     else el.setAttribute(COVER_VEIL_ATTRIBUTE, veil)
     surfaces += 1
-    // Blur belongs to panes. Below the blur floor it costs more than it shows,
-    // and across a whole column (a quarter of the viewport) it smooths the
-    // ambient backdrop into a flat slab — the "ink fill" look. Both keep the
-    // light film and the specular rim instead.
-    const area = rect.width * rect.height
-    if (area < BLUR_AREA || area > vw * vh * LARGE_AREA_RATIO) el.setAttribute(COVER_FLAT_ATTRIBUTE, '')
+    // Blur belongs to panes: below the blur floor it costs more than it shows.
+    if (area < BLUR_AREA) el.setAttribute(COVER_FLAT_ATTRIBUTE, '')
     // Pane-scale faces also join the spotlight/tilt set (the glow overlay is
     // maintained by spot-core for every stamped pane). Absolute/fixed panes
     // are left out: the spot rule sets `position: relative`, which would
     // re-anchor them, and `isolation` would trap their popovers.
-    const position = computed.position
-    if (rect.width * rect.height >= PANE_AREA && (position === 'static' || position === 'relative')) {
+    if (area >= PANE_AREA && inFlow) {
       // Never clobber a spot the seam stamper already placed.
       if (!el.hasAttribute(COVER_SPOT_ATTRIBUTE)) {
         el.setAttribute(COVER_SPOT_ATTRIBUTE, COVER_SPOT_OWNER)
