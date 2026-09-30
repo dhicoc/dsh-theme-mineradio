@@ -1,6 +1,32 @@
 # Changelog
 
-## v2.5.3 (2026-09-30)
+## v3.0.0 (2026-09-30)
+
+**覆盖机制重写：从「类名词根选择器」改为「运行时角色普查 + 保证优先级」，并以计算样式普查作为唯一判定证据。**
+
+### 根因（v2.5.3 已修，此处记录全貌）
+
+长期「对话主区域 ink 填充」的真凶是主题**自己**把整页底 token 覆盖成不透明：
+`theme-layer.ts` 的 `--dsw-alias-bg-base` 原为不透明的 `#08090B`。该 token 在 0.2.0-rc.2 里被 **42 处背景**消费（AppFrame `.frame`、`[data-windows-titlebar] .centerCol`、DockKit `.tabHost`、会话列 `.Dc7zOa_root`…），凡选择器没扫到的消费者就保持纯黑。实测：不透明时这三块均为 `rgb(8,9,11)`；改半透明后全部消失。
+
+### 新增机制
+
+- **运行时角色普查**（`role-census.ts`）：读**计算值与几何**判定角色（`ground/structure/pane/overlay/control/chip`），不看类名。角色规则带 `!important`，因此以优先级取胜，不再比特异性。
+- **伪元素板子识别**（`data-md-veil`）：宿主把板子画在 `::before` 上的（如智能体团队面板），普查标记**承载者**，配方落在伪元素上，元素自身保持干净（避免双层玻璃）。
+- **跳过已精装面**：带家族内缘（`inset 0 0 0 1px …`）的面不被打戳——这根治了「兜底盖掉手工精调」的回归。
+- **硬约束内建**：五个定位锚点（`.frame`/`.overlayLayer`/`.ledger`/`.composerSeat`/`.surface`）拒绝上玻璃；`backdrop-filter` 会重锚就地 `fixed` 后代，故走伪元素。
+- **可读性豁免**：`pre/code/input/textarea/xterm/markdown/bannerWrap` 及其子树保持实底。
+
+### 顺带修复
+
+- `--dsw-specific-input-major` 浅色侧原为不透明 `#FFFFFF`（深色侧已半透明）——浅色模式下输入框会挡住壁纸。
+- `overlay` 角色缺 transition，菜单/对话框状态变化是硬切。
+
+### 验证：16 道门禁（`outputs/harness/verify-all.mjs`）
+
+全 UI 复刻页（真实 rc.2 源样式、11 个区域）：**22 块实心板 → 0**。含深浅两种调色板、token 够不到的 8 处字面量/SVG 表面、发布产物加载、以及每道门禁的反向验证。
+
+# Changelog## v2.5.3 (2026-09-30)
 
 **修复长期存在的「对话主区域 ink 填充」——根因在主题自己的 token 取值里。**
 
