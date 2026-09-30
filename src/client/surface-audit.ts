@@ -16,7 +16,7 @@
  *   __mineradioAudit()        — scan, stamp, report (copies to clipboard)
  *   __mineradioAudit(false)   — clear stamps
  */
-import { COVER_SURFACE_ATTRIBUTE, COVER_BONE_ATTRIBUTE, paintedAlpha, SURFACE_POLICY } from './surface-cover.ts'
+import { COVER_SURFACE_ATTRIBUTE, COVER_BONE_ATTRIBUTE, COVER_VEIL_ATTRIBUTE, paintedAlpha, SURFACE_POLICY } from './surface-cover.ts'
 
 /** The theme attribute the whole layer is gated on. */
 const AQUA = 'data-dsh-aqua'
@@ -25,7 +25,7 @@ const STAMP = 'data-dsh-aqua-unthemed'
 /** Audit mode attribute on <html>; toggles the outline stylesheet. */
 const MODE = 'data-dsh-aqua-audit'
 /** Faces the cover already dressed — never reported. */
-const COVERED_SELECTOR = `[${COVER_SURFACE_ATTRIBUTE}], [${COVER_BONE_ATTRIBUTE}]`
+const COVERED_SELECTOR = `[${COVER_SURFACE_ATTRIBUTE}], [${COVER_BONE_ATTRIBUTE}], [${COVER_VEIL_ATTRIBUTE}]`
 
 /** Elements that never count as un-adapted slabs. */
 const SKIP_SELECTOR = [

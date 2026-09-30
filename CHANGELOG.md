@@ -4,6 +4,8 @@
 
 按实机反馈收紧自动覆盖策略（2.6.0 尚未发布，直接发 2.6.1）：
 
+- **修复：宿主把板子画在伪元素上时整片漏网**。智能体团队弹窗（`dsh-experimental-client-ui-agent-team`）的元素本身透明，看得见的板子是 `.EBLgjq_panel::before { content:""; position:absolute; inset:0; background:var(--dsw-specific-menu); backdrop-filter:var(--dsw-menu-backdrop-filter) }` 画的——于是所有「测元素自身背景」的机制（L1 通配、审计器、覆盖器）都读成「没有背景」而直接跳过；L1 其实按 `panel` 词根匹配上了，但它画的渐变被 `::before` 盖在下面，肉眼毫无变化。现覆盖器会识别「铺满整个盒子 + 有上漆」的 `::before`/`::after`，盖 `data-dsh-aqua-veil`，由 L2 直接把家族配方画到那个伪元素上（`inset`/圆角/定位一律不动），同时把宿主元素自身清空，避免叠出两层玻璃与两个 backdrop root。
+
 - **覆盖面放宽，堵掉三类漏网面**：
   - **尺寸**：旧判据要求两轴 ≥80px，而宿主大量卡片只有 60px 高（`kuvljq_header`「已编辑 N 个文件」、`flL80G_file` 交付物卡都是 60px）。改为「宽 ≥96 且高 ≥24 且面积 ≥6000」——图标（40×40）仍然不碰，60px 卡片接住。
   - **黑名单改为只判元素自身**：旧实现用 `el.closest()` 判祖先，而工具卡片挂在 `[class*='markdown']` 包装里、整个应用挂在 `#root` 里，祖先一命中就整片豁免。现在 `matches()` 只看元素自己；真正的可读内容（`pre`/`code`/输入控件/媒体/图表）仍按自身排除。

@@ -42,11 +42,17 @@ export const COVER_FLAT_ATTRIBUTE = 'data-dsh-aqua-flat'
 export const COVER_SPOT_ATTRIBUTE = 'data-dsh-aqua-spot'
 /** Value marking a spot the cover owns (an empty value belongs to the seams). */
 const COVER_SPOT_OWNER = 'cover'
+/** Stamp for faces the HOST paints with a pseudo-element: value is the pseudo
+ *  (`before`/`after`). Dressing the element itself would stay hidden behind
+ *  that veil — the agent-team popover (`EBLgjq_panel::before`) is exactly this
+ *  shape, which is why every element-measuring rule missed it. */
+export const COVER_VEIL_ATTRIBUTE = 'data-dsh-aqua-veil'
 /** Opt-out for a host element that must stay stock-painted. */
 export const COVER_IGNORE_ATTRIBUTE = 'data-dsh-aqua-cover-ignore'
 /** Every stamp this module owns; used for release and for teardown. */
 const OWN_ATTRIBUTES = [
-  COVER_SURFACE_ATTRIBUTE, COVER_BONE_ATTRIBUTE, COVER_FLAT_ATTRIBUTE, COVER_SPOT_ATTRIBUTE,
+  COVER_SURFACE_ATTRIBUTE, COVER_BONE_ATTRIBUTE, COVER_FLAT_ATTRIBUTE,
+  COVER_SPOT_ATTRIBUTE, COVER_VEIL_ATTRIBUTE,
 ] as const
 
 /** Elements that never count as un-adapted slabs.
@@ -167,6 +173,41 @@ export function paintedAlpha(value: string): number {
 const alphaOf = paintedAlpha
 
 /**
+ * Is a pseudo-element painting the face for its host?
+ *
+ * Host popovers and menus commonly keep the element itself transparent and
+ * paint the visible plate on `::before` (`content:""; position:absolute;
+ * inset:0; background: var(--dsw-specific-menu)`). Measuring the element alone
+ * reads "no background" and skips exactly the faces users notice most.
+ *
+ * @param el - candidate host element.
+ * @param rect - the element's border box.
+ * @returns `before` / `after` when that pseudo covers the box with a paint,
+ *   otherwise null.
+ */
+function veilOf(el: Element, rect: DOMRect): 'before' | 'after' | null {
+  for (const pseudo of ['::before', '::after'] as const) {
+    const style = getComputedStyle(el, pseudo)
+    const content = style.content
+    if (content === 'none' || content === 'normal' || content === '') continue
+    if (style.position !== 'absolute' && style.position !== 'fixed') continue
+    if (style.display === 'none' || style.visibility === 'hidden') continue
+    if (alphaOf(style.backgroundColor) < PAINT_ALPHA && style.backgroundImage === 'none') continue
+    // Cover test: pinned to all four edges, or sized to the box.
+    const near = (value: string): boolean => {
+      const px = Number.parseFloat(value)
+      return Number.isNaN(px) || Math.abs(px) <= 2
+    }
+    const pinned = near(style.top) && near(style.bottom) && near(style.left) && near(style.right)
+    const sized = Number.parseFloat(style.width) >= rect.width - 2
+      && Number.parseFloat(style.height) >= rect.height - 2
+    if (!pinned && !sized) continue
+    return pseudo === '::before' ? 'before' : 'after'
+  }
+  return null
+}
+
+/**
  * The shared face signature. The audit reports on exactly what the cover
  * dresses, so the two can never drift apart — export the numbers instead of
  * restating them.
@@ -203,26 +244,37 @@ export function startSurfaceCover(): SurfaceCoverHandle {
 
   const stampOf = (el: Element): string | null =>
     el.hasAttribute(COVER_SURFACE_ATTRIBUTE) ? COVER_SURFACE_ATTRIBUTE
-      : el.hasAttribute(COVER_BONE_ATTRIBUTE) ? COVER_BONE_ATTRIBUTE
-        : null
+      : el.hasAttribute(COVER_VEIL_ATTRIBUTE) ? COVER_VEIL_ATTRIBUTE
+        : el.hasAttribute(COVER_BONE_ATTRIBUTE) ? COVER_BONE_ATTRIBUTE
+          : null
 
-  /** Release one element's stamps and forget its decision. */
+  /** Release one element's stamps and forget its decision (idempotent). */
   const release = (el: Element): void => {
     const stamp = stampOf(el)
+    if (stamp === null && !el.hasAttribute(COVER_FLAT_ATTRIBUTE)) return
     if (el.getAttribute(COVER_SPOT_ATTRIBUTE) === COVER_SPOT_OWNER) {
       el.removeAttribute(COVER_SPOT_ATTRIBUTE)
       spots -= 1
     }
-    for (const attribute of OWN_ATTRIBUTES) el.removeAttribute(attribute)
-    if (stamp === COVER_SURFACE_ATTRIBUTE) surfaces -= 1
+    el.removeAttribute(COVER_SURFACE_ATTRIBUTE)
+    el.removeAttribute(COVER_VEIL_ATTRIBUTE)
+    el.removeAttribute(COVER_BONE_ATTRIBUTE)
+    el.removeAttribute(COVER_FLAT_ATTRIBUTE)
+    if (stamp === COVER_SURFACE_ATTRIBUTE || stamp === COVER_VEIL_ATTRIBUTE) surfaces -= 1
     else if (stamp === COVER_BONE_ATTRIBUTE) bones -= 1
   }
 
   /** Drop every stamp this module owns, anywhere in the tree. */
   const clearAll = (): void => {
-    const selector = [...OWN_ATTRIBUTES.map((a) => `[${a}]`), `[${COVER_SPOT_ATTRIBUTE}='${COVER_SPOT_OWNER}']`].join(', ')
+    const selector = [
+      ...OWN_ATTRIBUTES.map((attribute) => `[${attribute}]`),
+      `[${COVER_SPOT_ATTRIBUTE}='${COVER_SPOT_OWNER}']`,
+    ].join(', ')
     for (const el of document.querySelectorAll(selector)) {
-      for (const attribute of OWN_ATTRIBUTES) el.removeAttribute(attribute)
+      el.removeAttribute(COVER_SURFACE_ATTRIBUTE)
+      el.removeAttribute(COVER_VEIL_ATTRIBUTE)
+      el.removeAttribute(COVER_BONE_ATTRIBUTE)
+      el.removeAttribute(COVER_FLAT_ATTRIBUTE)
       if (el.getAttribute(COVER_SPOT_ATTRIBUTE) === COVER_SPOT_OWNER) el.removeAttribute(COVER_SPOT_ATTRIBUTE)
     }
   }
@@ -252,11 +304,10 @@ export function startSurfaceCover(): SurfaceCoverHandle {
   const decide = (el: Element): void => {
     queued.delete(el)
     if (disposed || !el.isConnected) return
-    const previous = stampOf(el)
     decided.add(el)
     measured += 1
-    // A re-check (attribute flip, resize, rescan) may have kept an old stamp.
-    if (previous !== null) release(el)
+    // A re-check (attribute flip, resize, rescan) may have kept old stamps.
+    release(el)
     if (!(el instanceof HTMLElement)) return
     // The page ground is painted by the theme's own body rule: skip the two
     // document elements by identity. `#root` must NOT be skipped as an
@@ -272,19 +323,23 @@ export function startSurfaceCover(): SurfaceCoverHandle {
     const computed = getComputedStyle(el)
     const alpha = alphaOf(computed.backgroundColor)
     // A face paints something: a tint, a solid fill or a gradient wash. A
-    // fully transparent box is a layout wrapper and stays untouched.
-    if (alpha < PAINT_ALPHA && computed.backgroundImage === 'none') return
+    // fully transparent box is a layout wrapper — unless its pseudo-element
+    // paints the plate for it (host popovers do exactly that).
+    const ownPaint = alpha >= PAINT_ALPHA || computed.backgroundImage !== 'none'
+    const veil = ownPaint ? null : veilOf(el, rect)
+    if (!ownPaint && veil === null) return
     const vw = window.innerWidth
     const vh = window.innerHeight
     const ground = rect.width >= vw * GROUND_VIEWPORT_RATIO && rect.height >= vh * GROUND_VIEWPORT_RATIO
-    if (ground) {
+    if (ground && veil === null) {
       // Page ground: only the fill is lifted so the ambient backdrop reaches
       // the eye — a gradient over the whole viewport would hide it.
       el.setAttribute(COVER_BONE_ATTRIBUTE, '')
       bones += 1
       return
     }
-    el.setAttribute(COVER_SURFACE_ATTRIBUTE, '')
+    if (veil === null) el.setAttribute(COVER_SURFACE_ATTRIBUTE, '')
+    else el.setAttribute(COVER_VEIL_ATTRIBUTE, veil)
     surfaces += 1
     if (rect.width * rect.height < BLUR_AREA) el.setAttribute(COVER_FLAT_ATTRIBUTE, '')
     // Pane-scale faces also join the spotlight/tilt set (the glow overlay is

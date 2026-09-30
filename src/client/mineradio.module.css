@@ -197,6 +197,33 @@
   backdrop-filter: none;
 }
 
+/* Veil faces: the host paints the plate on a pseudo-element
+   (`content:""; position:absolute; inset:0; background:var(…)`), so dressing
+   the element itself stays hidden behind it. The agent-team popover
+   (`EBLgjq_panel::before`) and a stack of other menus are built this way.
+   The veil keeps its geometry and takes the family recipe instead. */
+[data-dsh-aqua] [data-dsh-aqua-veil='before']::before,
+[data-dsh-aqua] [data-dsh-aqua-veil='after']::after {
+  background: var(--dsh-aqua-glass-auto);
+  box-shadow: var(--dsh-aqua-glass-auto-shadow);
+  backdrop-filter: blur(calc(var(--dsh-aqua-blur, 24px) * 0.6)) saturate(1.12);
+}
+
+/* The veil IS the surface: keep the element itself inert so the L0/L1 sweeps
+   (which do match a `panel` root here) cannot stack a second glass layer and
+   a second backdrop root on top of it. The host's own drop shadow stays. */
+[data-dsh-aqua] [data-dsh-aqua-veil] {
+  background: none;
+  backdrop-filter: none;
+}
+
+[data-dsh-aqua] [data-dsh-aqua-veil][data-dsh-aqua-flat]::before,
+[data-dsh-aqua] [data-dsh-aqua-veil][data-dsh-aqua-flat]::after,
+[data-dsh-aqua][data-dsh-aqua-perf='performance'] [data-dsh-aqua-veil]::before,
+[data-dsh-aqua][data-dsh-aqua-perf='performance'] [data-dsh-aqua-veil]::after {
+  backdrop-filter: none;
+}
+
 [data-dsh-aqua][data-dsh-aqua-perf='performance'] [data-dsh-aqua-auto] {
   backdrop-filter: none;
 }
