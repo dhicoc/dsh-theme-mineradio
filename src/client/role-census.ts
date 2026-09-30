@@ -99,6 +99,35 @@ const ANCHOR_SELECTOR = [
   '[data-dsh-trajectory]',
 ].join(', ')
 
+/**
+ * The theme's OWN injected layers, which the census must never dress.
+ *
+ * The census marks any element that paints something and is large enough, and that
+ * includes the layers this plugin puts on the page: the fluid canvas, the wallpaper, the
+ * whale, the star river, the dot mesh, the dispersion sheet and the edge fades. Every one
+ * of them is a `position: fixed` full-viewport backdrop. Dressing them costs twice over:
+ * family glass over them would grey out the very backdrop the theme exists to show, and a
+ * `backdrop-filter` on a full-viewport canvas is the most expensive thing it could blur.
+ *
+ * Measured: without this skip all six were stamped `overlay` with glass and a blur.
+ * The markers below are the ones the plugin writes (whale.ts:76, critters.ts:102,
+ * star-river.ts:133, mesh.ts:37), matched by attribute so a change of element is safe.
+ */
+const OWN_LAYER_SELECTOR = [
+  '[data-dsh-aqua-fluid]',
+  '[data-dsh-aqua-wallpaper]',
+  '[data-dsh-aqua-wallpaper-layer]',
+  '[data-dsh-aqua-whale]',
+  '[data-dsh-mineradio-stars]',
+  '[data-dsh-aqua-mesh]',
+  '[data-dsh-aqua-dispersion]',
+  '[data-dsh-aqua-fade]',
+  '[data-dsh-aqua-glow]',
+  '[data-dsh-aqua-badge-hidden]',
+  '[data-dsh-aqua-harness-badge]',
+  '[data-dsh-aqua-harness-badge-text]',
+].join(', ')
+
 function readabilitySelector(): string {
   const override = (globalThis as { __MD_READABILITY__?: string }).__MD_READABILITY__
   return override ?? DEFAULT_READABILITY
@@ -324,6 +353,10 @@ export function startRoleCensus(): CensusHandle {
     if (isReadability(el)) return
     // Positional anchors keep the host's overlay geometry intact.
     if (el.matches(ANCHOR_SELECTOR)) return
+    // The plugin's own backdrop layers stay untouched: glass over them would hide the
+    // backdrop they exist to show, and a blur on a full-viewport canvas is the most
+    // expensive thing the census could do.
+    if (el.matches(OWN_LAYER_SELECTOR) || el.closest(OWN_LAYER_SELECTOR) !== null) return
 
     const rect = el.getBoundingClientRect()
     if (rect.width < POLICY.minWidth || rect.height < POLICY.minHeight) return
