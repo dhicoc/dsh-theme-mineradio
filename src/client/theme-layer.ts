@@ -1854,6 +1854,16 @@ export class MineradioLayer {
     return this.coverStats()
   }
 
+  /**
+   * Stop the automatic cover and drop its stamps, keeping the rest of the
+   * theme mounted. Emergency switch: it isolates a plate the cover painted
+   * from one the host or a precise rule painted, without a restart.
+   */
+  coverOff(): void {
+    this.coverHandle?.dispose()
+    this.coverHandle = undefined
+  }
+
   /** Attach the cursor-spotlight pointer feeds (idempotent per mount). */
   private startSpotlightFeed(): void {
     if (this.spotlightDisposer !== undefined) return

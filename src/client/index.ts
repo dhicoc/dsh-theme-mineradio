@@ -67,6 +67,50 @@ export function apply(ctx: Context): void {
     return stats
   }
 
+  // Emergency switch: `__mineradioCoverOff()` drops every stamp the automatic
+  // cover placed and stops it, leaving the rest of the theme alone. If a
+  // suspicious plate disappears after running it, the cover painted it; if the
+  // plate stays, something else does and the cover is innocent.
+  ;(window as unknown as Record<string, unknown>).__mineradioCoverOff = () => {
+    layer.coverOff()
+    console.info('[mineradio cover] stopped, every cover stamp removed')
+  }
+
+  // Forensics: `__mineradioBlame()` walks the layers under the middle of the
+  // viewport (or the point you pass) and reports whichever of them paints —
+  // owner, paint, and whether the theme or the cover touched it. Needs no
+  // DevTools selection, so it works with the panel closed.
+  ;(window as unknown as Record<string, unknown>).__mineradioBlame = (x?: number, y?: number) => {
+    const cx = x ?? Math.round(window.innerWidth / 2)
+    const cy = y ?? Math.round(window.innerHeight / 2)
+    const stack: Array<Record<string, unknown>> = []
+    for (const el of document.elementsFromPoint(cx, cy)) {
+      const style = getComputedStyle(el)
+      const rect = el.getBoundingClientRect()
+      stack.push({
+        tag: el.tagName.toLowerCase(),
+        cls: el.className?.toString().slice(0, 64) ?? '',
+        aqua: el
+          .getAttributeNames()
+          .filter((name) => name.startsWith('data-dsh'))
+          .map((name) => `${name}=${el.getAttribute(name) ?? ''}`)
+          .join(' '),
+        area: `${Math.round(rect.width)}x${Math.round(rect.height)}`,
+        position: style.position,
+        z: style.zIndex,
+        bgColor: style.backgroundColor,
+        bgImage: style.backgroundImage.slice(0, 80),
+        shadow: style.boxShadow.slice(0, 80),
+        backdrop: style.backdropFilter,
+      })
+    }
+    console.table(stack)
+    const report = JSON.stringify({ at: [cx, cy], stack }, null, 1)
+    console.info(report)
+    void navigator.clipboard?.writeText(report)
+    return stack
+  }
+
   // Two store mirrors of the same layer state: one for the Plugins card
   // (master switch) and one for the General section's Appearance row (knobs).
   const pluginStore = createMineradioRowStore()
