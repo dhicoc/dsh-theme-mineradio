@@ -1,6 +1,15 @@
 # Changelog
 
-## v2.5.2 (2026-09-30)
+## v2.5.3 (2026-09-30)
+
+**修复长期存在的「对话主区域 ink 填充」——根因在主题自己的 token 取值里。**
+
+- 真凶：`theme-layer.ts` 把 `--dsw-alias-bg-base` 覆盖成**不透明**的 `#08090B`。该 token 在 0.2.0-rc.2 里被 **42 处背景**消费（AppFrame `.frame`、`[data-windows-titlebar] .centerCol`、DockKit `.tabHost`、会话列 `.Dc7zOa_root`…），凡是主题选择器没扫到的消费者就保持不透明 ⇒ 整页成黑板，fluid/壁纸永远透不出来。**从该取值引入起就一直存在**，与 2.6 的自动覆盖无关。
+- 修复：改为 `color-mix(in srgb, #08090B calc(78% * var(--dsh-aqua-frost, 1)), transparent)`（light 同构）。`--dsh-aqua-frost` 旋钮继续调节底的厚度。
+- 实测（`outputs/harness/theme-ink-test.mjs`，三页对照、A 页为有效性闸门）：不透明 `#08090B` 时 `centerCol`/`tabHost`/会话列均为 `rgb(8,9,11)`；换成半透明 mix 后这三块全部消失。
+- 顺带纠正一处会误导所有后续测量的错误：`#08090B` 是**主题自己**的值，宿主的 dark `--dsw-alias-bg-base` 是 `rgb(21,21,23)`（`#151517`）。此前把它当「宿主的 INK」作判据，等于每次都在量自己的假设。
+
+# Changelog## v2.5.2 (2026-09-30)
 
 **修复长期存在的黑块：外壳（AppFrame / DockKit）铺的 INK 实心底，主题的词表一直没覆盖到。**
 
