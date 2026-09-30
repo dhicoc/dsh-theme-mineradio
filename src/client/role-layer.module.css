@@ -1,0 +1,209 @@
+/* ==========================================================================
+   Mineradio 3.0 — role stylesheet
+   ==========================================================================
+
+   This file is DELIBERATELY small. All coverage decisions live in the runtime
+   census (`role-census.ts`), which reads what the app actually paints and
+   stamps a role. This sheet only turns a role into a look.
+
+   WHY `!important` IS USED HERE (and why 2.x did not)
+   The 2.x theme dressed surfaces from class-name word roots at a fixed
+   (0,2,0). Measured against the real 0.2.0-rc.2 shell, that loses: the shell
+   paints `--dsw-alias-bg-base` on `._tabHost_…:not(._float_…)`,
+   `._emptyTabHost_…`, `._tabCell_…`, `._paneBody_…`, `._stripChrome_…` and
+   `._backing_…` — roots the word list never learned. Any host rule above
+   (0,2,0) wins outright, so the theme kept shipping a black plate.
+   `outputs/harness/mechanism-test.mjs` measures exactly this: the same
+   declaration at (0,2,0) loses, with `!important` it wins, on the same element.
+
+   The census compensates for the bluntness of `!important`: it refuses to
+   stamp any face that already carries the family rim (`inset 0 0 0 1px …`), so
+   hand-tuned panes keep their look and role rules never fight them.
+
+   Face vocabulary used below:
+     ground     viewport-filling slab      -> fill lifted only (ambient shows)
+     structure  in-flow large container    -> fill lifted only, no blur
+     pane       painted card/panel         -> full family glass
+     overlay    fixed/absolute popover     -> family glass + deeper shadow
+     control    interactive small part     -> glass sliver, no blur
+     chip       small painted decoration   -> tint only
+   ========================================================================== */
+
+/* ---------- tokens ---------- */
+
+[data-dsh-aqua] {
+  /* The family's light catch-light and body, split so every role can mix its
+     own weight from the same two ingredients. */
+  --md-edge: rgb(255 255 255 / 0.42);
+  --md-edge-soft: rgb(255 255 255 / 0.16);
+  --md-body-a: rgb(244 210 138 / 0.10);
+  --md-body-b: rgba(255 252 246 / 0.34);
+  --md-body-c: rgba(250 246 238 / 0.28);
+  --md-accent: rgb(154 111 44 / 0.14);
+}
+
+[data-dsh-aqua] body[data-ds-dark-theme] {
+  --md-edge: rgb(255 255 255 / 0.12);
+  --md-edge-soft: rgb(255 255 255 / 0.06);
+  --md-body-a: rgb(0 245 212 / 0.055);
+  --md-body-b: rgba(12 13 18 / 0.34);
+  --md-body-c: rgba(2 3 5 / 0.30);
+  --md-accent: rgb(0 245 212 / 0.12);
+}
+
+/* ---------- ground & structure: lift the fill, never paint over the fluid ---
+   These are the app's windows onto the ambient backdrop. Measured cause of the
+   long-standing black plate: the shell's tabHost/paneBody/backing painted
+   `--dsw-alias-bg-base` and nothing in the old theme reached it, so every
+   themed surface above sat on a black slab. */
+
+[data-dsh-aqua] [data-md-role='ground'],
+[data-dsh-aqua] [data-md-role='structure'] {
+  background-color: transparent !important;
+}
+
+/* ---------- pane: the full family glass ---------- */
+
+[data-dsh-aqua] [data-md-role='pane'] {
+  background-color: transparent !important;
+  background-image:
+    radial-gradient(120% 90% at 12% -10%, var(--md-edge) 0%, transparent 46%),
+    radial-gradient(90% 70% at 92% 6%, var(--md-accent) 0%, transparent 52%),
+    linear-gradient(150deg, var(--md-body-a) 0%, var(--md-body-b) 48%, var(--md-body-c) 100%) !important;
+  box-shadow:
+    inset 0 0 0 1px var(--md-edge-soft),
+    inset 0 1px 0 var(--md-edge),
+    inset 0 -1px 0 var(--md-accent),
+    0 2px 12px rgb(0 0 0 / 0.10) !important;
+  backdrop-filter: blur(calc(var(--dsh-aqua-blur, 22px) * 0.55)) saturate(1.16) !important;
+  -webkit-backdrop-filter: blur(calc(var(--dsh-aqua-blur, 22px) * 0.55)) saturate(1.16) !important;
+  transition: box-shadow 0.28s ease, background-color 0.28s ease, backdrop-filter 0.28s ease;
+}
+
+/* ---------- overlay: popovers, menus, dialogs ----------
+   `:not([data-md-veil])` matters: when the plate is drawn by a pseudo-element,
+   dressing the BOX as well would stack two glass layers over one plate. The
+   census marks the carrier, so exactly one of these two rules applies.
+   
+   MEASURED CONSTRAINT (outputs/rc2-source/overlays.md). A `backdrop-filter` on
+   an element makes it the containing block for its `position: fixed`
+   descendants. Surfaces that render a fixed child in place — the agent-team
+   panel, the subagent menu, the Cordis panel, `MenuSurface` — would have those
+   children re-anchored into them and clipped by their own `overflow: hidden`.
+   The host says so itself, verbatim, in its own stylesheets:
+   
+     "backdrop-filter on the panel itself would turn it into the containing
+      block for fixed descendants, so the member Tooltip bubbles would be
+      re-anchored into the panel and clipped by its hidden overflow."
+   
+   That is why those panels paint their plate with `::before` — and it is why the
+   census marks the carrier and this rule defers to the pseudo rule below. */
+
+[data-dsh-aqua] [data-md-role='overlay']:not([data-md-veil]) {
+  background-color: transparent !important;
+  background-image:
+    radial-gradient(120% 90% at 10% -12%, var(--md-edge) 0%, transparent 44%),
+    radial-gradient(100% 80% at 88% 4%, var(--md-accent) 0%, transparent 50%),
+    linear-gradient(150deg, var(--md-body-a) 0%, var(--md-body-b) 44%, var(--md-body-c) 100%) !important;
+  box-shadow:
+    inset 0 0 0 1px var(--md-edge-soft),
+    inset 0 1px 0 var(--md-edge),
+    0 18px 48px rgb(0 0 0 / 0.34) !important;
+  backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.2) !important;
+  -webkit-backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.2) !important;
+}
+
+/* A host popover whose plate is drawn by a covering pseudo-element (the
+   agent-team panel is exactly this: `.EBLgjq_panel::before { position:absolute;
+   inset:0; background:var(--dsw-specific-menu) }`). Testing only the element's
+   own background can never reach it, so the census marks the carrier and the
+   recipe moves onto the pseudo. The box keeps no glass of its own. */
+[data-dsh-aqua] [data-md-veil] {
+  background-color: transparent !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+[data-dsh-aqua] [data-md-veil='before']::before,
+[data-dsh-aqua] [data-md-veil='after']::after {
+  background-color: transparent !important;
+  background-image:
+    radial-gradient(120% 90% at 10% -12%, var(--md-edge) 0%, transparent 44%),
+    radial-gradient(100% 80% at 88% 4%, var(--md-accent) 0%, transparent 50%),
+    linear-gradient(150deg, var(--md-body-a) 0%, var(--md-body-b) 44%, var(--md-body-c) 100%) !important;
+  box-shadow:
+    inset 0 0 0 1px var(--md-edge-soft),
+    inset 0 1px 0 var(--md-edge) !important;
+  backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.2) !important;
+  -webkit-backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.2) !important;
+}
+
+/* ---------- control: small interactive parts ---------- */
+
+[data-dsh-aqua] [data-md-role='control'] {
+  background-color: transparent !important;
+  background-image: linear-gradient(150deg, var(--md-body-a) 0%, var(--md-body-c) 100%) !important;
+  box-shadow: inset 0 0 0 1px var(--md-edge-soft) !important;
+  transition: box-shadow 0.22s ease, background-color 0.22s ease;
+}
+
+[data-dsh-aqua] [data-md-role='control']:hover {
+  box-shadow:
+    inset 0 0 0 1px var(--md-edge-soft),
+    inset 0 1px 0 var(--md-edge),
+    0 6px 18px rgb(0 0 0 / 0.16) !important;
+}
+
+/* ---------- chip: small painted decoration ---------- */
+
+[data-dsh-aqua] [data-md-role='chip'] {
+  background-color: transparent !important;
+  background-image: linear-gradient(150deg, var(--md-body-a) 0%, var(--md-body-c) 100%) !important;
+}
+
+/* ---------- spotlight: panes big enough for the cursor glow ---------- */
+
+[data-dsh-aqua][data-dsh-aqua-spotlight] [data-md-spot] {
+  position: relative;
+  isolation: isolate;
+}
+
+/* Performance tier: drop the blur, keep the glass. */
+[data-dsh-aqua][data-dsh-aqua-perf='performance'] [data-md-role='pane'],
+[data-dsh-aqua][data-dsh-aqua-perf='performance'] [data-md-role='overlay'],
+[data-dsh-aqua][data-dsh-aqua-perf='performance'] [data-md-role='control'],
+[data-dsh-aqua][data-dsh-aqua-perf='performance'] [data-md-veil]::before,
+[data-dsh-aqua][data-dsh-aqua-perf='performance'] [data-md-veil]::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* ---------- readability carve-outs ----------
+   Code, terminals and file previews must stay legible: they keep their stock
+   fill and get no glass. The census skips them by tag/role; this is the belt to
+   that braces, in case a host release puts one behind a role we do stamp. */
+
+[data-dsh-aqua] pre,
+[data-dsh-aqua] code,
+[data-dsh-aqua] [class*='xterm'],
+[data-dsh-aqua] [data-code-block-content] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* ---------- never touch the host's positional anchors ----------
+   Measured (outputs/rc2-source/overlays.md): `.frame`, `.overlayLayer`, `.ledger`,
+   `.composerSeat` and `.surface` own the containing blocks that the host's
+   in-place `position: fixed` overlays depend on. Giving one of them a
+   `backdrop-filter`, `filter`, `transform` or `contain` silently re-anchors or
+   clips those overlays application-wide.
+
+   This is enforced by NOT STAMPING them, not by a defensive rule here. An
+   earlier revision of this file had a `[class*='_surface_'] { filter: none
+   !important }` guard; that was wrong twice over — it matched on hashed class
+   substrings (the fragile approach this rewrite exists to remove) and it would
+   have stripped legitimate filters from unrelated elements. Only `[data-md-role]`
+   selects glass, and the census never assigns those containers a glass role;
+   `assert-anchors-untouched.mjs` fails the pipeline if that ever changes.
+   ---------- */

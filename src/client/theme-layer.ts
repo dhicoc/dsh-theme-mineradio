@@ -19,6 +19,7 @@ import { fluidToneColors, HUE_BASE } from './fluid-tones.ts'
 import { deleteVideoBlob, loadVideoBlob, loadVideoHandle } from './wallpaper-store.ts'
 import { attachFluidInteractions } from './fluid-interactions.ts'
 import { startSeamStamper } from './seam-stamper.ts'
+import { startRoleCensus, type CensusHandle, type CensusStats } from './role-census.ts'
 import { startStationDial } from './station-dial.ts'
 import { mountWhale, type WhaleHandle } from './whale.ts'
 import { mountMesh, type MeshHandle } from './mesh.ts'
@@ -837,6 +838,8 @@ export class MineradioLayer {
   private interactionDisposer: (() => void) | undefined
   private themeListener: (() => void) | undefined
   private seamDisposer: (() => void) | undefined
+  /** Runtime role census: the coverage engine (see role-census.ts). */
+  private censusHandle: CensusHandle | undefined
   private spotlightDisposer: (() => void) | undefined
   private whaleHandle: WhaleHandle | undefined
   private meshHandle: MeshHandle | undefined
@@ -1567,6 +1570,7 @@ export class MineradioLayer {
     this.mountFluid()
     this.startSeamStamper()
     this.startSpotlightFeed()
+    this.startRoleCensus()
     if (this.stationDisposer === undefined) {
       this.stationDisposer = startStationDial((offset) => {
         this.stationOffset = offset
@@ -1736,6 +1740,10 @@ export class MineradioLayer {
     document.documentElement.removeAttribute('data-dsh-aqua-media')
     document.documentElement.removeAttribute(SPOTLIGHT_ATTRIBUTE)
     document.documentElement.removeAttribute(PRESS_ATTRIBUTE)
+    // Drop every role stamp before the attribute gate closes, so an unmounted
+    // theme leaves no residue behind.
+    this.censusHandle?.dispose()
+    this.censusHandle = undefined
     this.spotlightDisposer?.()
     this.spotlightDisposer = undefined
     this.starRiverHandle?.dispose()
@@ -1858,5 +1866,34 @@ export class MineradioLayer {
   private startSpotlightFeed(): void {
     if (this.spotlightDisposer !== undefined) return
     this.spotlightDisposer = startSpotlight()
+  }
+
+  /**
+   * Start the runtime role census (idempotent per mount).
+   *
+   * This is the coverage engine: it reads what the host actually paints, stamps a
+   * role attribute, and the stylesheet dresses by role with `!important` so a
+   * declaration wins on priority rather than on a specificity contest it cannot
+   * reliably win. It runs after the seams and the token layer so it can see their
+   * effect, and it skips faces that already wear the family rim — the token layer
+   * and the hand-written rules have already dressed those, and re-dressing them
+   * is what flattened the session header in an earlier revision.
+   */
+  private startRoleCensus(): void {
+    if (this.censusHandle !== undefined) return
+    this.censusHandle = startRoleCensus()
+  }
+
+  /** Role counters for the console API (`__mineradioCensus()`). */
+  censusStats(): CensusStats {
+    return this.censusHandle?.stats() ??
+      { measured: 0, stamped: 0, handDressed: 0, pending: 0,
+        byRole: { ground: 0, structure: 0, pane: 0, overlay: 0, control: 0, chip: 0 } }
+  }
+
+  /** Force a fresh census pass (after a host repaint the memo missed). */
+  censusRescan(): CensusStats {
+    this.censusHandle?.rescan()
+    return this.censusStats()
   }
 }
