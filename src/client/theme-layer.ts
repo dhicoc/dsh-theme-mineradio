@@ -147,13 +147,13 @@ export const MINERADIO_TOKEN_OVERRIDES: ThemeTokenOverrides = {
   '--dsw-alias-state-business-tertiary': { light: 'rgba(244, 210, 138, 0.22)', dark: 'rgba(244, 210, 138, 0.16)' },
   '--dsw-alias-state-success-tertiary': { light: 'rgba(122, 215, 194, 0.22)', dark: 'rgba(122, 215, 194, 0.14)' },
   '--dsw-alias-state-warn-tertiary': { light: 'rgba(255, 83, 103, 0.18)', dark: 'rgba(255, 83, 103, 0.14)' },
-  // File-diff line fills. The host ships these opaque (design-platform.css:244-247,
-  // 362-365), so a diff view was a solid green/red slab over the backdrop. Every other
-  // semantic state in this table is translucent, and these are the same kind of colour —
-  // meaning rather than material — so they follow suit. Kept more saturated than the
-  // state tokens above, because on a diff line the colour IS the information.
+  // File-diff line fills & gutters. The host ships these opaque (design-platform.css:244-249,
+  // 362-367), so a diff view was a solid green/red slab over the backdrop with harsh black gutters.
+  // We keep them translucent and harmonious with the theme's glass backdrop.
   '--dsw-alias-file-diff-added-bg': { light: 'rgba(46, 125, 64, 0.20)', dark: 'rgba(64, 160, 88, 0.22)' },
+  '--dsw-alias-file-diff-added-gutter': { light: 'rgba(46, 125, 64, 0.10)', dark: 'rgba(64, 160, 88, 0.12)' },
   '--dsw-alias-file-diff-deleted-bg': { light: 'rgba(190, 54, 50, 0.18)', dark: 'rgba(210, 72, 66, 0.22)' },
+  '--dsw-alias-file-diff-deleted-gutter': { light: 'rgba(190, 54, 50, 0.10)', dark: 'rgba(210, 72, 66, 0.12)' },
 
   // Buttons: the primary action becomes champagne gold with dark ink.
   '--dsw-alias-button-primary-fill': { light: CHAMPAGNE_DEEP, dark: CHAMPAGNE },

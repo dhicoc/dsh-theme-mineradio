@@ -1255,10 +1255,22 @@ html:not(:has(body[data-ds-dark-theme])) [data-dsh-aqua] [data-dsh-station-tuner
 /* Todo / composer-dock tip cards: stock fill is --dsw-specific-tip (a flat
    token, no blur). Same family glass as the panes. The todo card is the
    _root that owns a collapse header (aria-expanded); the dock panel is
-   the _panel sitting in a _dock; the goal strip is the _bar in a _dock. */
+   the _panel sitting in a _dock; the goal strip is the _bar in a _dock.
+   宽匹配策略 (Wide Match Strategy):
+   DSH 的官方与第三方扩展条均注册在 slots.ts 的 'conversation.input.dock' 槽位。
+   每个停靠条都被包裹在具有 display:contents 的 [data-slot='conversation.input.dock'] 槽位内。
+   通过宽匹配槽位内所有直接子代及其承载卡片（不管是未来的什么标签、条、或是组件），
+   自动继承家族精装玻璃，而无需每次官方新增标签就手动追加精确类名。 */
 [data-dsh-float] [class*='_root']:has(> [class*='_body'] > button[class*='_header'][aria-expanded]),
 [data-dsh-float] [class*='_dock'] > [class*='_panel']:has(> [class*='_header']),
-[data-dsh-float] [class*='_dock'] > [class*='_bar'] {
+[data-dsh-float] [class*='_dock'] > [class*='_bar'],
+[data-dsh-float] [data-goal-bar] [class*='_bar'],
+[data-dsh-float] [data-slot='conversation.input.dock'] > * > [class*='_bar'],
+[data-dsh-float] [data-slot='conversation.input.dock'] > * > [class*='_panel'],
+[data-dsh-float] [data-slot='conversation.input.dock'] > * > [class*='_root'],
+[data-dsh-float] [data-slot='conversation.input.dock'] [class*='_dock'] > [class*='_bar'],
+[data-dsh-float] [data-slot='conversation.input.dock'] [class*='_dock'] > [class*='_panel'],
+[data-dsh-float] [data-slot='conversation.input.dock'] [class*='_dock'] > [class*='_root'] {
   background: var(--dsh-aqua-glass-card-light);
   border-color: rgba(122, 86, 28, 0.34);
   box-shadow: var(--dsh-aqua-glass-shadow-light);
@@ -1267,10 +1279,29 @@ html:not(:has(body[data-ds-dark-theme])) [data-dsh-aqua] [data-dsh-station-tuner
 
 [data-dsh-float] body[data-ds-dark-theme] [class*='_root']:has(> [class*='_body'] > button[class*='_header'][aria-expanded]),
 [data-dsh-float] body[data-ds-dark-theme] [class*='_dock'] > [class*='_panel']:has(> [class*='_header']),
-[data-dsh-float] body[data-ds-dark-theme] [class*='_dock'] > [class*='_bar'] {
+[data-dsh-float] body[data-ds-dark-theme] [class*='_dock'] > [class*='_bar'],
+[data-dsh-float] body[data-ds-dark-theme] [data-goal-bar] [class*='_bar'],
+[data-dsh-float] body[data-ds-dark-theme] [data-slot='conversation.input.dock'] > * > [class*='_bar'],
+[data-dsh-float] body[data-ds-dark-theme] [data-slot='conversation.input.dock'] > * > [class*='_panel'],
+[data-dsh-float] body[data-ds-dark-theme] [data-slot='conversation.input.dock'] > * > [class*='_root'],
+[data-dsh-float] body[data-ds-dark-theme] [data-slot='conversation.input.dock'] [class*='_dock'] > [class*='_bar'],
+[data-dsh-float] body[data-ds-dark-theme] [data-slot='conversation.input.dock'] [class*='_dock'] > [class*='_panel'],
+[data-dsh-float] body[data-ds-dark-theme] [data-slot='conversation.input.dock'] [class*='_dock'] > [class*='_root'] {
   background: var(--dsh-aqua-glass-card-dark);
   border-color: rgba(0, 245, 212, 0.22);
   box-shadow: var(--dsh-aqua-glass-shadow-dark);
+}
+
+/* 宽匹配自动清除槽位内部任意组件用于模拟实色菜单底板的伪元素 */
+[data-dsh-aqua] [data-goal-bar] [class*='_bar']::before,
+[data-dsh-aqua] [data-queue-dock] > [class*='_panel']::before,
+[data-dsh-aqua] [class*='_dock'] > [class*='_bar']::before,
+[data-dsh-aqua] [data-slot='conversation.input.dock'] [class*='_bar']::before,
+[data-dsh-aqua] [data-slot='conversation.input.dock'] [class*='_panel']::before {
+  content: none !important;
+  display: none !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
 }
 
 /* Queue-message tag (composer QueueDock). Stock panel fill is the same

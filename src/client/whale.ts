@@ -85,13 +85,12 @@ export function mountWhale(host: HTMLElement, dark: boolean): WhaleHandle {
     return { setDark: () => {}, dispose: () => {} }
   }
 
-  const reduced = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
   const particles: Particle[] = []
   let raf = 0
   let disposed = false
   let startedAt = performance.now()
   let darkMode = dark
-  let mouseWorld = { x: 0, y: 0 }
+  let mouseWorld = { x: 999, y: 999 }
   let dpr = 1
   let scale = 1
   let width = 0
@@ -226,7 +225,7 @@ export function mountWhale(host: HTMLElement, dark: boolean): WhaleHandle {
         const dist = Math.sqrt(mx * mx + my * my)
         if (dist < mouseRadius && dist > 0.001) {
           const t = 1 - dist / mouseRadius
-          const force = t * t * t * mouseEffect * strength
+          const force = t * t * mouseEffect * strength
           const angle = Math.sin(i * 0.37 + time * 0.5) * MOUSE_DISTORT
           const ca = Math.cos(angle)
           const sa = Math.sin(angle)
@@ -234,8 +233,8 @@ export function mountWhale(host: HTMLElement, dark: boolean): WhaleHandle {
           const uy = my / dist
           const rx = ux * ca - uy * sa
           const ry = ux * sa + uy * ca
-          px += rx * force * 2
-          py += ry * force * 2
+          px += rx * force * 3
+          py += ry * force * 3
         }
       }
       // Light shading: distance falloff from the fixed light (2D projection).
@@ -275,7 +274,7 @@ export function mountWhale(host: HTMLElement, dark: boolean): WhaleHandle {
     return x * x * (3 - 2 * x)
   }
 
-  let mouseNdc = { x: 0, y: 0 }
+  let mouseNdc = { x: 999, y: 999 }
   const onMove = (event: PointerEvent): void => {
     const rect = holder.getBoundingClientRect()
     if (rect.width === 0 || rect.height === 0) return
@@ -284,7 +283,11 @@ export function mountWhale(host: HTMLElement, dark: boolean): WhaleHandle {
       y: -(((event.clientY - rect.top) / rect.height) * 2 - 1),
     }
   }
+  const onLeave = (): void => {
+    mouseNdc = { x: 999, y: 999 }
+  }
   window.addEventListener('pointermove', onMove, { passive: true })
+  window.addEventListener('pointerleave', onLeave, { passive: true })
 
   const start = (): void => {
     if (disposed) return
@@ -322,18 +325,7 @@ export function mountWhale(host: HTMLElement, dark: boolean): WhaleHandle {
     if (disposed) return
     sample(img)
     resize()
-    if (reduced) {
-      mouseWorld = { x: 0, y: 0 }
-      draw(1, 2)
-      // The phase container may mount after the plugin — re-center once late.
-      window.setTimeout(() => {
-        if (disposed) return
-        resize()
-        draw(1, 2)
-      }, 600)
-    } else {
-      start()
-    }
+    start()
   }
   img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(WHALE_SVG)}`
 
@@ -342,12 +334,12 @@ export function mountWhale(host: HTMLElement, dark: boolean): WhaleHandle {
       if (darkMode === dark) return
       darkMode = dark
       holder.setAttribute('data-scheme', dark ? 'dark' : 'light')
-      if (reduced && particles.length > 0) draw(1, 2)
     },
     dispose: (): void => {
       disposed = true
       cancelAnimationFrame(raf)
       window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerleave', onLeave)
       window.removeEventListener('resize', resize)
       holder.remove()
     },

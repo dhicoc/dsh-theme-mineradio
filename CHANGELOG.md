@@ -17,8 +17,11 @@
 - **硬约束内建**：五个定位锚点（`.frame`/`.overlayLayer`/`.ledger`/`.composerSeat`/`.surface`）拒绝上玻璃；`backdrop-filter` 会重锚就地 `fixed` 后代，故走伪元素。
 - **可读性豁免**：`pre/code/input/textarea/xterm/markdown/bannerWrap` 及其子树保持实底。
 
-### 顺带修复
+### 顺带修复与细节精调
 
+- **输入框扩展坞（DockKit dock）宽匹配覆盖**：采用 `[data-slot='conversation.input.dock']` 宽匹配选择器，自动覆盖输入栏扩展条上的所有现有及未来新增标签项，并消除宿主伪元素遮挡板，继承家族精装玻璃。
+- **粒子金鲸动效与鼠标交互修复**：解除 `prefers-reduced-motion` 对动画主循环的硬阻断，将动效完全交由主题性能档位管控；重构光标交互坐标与移出复位，恢复粒子入场汇聚组装、呼吸摇曳以及随鼠标游离发散、离开聚合复原的灵动特性。
+- **代码改动悬浮看板（FileDiff）行号槽黑块消除**：将 `--dsw-alias-file-diff-added-gutter` 与 `--dsw-alias-file-diff-deleted-gutter` 纳入透明水彩调色板，告别官方默认的墨黑硬补丁底色，与磨砂毛玻璃和流体完全连贯通透。
 - `--dsw-specific-input-major` 浅色侧原为不透明 `#FFFFFF`（深色侧已半透明）——浅色模式下输入框会挡住壁纸。
 - `overlay` 角色缺 transition，菜单/对话框状态变化是硬切。
 

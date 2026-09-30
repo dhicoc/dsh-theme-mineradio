@@ -49,8 +49,14 @@ const cssModules = {
       const tagId = `${PLUGIN_ID}/${rel}?v=${hash(rel)}`
 
       // Collect class-defining selectors (`.foo`, excluding pseudo-classes).
+      // Strip comments, attribute selectors [attr="foo.bar"], and strings first so dots in attributes are not mistaken for class names.
+      const sanitized = source
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/\[[^\]]*\]/g, '[]')
+        .replace(/"[^"]*"/g, '""')
+        .replace(/'[^']*'/g, "''")
       const names = new Set()
-      for (const m of source.matchAll(/\.([_a-zA-Z][\w-]*)/g)) {
+      for (const m of sanitized.matchAll(/\.([_a-zA-Z][\w-]*)/g)) {
         if (!/^(:{1,2}[a-z]|hover|active|focus|before|after|not|is|where|has|nth|first|last|child|empty|root)[\w-]*$/i.test(m[1])) {
           names.add(m[1])
         }
