@@ -307,6 +307,10 @@ export function startSurfaceCover(): SurfaceCoverHandle {
     decided.add(el)
     measured += 1
     // A re-check (attribute flip, resize, rescan) may have kept old stamps.
+    // Remember whether the rim we are about to see could be our own: the
+    // family recipe's first inset is applied BY our stamp, so an element we
+    // dressed must never be mistaken for a hand-dressed one and released.
+    const ours = el.hasAttribute(COVER_SURFACE_ATTRIBUTE) || el.hasAttribute(COVER_VEIL_ATTRIBUTE)
     release(el)
     if (!(el instanceof HTMLElement)) return
     // The page ground is painted by the theme's own body rule: skip the two
@@ -321,6 +325,12 @@ export function startSurfaceCover(): SurfaceCoverHandle {
     if (rect.width < MIN_WIDTH || rect.height < MIN_HEIGHT) return
     if (rect.width * rect.height < MIN_AREA) return
     const computed = getComputedStyle(el)
+    // Hand-dressed by a precise rule: the family rim is `inset 0 0 0 1px …`,
+    // and only the theme's own glass carries it. Leave those alone — the auto
+    // rule sits at (0,2,0) and would otherwise out-specify precise rules such
+    // as `[data-dsh-float] header` (0,1,1), flattening a hand-tuned pane (its
+    // blur and brightness) into a plain plate.
+    if (!ours && computed.boxShadow.includes('inset')) return
     const alpha = alphaOf(computed.backgroundColor)
     // A face paints something: a tint, a solid fill or a gradient wash. A
     // fully transparent box is a layout wrapper — unless its pseudo-element

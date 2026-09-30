@@ -67,9 +67,23 @@
   --dsh-aqua-bloom: hsla(var(--dsh-aqua-bloom-h, 44), 82%, 66%, 0.07);
   /* Scheme-neutral alias for the runtime auto-cover (L2 below): the dark
      body rule further down swaps it, so the cover rule itself never needs a
-     scheme-qualified selector (and never out-specifies the precise rules). */
-  --dsh-aqua-glass-auto: var(--dsh-aqua-glass-card-light);
+     scheme-qualified selector (and never out-specifies the precise rules).
+     It points at the LIGHT family film, not the card recipe: the card's dark
+     stops (~0.70 alpha) are right for a card and read as ink across a whole
+     column, so an auto-covered face gets the film + rim + blur instead. */
+  --dsh-aqua-glass-auto: var(--dsh-aqua-glass-veil-light);
   --dsh-aqua-glass-auto-shadow: var(--dsh-aqua-glass-shadow-light);
+  /* The auto-cover film: same catch-lights as the card, a fraction of the
+     body, so the ambient backdrop stays visible through it. */
+  --dsh-aqua-glass-veil-light:
+    linear-gradient(rgba(255 255 255 / var(--dsh-aqua-frost-white, 0)), rgba(255 255 255 / var(--dsh-aqua-frost-white, 0))),
+    radial-gradient(circle at 16% 0%, rgb(255 255 255 / calc(0.24 * var(--dsh-aqua-frost, 1))), transparent 42%),
+    linear-gradient(145deg, rgb(244 210 138 / calc(0.10 * var(--dsh-aqua-frost, 1))), rgba(255 252 246 / 0.34) 45%, rgba(250 246 238 / 0.28));
+  --dsh-aqua-glass-veil-dark:
+    linear-gradient(rgba(255 255 255 / var(--dsh-aqua-frost-white, 0)), rgba(255 255 255 / var(--dsh-aqua-frost-white, 0))),
+    radial-gradient(circle at 16% 0%, rgb(255 255 255 / calc(0.07 * var(--dsh-aqua-frost, 1))), transparent 42%),
+    radial-gradient(circle at 88% 8%, rgb(0 245 212 / calc(0.09 * var(--dsh-aqua-frost, 1))), transparent 44%),
+    linear-gradient(145deg, rgb(0 245 212 / calc(0.055 * var(--dsh-aqua-frost, 1))), rgba(12 13 18 / 0.34) 45%, rgba(2 3 5 / 0.30));
 }
 
 [data-dsh-aqua] [data-dsh-frame] {
@@ -142,7 +156,7 @@
 /* Dark scheme for the runtime auto-cover: swap the aliased recipe instead of
    repeating the L2 rule per scheme (keeps that rule at one specificity). */
 [data-dsh-aqua] body[data-ds-dark-theme] {
-  --dsh-aqua-glass-auto: var(--dsh-aqua-glass-card-dark);
+  --dsh-aqua-glass-auto: var(--dsh-aqua-glass-veil-dark);
   --dsh-aqua-glass-auto-shadow: var(--dsh-aqua-glass-shadow-dark);
 }
 
