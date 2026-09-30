@@ -61,8 +61,8 @@ export function apply(ctx: Context): void {
   ;(window as unknown as Record<string, unknown>).__mineradioCover = (rescan?: boolean) => {
     const stats = rescan === true ? layer.coverRescan() : layer.coverStats()
     console.info(
-      `[mineradio cover] ${stats.surfaces} surface(s) glassed, ${stats.bones} bone(s) lifted, ` +
-      `${stats.measured} element(s) measured, ${stats.pending} queued`,
+      `[mineradio cover] ${stats.surfaces} face(s) dressed (${stats.spots} on spotlight), ` +
+      `${stats.bones} ground slab(s) lifted, ${stats.measured} element(s) measured, ${stats.pending} queued`,
     )
     return stats
   }

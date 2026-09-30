@@ -1,22 +1,22 @@
 /**
  * Surface audit — the adaptation loop, closed.
  *
- * Instead of waiting for "this slab looks unthemed" reports, the audit
- * sweeps the live DOM for the exact signature of an un-adapted surface:
- * a large element whose COMPUTED background-color is fully opaque. It is
- * self-calibrating — everything the theme already reaches computes to
- * alpha < 1 (token-tinted fills via the override stack, family glass, the
- * lifted bones), so what remains is precisely the stock-painted residue
- * no rule has met yet.
+ * Once the layer has mounted, the runtime cover (surface-cover.ts) has already
+ * dressed every face it can reach. What this sweep reports is therefore the
+ * residue: faces that paint something but carry no cover stamp — i.e. the ones
+ * the cover deliberately skipped (blacklist) or could not reach. It shares the
+ * cover's signature verbatim (SURFACE_POLICY), so the report and the cover can
+ * never disagree about what a "face" is.
  *
  * Each hit is stamped `data-dsh-aqua-unthemed` (gold dashed outline while
  * `data-dsh-aqua-audit` sits on <html>) and grouped by its CSS-module word
- * root into a report that maps 1:1 onto new sweep roots or blacklist
- * entries. Dev-tool console API, no settings surface:
+ * root into a report that maps 1:1 onto new sweep roots or blacklist entries.
+ * Dev-tool console API, no settings surface:
  *
  *   __mineradioAudit()        — scan, stamp, report (copies to clipboard)
  *   __mineradioAudit(false)   — clear stamps
  */
+import { COVER_SURFACE_ATTRIBUTE, COVER_BONE_ATTRIBUTE, paintedAlpha, SURFACE_POLICY } from './surface-cover.ts'
 
 /** The theme attribute the whole layer is gated on. */
 const AQUA = 'data-dsh-aqua'
@@ -24,6 +24,8 @@ const AQUA = 'data-dsh-aqua'
 const STAMP = 'data-dsh-aqua-unthemed'
 /** Audit mode attribute on <html>; toggles the outline stylesheet. */
 const MODE = 'data-dsh-aqua-audit'
+/** Faces the cover already dressed — never reported. */
+const COVERED_SELECTOR = `[${COVER_SURFACE_ATTRIBUTE}], [${COVER_BONE_ATTRIBUTE}]`
 
 /** Elements that never count as un-adapted slabs. */
 const SKIP_SELECTOR = [
@@ -39,10 +41,6 @@ const SKIP_SELECTOR = [
   "[class*='mineradio']", "[class*='Mineradio']", "[class*='fonts_']",
 ].join(', ')
 
-/** Smallest slab worth reporting (px, both axes) — surfaces, not icons. */
-const MIN_SIZE = 80
-/** Computed alpha at or above this counts as "stock-painted opaque". */
-const OPAQUE_ALPHA = 0.98
 /** rAF slice size — keep the audit responsive on big trees. */
 const SLICE = 400
 
@@ -69,18 +67,12 @@ function wordRoot(el: Element): string {
 }
 
 /**
- * Parse the alpha out of a computed background-color.
+ * Parse the alpha out of a computed background-color — the cover's own
+ * helper, re-exported here so the two never diverge.
  * @param value - e.g. `rgb(8, 9, 11)` or `rgba(8, 9, 11, 0.55)`.
  * @returns 1 for `rgb()` forms (fully opaque), the parsed alpha otherwise.
  */
-function alphaOf(value: string): number {
-  const match = /^rgba?\(([^)]+)\)$/i.exec(value.trim())
-  if (match === null) return 0
-  const parts = match[1].split(/\s*[,/ ]\s*/)
-  if (parts.length < 4) return 1
-  const alpha = Number.parseFloat(parts[3])
-  return Number.isNaN(alpha) ? 1 : alpha
-}
+const alphaOf = paintedAlpha
 
 /**
  * Run one audit pass: sweep, stamp, report.
@@ -108,10 +100,15 @@ export function runSurfaceAudit(): () => void {
       if (el === document.body || el === document.documentElement) continue
       if (el.closest(SKIP_SELECTOR) !== null) continue
       if (el.hasAttribute(STAMP)) continue
+      // Already dressed by the runtime cover — not residue.
+      if (el.matches(COVERED_SELECTOR)) continue
+      if (el.hasAttribute('data-dsh-aqua-cover-ignore')) continue
       const rect = el.getBoundingClientRect()
-      if (rect.width < MIN_SIZE || rect.height < MIN_SIZE) continue
-      const bg = getComputedStyle(el).backgroundColor
-      if (alphaOf(bg) < OPAQUE_ALPHA) continue
+      if (rect.width < SURFACE_POLICY.minWidth || rect.height < SURFACE_POLICY.minHeight) continue
+      if (rect.width * rect.height < SURFACE_POLICY.minArea) continue
+      const style = getComputedStyle(el)
+      const bg = style.backgroundColor
+      if (alphaOf(bg) < SURFACE_POLICY.paintAlpha && style.backgroundImage === 'none') continue
       el.setAttribute(STAMP, '')
       const root = wordRoot(el)
       const finding = findings[root] ?? (findings[root] = { count: 0, sample: '', bg: '' })

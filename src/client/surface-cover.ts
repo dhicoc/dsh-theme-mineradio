@@ -3,21 +3,25 @@
  *
  * The precise rules in `mineradio.module.css` name surfaces; the L0/L1 sweeps
  * guess at them from CSS-module word roots. Both depend on the host keeping
- * its class vocabulary. This module removes that dependency: it reads what the
- * app actually PAINTS (the computed background) and stamps what it finds, so a
- * surface added or renamed by a host release is covered on first paint.
+ * its class vocabulary, and both miss faces painted from tokens the theme
+ * never overrides (`--dsw-static-neutral-*`) or whose class root is outside
+ * the vocabulary (`header`, `file`, `row`). This module removes that
+ * dependency: it reads what the app actually PAINTS and dresses what it finds,
+ * so a surface added or renamed by a host release is covered on first paint.
  *
- * Signature (the same one the audit reports on, so the two can never drift):
- * an element at least 80px on both axes whose computed background-color is
- * fully opaque. Everything the theme already reaches computes to alpha < 1
- * (token-tinted fills, family glass, lifted bones), so an opaque hit is by
- * construction a stock-painted face no rule has met yet.
+ * Signature: an element at least 96×24 (and 6000px²) that paints something —
+ * any background tint, solid fill or gradient wash. The whole app mounts
+ * inside `#root` and tool cards live inside `[class*='markdown']` wrappers, so
+ * the blacklist matches the element ITSELF, never its ancestors.
  *
- * Two outcomes, mirroring the L0/L1 split:
- *   data-dsh-aqua-bone    — a structural slab (full-bleed, or a large
- *                           un-rounded wrapper): only the fill is lifted, so
- *                           the ambient ground shows through it.
- *   data-dsh-aqua-auto    — a bounded surface: takes the family glass recipe.
+ * Three outcomes:
+ *   data-dsh-aqua-auto   — the family glass: gradient fill + specular rim +
+ *                          hairline, plus the blur knob on larger faces and a
+ *                          short transition so the pane reacts like the rest.
+ *   data-dsh-aqua-bone   — viewport-filling page ground: fill lifted only, so
+ *                          the ambient backdrop reaches the eye.
+ *   data-dsh-aqua-spot   — pane-scale faces also join the spotlight/tilt set
+ *                          (spot-core maintains their glow overlay).
  *
  * Cost control: the first pass sweeps the tree in rAF slices under a time
  * budget; afterwards a MutationObserver feeds only newly added subtrees, and
@@ -30,39 +34,64 @@ const AQUA = 'data-dsh-aqua'
 export const COVER_SURFACE_ATTRIBUTE = 'data-dsh-aqua-auto'
 /** Stamp for a structural slab that only has its fill lifted. */
 export const COVER_BONE_ATTRIBUTE = 'data-dsh-aqua-bone'
+/** Extra stamp for small faces: family glass without the backdrop blur. */
+export const COVER_FLAT_ATTRIBUTE = 'data-dsh-aqua-flat'
+/** Extra stamp for pane-scale faces: join the spotlight/tilt set. */
+export const COVER_SPOT_ATTRIBUTE = 'data-dsh-aqua-spot'
 /** Opt-out for a host element that must stay stock-painted. */
 export const COVER_IGNORE_ATTRIBUTE = 'data-dsh-aqua-cover-ignore'
+/** Every stamp this module owns; used for release and for teardown. */
+const OWN_ATTRIBUTES = [
+  COVER_SURFACE_ATTRIBUTE, COVER_BONE_ATTRIBUTE, COVER_FLAT_ATTRIBUTE, COVER_SPOT_ATTRIBUTE,
+] as const
 
-/** Elements that never count as un-adapted slabs. */
+/** Elements that never count as un-adapted slabs.
+ *
+ *  Matched against the element ITSELF (`matches`), never against ancestors:
+ *  the whole app mounts inside `#root`, tool cards live inside `[class*=
+ *  'markdown']` wrappers and the transcript inside scroll containers, so an
+ *  ancestor blacklist would exempt exactly the faces users report. An element
+ *  is only "readability content" when it paints that content itself. */
 const SKIP_SELECTOR = [
-  // The theme's own mounted surfaces.
-  '[data-dsh-aqua-ambient]', '[data-dsh-aqua-wallpaper]', '[data-dsh-aqua-fade]',
-  '[data-dsh-aqua-fluid-canvas]', '[data-dsh-aqua-spot]', '[data-dsh-aqua-halo]',
-  "[class*='mineradio']", "[class*='Mineradio']", "[class*='fonts_']",
   // Media and readability surfaces legitimately stay painted.
-  'img', 'video', 'canvas', 'svg', 'picture', 'iframe', 'pre', 'code', '.xterm',
+  'img', 'video', 'canvas', 'svg', 'picture', 'iframe', 'pre', 'code', 'kbd', 'samp', '.xterm',
+  'input', 'textarea', 'select', 'option',
   "[class*='code']", "[class*='Code']",
   "[class*='terminal']", "[class*='Terminal']",
   "[class*='markdown']", "[class*='Markdown']",
   "[class*='highlight']", "[class*='Highlight']",
   "[class*='progress']", "[class*='Progress']",
-  "[role='progressbar']",
-  // Painted on purpose: the native-vibrancy backing plate, image plates and
-  // data plots read as content, not as chrome.
+  "[role='progressbar']", "[role='slider']",
+  // Painted on purpose: the native-vibrancy backing plate, image plates, data
+  // plots and the theme's own controls read as content, not as chrome.
   "[class*='backing']",
   "[class*='chart']", "[class*='Chart']", "[class*='plot']", "[class*='Plot']",
   "[class*='sparkline']", "[class*='Sparkline']", "[class*='thumb']", "[class*='Thumb']",
+  "[class*='scrollbar']", "[class*='Scrollbar']",
+  "[class*='mineradio']", "[class*='Mineradio']", "[class*='fonts_']",
   `[${COVER_IGNORE_ATTRIBUTE}]`,
 ].join(', ')
 
-/** Smallest slab worth covering (px, both axes) — surfaces, not icons. */
-const MIN_SIZE = 80
-/** Computed alpha at or above this counts as "stock-painted opaque". */
-const OPAQUE_ALPHA = 0.98
-/** A slab this large relative to the viewport is structural, not a surface. */
-const BONE_AREA_RATIO = 0.45
-/** Full-bleed threshold (both axes) — always a bone. */
-const BONE_VIEWPORT_RATIO = 0.85
+/** The theme's own mounted layers — skip anything inside them. */
+const OWN_LAYER_SELECTOR = [
+  '[data-dsh-aqua-ambient]', '[data-dsh-aqua-wallpaper]', '[data-dsh-aqua-fade]',
+  '[data-dsh-aqua-fluid-canvas]', '[data-dsh-aqua-glow]',
+].join(', ')
+
+/** Smallest face worth dressing (px) — a surface, not an icon. Width, height
+ *  and area must all clear: a 40px tile or a 60×20 badge stays stock, while
+ *  the 60px-tall "edited N files" card (≈300×60) is a face. */
+const MIN_WIDTH = 96
+const MIN_HEIGHT = 24
+const MIN_AREA = 6000
+/** Alpha at or above this counts as "painted" (hover tints sit near 0.10). */
+const PAINT_ALPHA = 0.15
+/** Above this area the family glass also carries the backdrop blur. */
+const BLUR_AREA = 20000
+/** Pane-scale faces additionally join the spotlight/tilt set. */
+const PANE_AREA = 60000
+/** Full-bleed on both axes — the page ground, not a face. */
+const GROUND_VIEWPORT_RATIO = 0.85
 /** rAF time budget per frame (ms) — keeps the sweep off the critical path. */
 const FRAME_BUDGET_MS = 6
 /** Elements handled in one slice before the budget is re-checked. */
@@ -74,6 +103,8 @@ export interface SurfaceCoverStats {
   surfaces: number
   /** Structural slabs whose fill was lifted. */
   bones: number
+  /** Faces that also joined the spotlight/tilt set. */
+  spots: number
   /** Elements measured since the layer mounted. */
   measured: number
   /** Sweeps still queued (0 when the cover is idle). */
@@ -92,17 +123,60 @@ export interface SurfaceCoverHandle {
 
 /**
  * Parse the alpha out of a computed background-color.
- * @param value - e.g. `rgb(8, 9, 11)` or `rgba(8, 9, 11, 0.55)`.
- * @returns 1 for `rgb()` forms (fully opaque), the parsed alpha otherwise.
+ *
+ * Chrome resolves `color-mix()` fills to the modern `color(srgb … / a)` form,
+ * and the theme's own token ladder is built from `color-mix()` — so a parser
+ * that only understands `rgb()/rgba()` reads every mixed token as fully
+ * transparent and silently skips the faces that need the cover most (the
+ * 92%-alpha menu/dialog plate among them).
+ *
+ * @param value - e.g. `rgb(8, 9, 11)`, `rgba(8, 9, 11, 0.55)`,
+ *   `rgb(8 9 11 / 0.5)` or `color(srgb 0.03 0.03 0.04 / 0.92)`.
+ * @returns 1 for a fully opaque color, the parsed alpha otherwise.
  */
-function alphaOf(value: string): number {
-  const match = /^rgba?\(([^)]+)\)$/i.exec(value.trim())
-  if (match === null) return 0
-  const parts = match[1].split(/\s*[,/ ]\s*/)
-  if (parts.length < 4) return 1
-  const alpha = Number.parseFloat(parts[3])
-  return Number.isNaN(alpha) ? 1 : alpha
+export function paintedAlpha(value: string): number {
+  const text = value.trim().toLowerCase()
+  if (text === '' || text === 'transparent' || text === 'none') return 0
+  if (text === 'currentcolor') return 0
+  // Modern syntaxes carry the alpha after a slash.
+  const slash = text.lastIndexOf('/')
+  if (slash !== -1) {
+    const tail = text.slice(slash + 1).replace(/[^0-9.%]/g, '')
+    const parsed = Number.parseFloat(tail)
+    if (Number.isNaN(parsed)) return 1
+    return tail.includes('%') ? parsed / 100 : parsed
+  }
+  // Legacy comma form: only rgba()/hsla() carry a fourth component.
+  const legacy = /^(?:rgba|hsla)\(([^)]+)\)$/.exec(text)
+  if (legacy !== null) {
+    const parts = legacy[1].split(',')
+    if (parts.length < 4) return 1
+    const parsed = Number.parseFloat(parts[3])
+    return Number.isNaN(parsed) ? 1 : parsed
+  }
+  // Any other resolved color function without a slash is opaque; unknown
+  // keywords (inherit, a named color we cannot resolve here) are treated as
+  // unpainted so the cover never guesses.
+  return /^(?:rgb|hsl|hwb|lab|lch|oklab|oklch|color|light-dark|color-mix)\(/.test(text) ? 1 : 0
 }
+
+const alphaOf = paintedAlpha
+
+/**
+ * The shared face signature. The audit reports on exactly what the cover
+ * dresses, so the two can never drift apart — export the numbers instead of
+ * restating them.
+ */
+export const SURFACE_POLICY = {
+  /** Minimum width of a face (px). */
+  minWidth: MIN_WIDTH,
+  /** Minimum height of a face (px). */
+  minHeight: MIN_HEIGHT,
+  /** Minimum area of a face (px²). */
+  minArea: MIN_AREA,
+  /** Alpha at or above which a background counts as painted. */
+  paintAlpha: PAINT_ALPHA,
+} as const
 
 /**
  * Start covering un-adapted host surfaces.
@@ -120,6 +194,7 @@ export function startSurfaceCover(): SurfaceCoverHandle {
   let disposed = false
   let surfaces = 0
   let bones = 0
+  let spots = 0
   let measured = 0
 
   const stampOf = (el: Element): string | null =>
@@ -127,13 +202,20 @@ export function startSurfaceCover(): SurfaceCoverHandle {
       : el.hasAttribute(COVER_BONE_ATTRIBUTE) ? COVER_BONE_ATTRIBUTE
         : null
 
-  /** Release one element's stamp and forget its decision. */
+  /** Release one element's stamps and forget its decision. */
   const release = (el: Element): void => {
     const stamp = stampOf(el)
-    if (stamp === null) return
-    el.removeAttribute(stamp)
+    if (el.hasAttribute(COVER_SPOT_ATTRIBUTE)) spots -= 1
+    for (const attribute of OWN_ATTRIBUTES) el.removeAttribute(attribute)
     if (stamp === COVER_SURFACE_ATTRIBUTE) surfaces -= 1
-    else bones -= 1
+    else if (stamp === COVER_BONE_ATTRIBUTE) bones -= 1
+  }
+
+  /** Drop every stamp this module owns, anywhere in the tree. */
+  const clearAll = (): void => {
+    for (const el of document.querySelectorAll(OWN_ATTRIBUTES.map((a) => `[${a}]`).join(', '))) {
+      for (const attribute of OWN_ATTRIBUTES) el.removeAttribute(attribute)
+    }
   }
 
   /** Enqueue one element for a decision (idempotent). */
@@ -172,28 +254,39 @@ export function startSurfaceCover(): SurfaceCoverHandle {
     // ancestor — the whole app mounts inside it, so a `closest()` blacklist
     // there would silently disable the cover (and the audit) entirely.
     if (el === document.body || el === document.documentElement) return
-    if (el.closest(SKIP_SELECTOR) !== null) return
+    if (el.closest(OWN_LAYER_SELECTOR) !== null) return
+    if (el.matches(SKIP_SELECTOR)) return
     if (!document.documentElement.hasAttribute(AQUA)) return
     const rect = el.getBoundingClientRect()
-    if (rect.width < MIN_SIZE || rect.height < MIN_SIZE) return
+    if (rect.width < MIN_WIDTH || rect.height < MIN_HEIGHT) return
+    if (rect.width * rect.height < MIN_AREA) return
     const computed = getComputedStyle(el)
-    if (alphaOf(computed.backgroundColor) < OPAQUE_ALPHA) return
-    const radius = Number.parseFloat(computed.borderTopLeftRadius)
+    const alpha = alphaOf(computed.backgroundColor)
+    // A face paints something: a tint, a solid fill or a gradient wash. A
+    // fully transparent box is a layout wrapper and stays untouched.
+    if (alpha < PAINT_ALPHA && computed.backgroundImage === 'none') return
     const vw = window.innerWidth
     const vh = window.innerHeight
-    const fullBleed = rect.width >= vw * BONE_VIEWPORT_RATIO && rect.height >= vh * BONE_VIEWPORT_RATIO
-    const oversized = rect.width * rect.height >= vw * vh * BONE_AREA_RATIO
-    // Scrollports are ground, not chrome: a gradient + blur over a scrolling
-    // column reads as a smear, while lifting the fill lets the ambient show.
-    const scrollport = /(auto|scroll)/.test(`${computed.overflowX}${computed.overflowY}`)
-    const structural = fullBleed || (oversized && !(radius > 0)) || scrollport
-    if (structural) {
+    const ground = rect.width >= vw * GROUND_VIEWPORT_RATIO && rect.height >= vh * GROUND_VIEWPORT_RATIO
+    if (ground) {
+      // Page ground: only the fill is lifted so the ambient backdrop reaches
+      // the eye — a gradient over the whole viewport would hide it.
       el.setAttribute(COVER_BONE_ATTRIBUTE, '')
       bones += 1
       return
     }
     el.setAttribute(COVER_SURFACE_ATTRIBUTE, '')
     surfaces += 1
+    if (rect.width * rect.height < BLUR_AREA) el.setAttribute(COVER_FLAT_ATTRIBUTE, '')
+    // Pane-scale faces also join the spotlight/tilt set (the glow overlay is
+    // maintained by spot-core for every stamped pane). Absolute/fixed panes
+    // are left out: the spot rule sets `position: relative`, which would
+    // re-anchor them, and `isolation` would trap their popovers.
+    const position = computed.position
+    if (rect.width * rect.height >= PANE_AREA && (position === 'static' || position === 'relative')) {
+      el.setAttribute(COVER_SPOT_ATTRIBUTE, '')
+      spots += 1
+    }
   }
 
   /** Drain the queue under a per-frame time budget. */
@@ -264,7 +357,7 @@ export function startSurfaceCover(): SurfaceCoverHandle {
     if (resizeTimer !== undefined) window.clearTimeout(resizeTimer)
     resizeTimer = window.setTimeout(() => {
       resizeTimer = undefined
-      for (const el of document.querySelectorAll(`[${COVER_SURFACE_ATTRIBUTE}], [${COVER_BONE_ATTRIBUTE}]`)) {
+      for (const el of document.querySelectorAll(OWN_ATTRIBUTES.map((a) => `[${a}]`).join(', '))) {
         decided.delete(el)
         enqueue(el)
       }
@@ -288,12 +381,10 @@ export function startSurfaceCover(): SurfaceCoverHandle {
   return {
     rescan(): void {
       if (disposed) return
-      for (const el of document.querySelectorAll(`[${COVER_SURFACE_ATTRIBUTE}], [${COVER_BONE_ATTRIBUTE}]`)) {
-        el.removeAttribute(COVER_SURFACE_ATTRIBUTE)
-        el.removeAttribute(COVER_BONE_ATTRIBUTE)
-      }
+      clearAll()
       surfaces = 0
       bones = 0
+      spots = 0
       decided = new WeakSet<Element>()
       queue = []
       cursor = 0
@@ -301,7 +392,7 @@ export function startSurfaceCover(): SurfaceCoverHandle {
       sweep()
     },
     stats(): SurfaceCoverStats {
-      return { surfaces, bones, measured, pending: Math.max(0, queue.length - cursor) }
+      return { surfaces, bones, spots, measured, pending: Math.max(0, queue.length - cursor) }
     },
     dispose(): void {
       if (disposed) return
@@ -313,10 +404,7 @@ export function startSurfaceCover(): SurfaceCoverHandle {
       if (resizeTimer !== undefined) window.clearTimeout(resizeTimer)
       queue = []
       cursor = 0
-      for (const el of document.querySelectorAll(`[${COVER_SURFACE_ATTRIBUTE}], [${COVER_BONE_ATTRIBUTE}]`)) {
-        el.removeAttribute(COVER_SURFACE_ATTRIBUTE)
-        el.removeAttribute(COVER_BONE_ATTRIBUTE)
-      }
+      clearAll()
     },
   }
 }

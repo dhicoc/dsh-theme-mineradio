@@ -1845,7 +1845,7 @@ export class MineradioLayer {
 
   /** Counters for the console API (`__mineradioCover()`). */
   coverStats(): SurfaceCoverStats {
-    return this.coverHandle?.stats() ?? { surfaces: 0, bones: 0, measured: 0, pending: 0 }
+    return this.coverHandle?.stats() ?? { surfaces: 0, bones: 0, spots: 0, measured: 0, pending: 0 }
   }
 
   /** Force a fresh auto-cover pass (after a host repaint the memo missed). */
