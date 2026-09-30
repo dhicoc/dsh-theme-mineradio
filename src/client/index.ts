@@ -55,6 +55,18 @@ export function apply(ctx: Context): void {
   // are all effects released on disable/dispose.
   const layer = new MineradioLayer(ctx)
 
+  // Dev-tool console API for the automatic cover: `__mineradioCover()` reports
+  // how many surfaces/bones the scanner stamped, `__mineradioCover(true)`
+  // forces a fresh pass (after a host repaint the per-element memo missed).
+  ;(window as unknown as Record<string, unknown>).__mineradioCover = (rescan?: boolean) => {
+    const stats = rescan === true ? layer.coverRescan() : layer.coverStats()
+    console.info(
+      `[mineradio cover] ${stats.surfaces} surface(s) glassed, ${stats.bones} bone(s) lifted, ` +
+      `${stats.measured} element(s) measured, ${stats.pending} queued`,
+    )
+    return stats
+  }
+
   // Two store mirrors of the same layer state: one for the Plugins card
   // (master switch) and one for the General section's Appearance row (knobs).
   const pluginStore = createMineradioRowStore()

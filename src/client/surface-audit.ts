@@ -27,7 +27,6 @@ const MODE = 'data-dsh-aqua-audit'
 
 /** Elements that never count as un-adapted slabs. */
 const SKIP_SELECTOR = [
-  'html', 'body', '#root',
   '[data-dsh-aqua-wallpaper]', '[data-dsh-aqua-ambient]', '[data-dsh-aqua-fade]',
   'img', 'video', 'canvas', 'svg', 'picture', 'iframe',
   // readability surfaces that legitimately stay solid:
@@ -102,6 +101,11 @@ export function runSurfaceAudit(): () => void {
     const end = Math.min(cursor + SLICE, elements.length)
     for (; cursor < end; cursor += 1) {
       const el = elements[cursor]
+      // Skip the document elements by identity only. `#root` (or `body`) must
+      // never enter the ancestor blacklist: the entire app mounts inside them,
+      // and `closest()` would then exempt every surface on the page — the
+      // audit would report full coverage while opaque slabs are on screen.
+      if (el === document.body || el === document.documentElement) continue
       if (el.closest(SKIP_SELECTOR) !== null) continue
       if (el.hasAttribute(STAMP)) continue
       const rect = el.getBoundingClientRect()

@@ -41,6 +41,7 @@ A full-size gallery is also hosted at **https://dhicoc.github.io/dsh-theme-miner
 - **Background brightness**: follows the resolved scheme — dark mode darkens (0–50), light mode brightens (50–100), 50 is unchanged
 - **Ambient decor**: particle whale in the chat center, star particles, and an interactive dot-grid mesh — all toggleable
 - **Champagne glow**: a pointer-tracking glow over the glass panes, plus a hover press-down for tactile depth
+- **Automatic cover**: the theme reads what each element actually paints — anything large enough whose background is fully opaque is stamped at runtime and given the family glass (structural slabs just have their fill lifted). No host class names involved, so a DSH release that renames or adds surfaces needs no new selectors here
 - One switch: off restores the stock UI exactly, and every effect is removed with the plugin
 
 ## Installation

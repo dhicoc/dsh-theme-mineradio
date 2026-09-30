@@ -1,5 +1,17 @@
 # Changelog
 
+## v2.6.0 (2026-09-30)
+
+- **自动覆盖：从「按类名点名」改成「按实际绘制」接住**。L0/L1 仍靠 CSS-module 词根猜面，宿主改一次类名或加一个新面就漏一块；新增 `src/client/surface-cover.ts`，运行时读元素**真实的 computed 背景**：≥80px 且背景 alpha ≥0.98 即判定为「没有规则接住的面」，当场盖戳，样式交给 L2 规则——整条链路不再依赖宿主的类名词表。主题已覆盖的面 alpha 必然 <1，所以命中即漏网，判定口径与审计器完全一致。
+  - `data-dsh-aqua-auto` → 有界表面：套家族玻璃（同一组 glass-card / glass-shadow 变量，模糊走「玻璃模糊度」旋钮的 60%，性能档退化为纯染色）。
+  - `data-dsh-aqua-bone` → 结构板（满屏、或大面积无圆角、或滚动容器）：只清填充色，氛围光直接透出来，不给整列上渐变+模糊。
+  - 可读词汇（code / terminal / xterm / markdown / highlight / progress / 图表 / 缩略图 / 原生 vibrancy 底板）在 JS 与 CSS 两侧各留一份黑名单；需要保持原样的宿主块可加 `data-dsh-aqua-cover-ignore`。
+  - 开销受控：首屏整树分片扫描（rAF + 每帧 6ms 预算 + 逐元素记忆化），之后只吃 MutationObserver 送来的新增子树；`resize` 与属性变化触发防抖重扫。
+- **修复：审计器与覆盖器的祖先黑名单把整个应用跳过了**。黑名单里写着 `#root`，而 DSH Web UI 的挂载点正是 `<div id="root">`——`closest()` 命中祖先即豁免，`#root` 里的**每一个**元素都被跳过，于是 `__mineradioAudit()` 长期报「no un-adapted opaque surfaces」，肉眼却仍有实心板。现在 `html`/`body` 只按自身身份排除，`#root` 不再进祖先黑名单，审计器恢复为可信的自检工具（上一版正是据此以为已全覆盖）。
+- **新增控制台 API `__mineradioCover()`**：打印覆盖计数（已上玻璃的表面数 / 已清底的结构板数 / 已测量元素数 / 队列长度）；`__mineradioCover(true)` 强制重扫（宿主某次重绘绕过了记忆化时用）。
+- **静态证据（DSH 0.2.0-rc.2 实包）**：从 `app.asar` 提取全部 `@deepseek-ai/dsh-client-*` 与 web 前端 CSS，逐条比对本主题的 `[class*=]` 词表——110 个「声明了不透明填充」的类名词根里有 **89 个主题词表根本够不到**（`tabHost` / `emptyTabHost` / `overlay` / `page` / `editor` / `business` / `output` …）。离线画廊用这些真实类名复现：33 个面在覆盖前是不透明实心，覆盖后 0 个残留、黑名单 0 违规。本版因此不再逐个补词根，统一交给自动覆盖。
+- 精装规则（顶栏 / 侧栏 / 输入栏 / 菜单 / 气泡…）保留最后一票：L2 与它们同为 (0,2,0) 且写在前面，宿主语义更强的规则照旧生效。
+
 ## v2.5.1 (2026-09-30)
 
 - **修复：设置页点开「动效」组后主题设置整体消失**。根因是 rc.2 的 `dsh-client-ui-primitives` 把图标 API 改名（`IconCheckOutline16` → `IconCheckOutlineRegular/Medium`），旧名运行时为 `undefined`；「动效」折叠组默认收起，点开才渲染鲸鱼/生物/网格等开关的选中态勾图标，React 渲染 undefined 组件即崩，整棵 slot 子树被卸载。现改用 `IconCheckOutlineRegular size={16}`（主卡同修）。
