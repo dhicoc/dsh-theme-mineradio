@@ -1,6 +1,16 @@
 # Changelog
 
-## v2.5.1 (2026-09-30)
+## v2.5.2 (2026-09-30)
+
+**修复长期存在的黑块：外壳（AppFrame / DockKit）铺的 INK 实心底，主题的词表一直没覆盖到。**
+
+- 起因（实测得出，不是推断）：外壳样式表里 **7 个类**用 `--dsw-alias-bg-base` 铺实心底，而主题的 L0 骨架清扫只认 `frame/Col/Body/Stack/Wrap/Layer/Seat/container/root` 这些词根 —— `_tabHost_6nhg2_162`、`_emptyTabHost_6nhg2_143`、`_tabCell_…`、`_paneBody_…`、`_stripChrome_…`、`_stripTabs_…`、`_backing_…` 全部逃过清扫。会话列就挂在这层外壳里，于是那块黑从早期版本一路透上来。
+- 新增 **L0b 外壳面板层**：按 `tabHost / tabCell / paneBody / paneCell / dockHost / dockPanel / dock / stripChrome / stripTabs / backing / bannerWrap` 词根 + 不可哈希的 `data-dockkit-*` 属性清底（`background-color: transparent`，保留 `background-image`，不碰壁纸）。
+- 验证工具（可复跑、可证伪）：
+  - `outputs/harness/ink-matrix.mjs` —— 把外壳所有铺 INK 的类逐个渲染，分别在「只有外壳 CSS」与「外壳 + 主题」两种情况下读 computed 值做差，列出仍未被接住的类。修复前 **1/7 被接住**，修复后 **6/7**（剩下 1 个是 markdown 图片占位板，本就该有底）。
+  - `outputs/harness/cascade-test.mjs` —— 真实 AppFrame/DockKit 层级形状 + 真实宿主 CSS，带 `--no-theme` 对照组，确保 fixture 真的触发了宿主规则（对照必须显示 INK 实心，否则结论无效）。
+
+# Changelog## v2.5.1 (2026-09-30)
 
 - **修复：设置页点开「动效」组后主题设置整体消失**。根因是 rc.2 的 `dsh-client-ui-primitives` 把图标 API 改名（`IconCheckOutline16` → `IconCheckOutlineRegular/Medium`），旧名运行时为 `undefined`；「动效」折叠组默认收起，点开才渲染鲸鱼/生物/网格等开关的选中态勾图标，React 渲染 undefined 组件即崩，整棵 slot 子树被卸载。现改用 `IconCheckOutlineRegular size={16}`（主卡同修）。
 - **主卡注册迁移**：rc.2 删除了 `settings.plugin.item` 卡片 slot，插件卡现按新契约注册为 `settings.plugins.tab` 贡献（`id: 'mineradio'`，`label: 'Mineradio'`，品牌名不翻译），总开关在「设置 → 插件」页以标签页形态出现。

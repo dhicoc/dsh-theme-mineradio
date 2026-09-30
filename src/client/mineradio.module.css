@@ -108,6 +108,39 @@
   background-color: transparent;
 }
 
+/* L0b — shell panes. The AppFrame/DockKit shell paints the SAME opaque base
+   fill on its pane wrappers, but with vocabulary L0 never learned:
+   `._tabHost_…:not(._float_…)` and `._emptyTabHost_…` both do
+   `background: var(--dsw-alias-bg-base)` at (0,2,0), `_paneBody_…`/_tabCell_…
+   carry it too. Those class roots (`Host`, `pane`, `dock`, `cell`, `strip`)
+   are absent from the L0 list, so the floor never reached them and the INK
+   showed through every themed surface above — the long-standing black plate
+   over the conversation area. The DockKit data-atributes are unhashed, so
+   they are the durable handle; the word roots cover the hashed classes.
+   (0,2,0), level with the stock rules, winning by injection order. */
+[data-dsh-aqua]
+  :is(
+    [class*='tabHost'], [class*='TabHost'], [class*='tabCell'], [class*='TabCell'],
+    [class*='paneBody'], [class*='PaneBody'], [class*='paneCell'], [class*='PaneCell'],
+    [class*='dockHost'], [class*='dockPanel'], [class*='dock'], [class*='Dock'],
+    [class*='stripChrome'], [class*='stripTabs'],
+    [class*='backing'], [class*='Backing'], [class*='bannerWrap'], [class*='BannerWrap'],
+    [data-dockkit-host], [data-dockkit-column], [data-dockkit-strip-scroll],
+    [data-dockkit-dock-zone], [data-dockkit-drop-zones]
+  ) {
+  background-color: transparent;
+}
+
+/* Shell pane wrappers that carry an `_image_…` / `_frame_…` hash: these are the
+   app's own backdrop hosts (the wallpaper/video plate and the code-block image
+   frame). They are painted opaque by the shell and have no stable attribute,
+   so they are matched by their `[class*='image']`/`[class*='frame']` roots,
+   which L0 already knows. `background-image` is deliberately left alone: the
+   wallpaper plate must keep its picture and only lose the black underlay. */
+[data-dsh-aqua] :is([class*='image'][class*='image'], [class*='Image'][class*='Image']):where(:not([data-dsh-aqua-wallpaper] *)) {
+  background-color: transparent;
+}
+
 /* L1 — unknown surfaces. Any surface-vocabulary element takes the family
    glass recipe (the same vars the precise rules consume). The blur rides
    the existing knob at 60% and drops entirely in the performance gate.
