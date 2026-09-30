@@ -56,6 +56,23 @@ const DEFAULT_READABILITY = [
   '[data-lexical-editor]',
 ].join(', ')
 
+/**
+ * Containers that hold code but are not themselves code elements.
+ *
+ * Measured on the trajectory view: `#tjProgram` (`.programSource`) is a plain div
+ * wrapping a `pre`, so the tag-based rule above skips the wrapper and the census
+ * dressed it as a pane — which blurred the code behind it. The `pre` inside stayed
+ * sharp, so the text was legible but greyed, which is exactly the kind of damage a
+ * legibility carve-out exists to prevent. These match on the role the name states
+ * (program source, terminal body, diff body) rather than on a specific package.
+ */
+const READABILITY_CONTAINER = [
+  "[class*='programSource']", "[class*='ProgramSource']",
+  "[class*='codeArea']", "[class*='CodeArea']",
+  "[class*='console']", "[class*='Console']",
+  "[class*='diffBody']", "[class*='DiffBody']",
+].join(', ')
+
 /** Containers whose whole subtree is readability-owned (code blocks). */
 const READABILITY_ROOT = '[data-code-wrap], [class*="xterm"], [class*="terminal"]'
 
@@ -90,6 +107,7 @@ function readabilitySelector(): string {
 /** True when the element, or any ancestor, must stay legible. */
 function isReadability(el: Element): boolean {
   if (el.matches(readabilitySelector())) return true
+  if (el.matches(READABILITY_CONTAINER)) return true
   return el.closest(READABILITY_ROOT) !== null
 }
 

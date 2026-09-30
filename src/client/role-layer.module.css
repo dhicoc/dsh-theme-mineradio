@@ -195,7 +195,16 @@
 [data-dsh-aqua] pre,
 [data-dsh-aqua] code,
 [data-dsh-aqua] [class*='xterm'],
-[data-dsh-aqua] [data-code-block-content] {
+[data-dsh-aqua] [data-code-block-content],
+/* Containers that hold code without being code themselves (program source, diffs,
+   consoles). The census skips them so they keep their own look; this is the belt to
+   that braces if a host release puts one behind a role we do stamp. Measured need:
+   the trajectory program-source wrapper was dressed as a pane, which blurred the
+   code behind it. */
+[data-dsh-aqua] [class*='programSource'],
+[data-dsh-aqua] [class*='codeArea'],
+[data-dsh-aqua] [class*='console'],
+[data-dsh-aqua] [class*='diffBody'] {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
