@@ -65,40 +65,6 @@
   /* Signature champagne-gold ambient bloom behind the glass (the Mineradio
      wordmark's bronze light) — colorized by the spotlight hue knob. */
   --dsh-aqua-bloom: hsla(var(--dsh-aqua-bloom-h, 44), 82%, 66%, 0.07);
-  /* Scheme-neutral alias for the runtime auto-cover (L2 below): the dark
-     body rule further down swaps it, so the cover rule itself never needs a
-     scheme-qualified selector (and never out-specifies the precise rules).
-     It points at the LIGHT family film, not the card recipe: the card's dark
-     stops (~0.70 alpha) are right for a card and read as ink across a whole
-     column, so an auto-covered face gets the film + rim + blur instead. */
-  --dsh-aqua-glass-auto: var(--dsh-aqua-glass-veil-light);
-  --dsh-aqua-glass-auto-shadow: var(--dsh-aqua-glass-veil-shadow-light);
-  /* Rim-only depth for auto-covered faces. The card shadow set carries a deep
-     outer drop (`0 22px 64px black .30`) and a wide inner dark band
-     (`inset 0 -24px 58px black .16`) — right for a card, but across a whole
-     conversation area they paint a black plate ("ink fill"). The veil keeps
-     only the specular rim and the catch-lights. */
-  --dsh-aqua-glass-veil-shadow-light:
-    inset 0 0 0 1px rgb(255 255 255 / 0.40),
-    inset 0 1px 0 rgb(255 255 255 / calc(0.52 + 0.20 * (1 - var(--dsh-aqua-spec-y, 0)) / 2)),
-    inset 0 -1px 0 rgb(154 111 44 / calc(0.08 + 0.12 * (1 + var(--dsh-aqua-spec-y, 0)) / 2)),
-    0 2px 10px rgb(38 26 8 / 0.06);
-  --dsh-aqua-glass-veil-shadow-dark:
-    inset 0 0 0 1px rgb(255 255 255 / 0.10),
-    inset 0 1px 0 rgb(255 255 255 / calc(0.14 + 0.16 * (1 - var(--dsh-aqua-spec-y, 0)) / 2)),
-    inset 0 -1px 0 rgb(0 245 212 / calc(0.04 + 0.10 * (1 + var(--dsh-aqua-spec-y, 0)) / 2)),
-    0 2px 12px rgb(0 0 0 / 0.10);
-  /* The auto-cover film: same catch-lights as the card, a fraction of the
-     body, so the ambient backdrop stays visible through it. */
-  --dsh-aqua-glass-veil-light:
-    linear-gradient(rgba(255 255 255 / var(--dsh-aqua-frost-white, 0)), rgba(255 255 255 / var(--dsh-aqua-frost-white, 0))),
-    radial-gradient(circle at 16% 0%, rgb(255 255 255 / calc(0.24 * var(--dsh-aqua-frost, 1))), transparent 42%),
-    linear-gradient(145deg, rgb(244 210 138 / calc(0.10 * var(--dsh-aqua-frost, 1))), rgba(255 252 246 / 0.34) 45%, rgba(250 246 238 / 0.28));
-  --dsh-aqua-glass-veil-dark:
-    linear-gradient(rgba(255 255 255 / var(--dsh-aqua-frost-white, 0)), rgba(255 255 255 / var(--dsh-aqua-frost-white, 0))),
-    radial-gradient(circle at 16% 0%, rgb(255 255 255 / calc(0.07 * var(--dsh-aqua-frost, 1))), transparent 42%),
-    radial-gradient(circle at 88% 8%, rgb(0 245 212 / calc(0.09 * var(--dsh-aqua-frost, 1))), transparent 44%),
-    linear-gradient(145deg, rgb(0 245 212 / calc(0.055 * var(--dsh-aqua-frost, 1))), rgba(12 13 18 / 0.34) 45%, rgba(2 3 5 / 0.30));
 }
 
 [data-dsh-aqua] [data-dsh-frame] {
@@ -168,98 +134,12 @@
   backdrop-filter: none;
 }
 
-/* Dark scheme for the runtime auto-cover: swap the aliased recipe instead of
-   repeating the L2 rule per scheme (keeps that rule at one specificity). */
-[data-dsh-aqua] body[data-ds-dark-theme] {
-  --dsh-aqua-glass-auto: var(--dsh-aqua-glass-veil-dark);
-  --dsh-aqua-glass-auto-shadow: var(--dsh-aqua-glass-veil-shadow-dark);
-}
-
 /* Surface audit (console: __mineradioAudit()): gold dashed outline on
    every element the scanner flagged as an un-adapted opaque slab. Only
-   renders while the audit attribute is on <html>, so zero cost otherwise.
-   With the L2 auto-cover running this list should be empty — a hit means a
-   surface the cover declined (see data-dsh-aqua-cover-ignore). */
+   renders while the audit attribute is on <html>, so zero cost otherwise. */
 [data-dsh-aqua-audit] [data-dsh-aqua-unthemed] {
   outline: 1px dashed rgb(244 210 138 / 0.9);
   outline-offset: -1px;
-}
-
-/* ---------- L2 — runtime auto-cover: the floor under the floor ----------
-   L0/L1 still guess from class-name word roots, so a renamed or brand-new
-   host face slips through until someone adds its root — and faces painted
-   from tokens the theme never overrides (`--dsw-static-neutral-*`) slip
-   through entirely. This layer is fed by surface-cover.ts instead: it
-   measures what the app actually paints and stamps the hits, so coverage no
-   longer depends on the host's vocabulary.
-
-     [data-dsh-aqua-auto]   face   -> full family dressing: fill gradient,
-                                     specular rim, hairline, blur knob,
-                                     hover/settle transition
-     [data-dsh-aqua-flat]   small face -> same dressing without the blur
-     [data-dsh-aqua-bone]   page ground -> fill lifted, ambient shows
-     [data-dsh-aqua-spot]   pane-scale face -> joins the spotlight/tilt set
-
-   The dressing is the SAME variable set the precise rules consume, so an
-   auto-covered face is indistinguishable from a hand-dressed one. Kept at
-   (0,2,0) with the scheme coming from a variable, so the precise rules
-   further down keep the last word on the faces they name. The readability
-   blacklist is repeated here as a belt-and-braces guard for hosts that
-   repaint a code/terminal/markdown face after the scan. */
-[data-dsh-aqua]
-  [data-dsh-aqua-auto]:where(:not([class*='code'], [class*='Code'], [class*='terminal'], [class*='Terminal'], [class*='xterm'], [class*='markdown'], [class*='Markdown'], [class*='scroll'], [class*='Scroll'], [class*='progress'], [class*='Progress'])) {
-  background: var(--dsh-aqua-glass-auto);
-  box-shadow: var(--dsh-aqua-glass-auto-shadow);
-  backdrop-filter: blur(calc(var(--dsh-aqua-blur, 24px) * 0.6)) saturate(1.12);
-  transition: box-shadow 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
-}
-
-/* Pane-scale faces take the family's 20px corner language; smaller ones keep
-   whatever radius the host gave them (bars and rows stay square). */
-[data-dsh-aqua] [data-dsh-aqua-auto][data-dsh-aqua-spot] {
-  border-radius: var(--dsh-aqua-auto-radius, 20px);
-}
-
-/* Small faces: the same shine, no blur (they sit inside already-frosted
-   panes — a second backdrop root there costs a lot and shows nothing). */
-[data-dsh-aqua] [data-dsh-aqua-auto][data-dsh-aqua-flat] {
-  backdrop-filter: none;
-}
-
-/* Veil faces: the host paints the plate on a pseudo-element
-   (`content:""; position:absolute; inset:0; background:var(…)`), so dressing
-   the element itself stays hidden behind it. The agent-team popover
-   (`EBLgjq_panel::before`) and a stack of other menus are built this way.
-   The veil keeps its geometry and takes the family recipe instead. */
-[data-dsh-aqua] [data-dsh-aqua-veil='before']::before,
-[data-dsh-aqua] [data-dsh-aqua-veil='after']::after {
-  background: var(--dsh-aqua-glass-auto);
-  box-shadow: var(--dsh-aqua-glass-auto-shadow);
-  backdrop-filter: blur(calc(var(--dsh-aqua-blur, 24px) * 0.6)) saturate(1.12);
-}
-
-/* The veil IS the surface: keep the element itself inert so the L0/L1 sweeps
-   (which do match a `panel` root here) cannot stack a second glass layer and
-   a second backdrop root on top of it. The host's own drop shadow stays. */
-[data-dsh-aqua] [data-dsh-aqua-veil] {
-  background: none;
-  backdrop-filter: none;
-}
-
-[data-dsh-aqua] [data-dsh-aqua-veil][data-dsh-aqua-flat]::before,
-[data-dsh-aqua] [data-dsh-aqua-veil][data-dsh-aqua-flat]::after,
-[data-dsh-aqua][data-dsh-aqua-perf='performance'] [data-dsh-aqua-veil]::before,
-[data-dsh-aqua][data-dsh-aqua-perf='performance'] [data-dsh-aqua-veil]::after {
-  backdrop-filter: none;
-}
-
-[data-dsh-aqua][data-dsh-aqua-perf='performance'] [data-dsh-aqua-auto] {
-  backdrop-filter: none;
-}
-
-/* Page ground: color component only (a stock gradient or image stays put). */
-[data-dsh-aqua] [data-dsh-aqua-bone] {
-  background-color: transparent;
 }
 
 /* The header card floats ABOVE the transcript: the scroll body slides up

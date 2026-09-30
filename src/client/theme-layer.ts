@@ -19,7 +19,6 @@ import { fluidToneColors, HUE_BASE } from './fluid-tones.ts'
 import { deleteVideoBlob, loadVideoBlob, loadVideoHandle } from './wallpaper-store.ts'
 import { attachFluidInteractions } from './fluid-interactions.ts'
 import { startSeamStamper } from './seam-stamper.ts'
-import { startSurfaceCover, type SurfaceCoverHandle, type SurfaceCoverStats } from './surface-cover.ts'
 import { startStationDial } from './station-dial.ts'
 import { mountWhale, type WhaleHandle } from './whale.ts'
 import { mountMesh, type MeshHandle } from './mesh.ts'
@@ -812,7 +811,6 @@ export class MineradioLayer {
   private interactionDisposer: (() => void) | undefined
   private themeListener: (() => void) | undefined
   private seamDisposer: (() => void) | undefined
-  private coverHandle: SurfaceCoverHandle | undefined
   private spotlightDisposer: (() => void) | undefined
   private whaleHandle: WhaleHandle | undefined
   private meshHandle: MeshHandle | undefined
@@ -1542,7 +1540,6 @@ export class MineradioLayer {
     this.applyTokens()
     this.mountFluid()
     this.startSeamStamper()
-    this.startSurfaceCover()
     this.startSpotlightFeed()
     if (this.stationDisposer === undefined) {
       this.stationDisposer = startStationDial((offset) => {
@@ -1748,8 +1745,6 @@ export class MineradioLayer {
     removePageFades()
     this.seamDisposer?.()
     this.seamDisposer = undefined
-    this.coverHandle?.dispose()
-    this.coverHandle = undefined
   }
 
   /** Attach the fluid shader and the interaction feeds. */
@@ -1831,37 +1826,6 @@ export class MineradioLayer {
   private startSeamStamper(): void {
     if (this.seamDisposer !== undefined) return
     this.seamDisposer = startSeamStamper()
-  }
-
-  /**
-   * Start the runtime auto-cover (idempotent per mount). It measures what the
-   * host actually paints and stamps the un-adapted faces, so coverage no
-   * longer depends on the host's class vocabulary — see surface-cover.ts.
-   */
-  private startSurfaceCover(): void {
-    if (this.coverHandle !== undefined) return
-    this.coverHandle = startSurfaceCover()
-  }
-
-  /** Counters for the console API (`__mineradioCover()`). */
-  coverStats(): SurfaceCoverStats {
-    return this.coverHandle?.stats() ?? { surfaces: 0, bones: 0, spots: 0, measured: 0, pending: 0 }
-  }
-
-  /** Force a fresh auto-cover pass (after a host repaint the memo missed). */
-  coverRescan(): SurfaceCoverStats {
-    this.coverHandle?.rescan()
-    return this.coverStats()
-  }
-
-  /**
-   * Stop the automatic cover and drop its stamps, keeping the rest of the
-   * theme mounted. Emergency switch: it isolates a plate the cover painted
-   * from one the host or a precise rule painted, without a restart.
-   */
-  coverOff(): void {
-    this.coverHandle?.dispose()
-    this.coverHandle = undefined
   }
 
   /** Attach the cursor-spotlight pointer feeds (idempotent per mount). */
