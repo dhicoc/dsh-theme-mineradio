@@ -55,9 +55,32 @@ const MINT = '#7ad7c2'
 const MINT_RGB = '122, 215, 194'
 const ROSE = '#ff5367'
 const ROSE_RGB = '255, 83, 103'
+/**
+ * The page-ground colour, kept for shadows, masks and ink-on-light pairings.
+ * This is NOT used as an opaque fill any more — see `PAGE_GROUND` below.
+ */
 const INK = '#08090B'
 const PAPER = '#0E1014'
 const INK_SOFT = '#1A1D22'
+
+/**
+ * The page ground, as a translucent mix rather than an opaque colour.
+ *
+ * `--dsw-alias-bg-base` is consumed by 42 backgrounds in 0.2.0-rc.2 — the frame,
+ * the centre column, the DockKit `tabHost`, and the conversation column among
+ * them — so whatever this token resolves to becomes the floor under essentially
+ * the whole UI. Overriding it to the opaque `#08090B` (the previous value) is
+ * what painted the conversation area as a black plate and hid the fluid: every
+ * consumer the stylesheet's selectors did not reach stayed opaque, and no amount
+ * of tuning the glass on top could reveal the backdrop through it.
+ *
+ * Measured with the real rc.2 stylesheets (outputs/harness/theme-ink-test.mjs):
+ * opaque `#08090B` leaves 5 plates including `centerCol`, `tabHost` and the
+ * conversation column at `rgb(8, 9, 11)`; this translucent mix removes all three.
+ * The `--dsh-aqua-frost` knob still scales how much body the ground carries.
+ */
+const PAGE_GROUND_DARK = `color-mix(in srgb, ${INK} calc(78% * var(--dsh-aqua-frost, 1)), transparent)`
+const PAGE_GROUND_LIGHT = `color-mix(in srgb, #F7F3EA calc(78% * var(--dsh-aqua-frost, 1)), transparent)`
 
 /** Scheme-invariant override value (applied to both palettes). */
 const both = (value: string): { light: string; dark: string } => ({ light: value, dark: value })
@@ -76,7 +99,10 @@ export const MINERADIO_TOKEN_OVERRIDES: ThemeTokenOverrides = {
   // Backgrounds. The base stays opaque (the fallback behind the fluid); every
   // LAYERED surface is translucent so the fluid/wallpaper shows through the
   // controls, dropdowns and cards — no solid black slabs anywhere.
-  '--dsw-alias-bg-base': { light: '#F7F3EA', dark: INK },
+  // The whole-page ground. Translucent on purpose: 42 backgrounds consume this
+  // token, so an opaque value becomes a black floor under the entire UI and the
+  // fluid never reaches the eye (measured — see PAGE_GROUND_DARK above).
+  '--dsw-alias-bg-base': { light: PAGE_GROUND_LIGHT, dark: PAGE_GROUND_DARK },
   '--dsw-alias-bg-layer-1': { light: 'rgba(255, 255, 255, 0.55)', dark: 'color-mix(in srgb, rgb(14 16 20) calc(55% * var(--dsh-aqua-frost, 1)), transparent)' },
   '--dsw-alias-bg-layer-2': { light: 'rgba(240, 234, 224, 0.50)', dark: 'color-mix(in srgb, rgb(21 23 28) calc(55% * var(--dsh-aqua-frost, 1)), transparent)' },
   '--dsw-alias-bg-layer-3': { light: 'rgba(233, 226, 214, 0.45)', dark: 'color-mix(in srgb, rgb(28 31 37) calc(50% * var(--dsh-aqua-frost, 1)), transparent)' },
