@@ -72,7 +72,22 @@
      stops (~0.70 alpha) are right for a card and read as ink across a whole
      column, so an auto-covered face gets the film + rim + blur instead. */
   --dsh-aqua-glass-auto: var(--dsh-aqua-glass-veil-light);
-  --dsh-aqua-glass-auto-shadow: var(--dsh-aqua-glass-shadow-light);
+  --dsh-aqua-glass-auto-shadow: var(--dsh-aqua-glass-veil-shadow-light);
+  /* Rim-only depth for auto-covered faces. The card shadow set carries a deep
+     outer drop (`0 22px 64px black .30`) and a wide inner dark band
+     (`inset 0 -24px 58px black .16`) — right for a card, but across a whole
+     conversation area they paint a black plate ("ink fill"). The veil keeps
+     only the specular rim and the catch-lights. */
+  --dsh-aqua-glass-veil-shadow-light:
+    inset 0 0 0 1px rgb(255 255 255 / 0.40),
+    inset 0 1px 0 rgb(255 255 255 / calc(0.52 + 0.20 * (1 - var(--dsh-aqua-spec-y, 0)) / 2)),
+    inset 0 -1px 0 rgb(154 111 44 / calc(0.08 + 0.12 * (1 + var(--dsh-aqua-spec-y, 0)) / 2)),
+    0 2px 10px rgb(38 26 8 / 0.06);
+  --dsh-aqua-glass-veil-shadow-dark:
+    inset 0 0 0 1px rgb(255 255 255 / 0.10),
+    inset 0 1px 0 rgb(255 255 255 / calc(0.14 + 0.16 * (1 - var(--dsh-aqua-spec-y, 0)) / 2)),
+    inset 0 -1px 0 rgb(0 245 212 / calc(0.04 + 0.10 * (1 + var(--dsh-aqua-spec-y, 0)) / 2)),
+    0 2px 12px rgb(0 0 0 / 0.10);
   /* The auto-cover film: same catch-lights as the card, a fraction of the
      body, so the ambient backdrop stays visible through it. */
   --dsh-aqua-glass-veil-light:
@@ -157,7 +172,7 @@
    repeating the L2 rule per scheme (keeps that rule at one specificity). */
 [data-dsh-aqua] body[data-ds-dark-theme] {
   --dsh-aqua-glass-auto: var(--dsh-aqua-glass-veil-dark);
-  --dsh-aqua-glass-auto-shadow: var(--dsh-aqua-glass-shadow-dark);
+  --dsh-aqua-glass-auto-shadow: var(--dsh-aqua-glass-veil-shadow-dark);
 }
 
 /* Surface audit (console: __mineradioAudit()): gold dashed outline on

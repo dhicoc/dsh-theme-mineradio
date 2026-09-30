@@ -98,6 +98,9 @@ const MIN_AREA = 6000
 const PAINT_ALPHA = 0.15
 /** Above this area the family glass also carries the backdrop blur. */
 const BLUR_AREA = 20000
+/** Above this share of the viewport the blur is dropped again: a whole column
+ *  reads as a flat slab once its backdrop is smoothed. */
+const LARGE_AREA_RATIO = 0.25
 /** Pane-scale faces additionally join the spotlight/tilt set. */
 const PANE_AREA = 60000
 /** Full-bleed on both axes — the page ground, not a face. */
@@ -351,7 +354,12 @@ export function startSurfaceCover(): SurfaceCoverHandle {
     if (veil === null) el.setAttribute(COVER_SURFACE_ATTRIBUTE, '')
     else el.setAttribute(COVER_VEIL_ATTRIBUTE, veil)
     surfaces += 1
-    if (rect.width * rect.height < BLUR_AREA) el.setAttribute(COVER_FLAT_ATTRIBUTE, '')
+    // Blur belongs to panes. Below the blur floor it costs more than it shows,
+    // and across a whole column (a quarter of the viewport) it smooths the
+    // ambient backdrop into a flat slab — the "ink fill" look. Both keep the
+    // light film and the specular rim instead.
+    const area = rect.width * rect.height
+    if (area < BLUR_AREA || area > vw * vh * LARGE_AREA_RATIO) el.setAttribute(COVER_FLAT_ATTRIBUTE, '')
     // Pane-scale faces also join the spotlight/tilt set (the glow overlay is
     // maintained by spot-core for every stamped pane). Absolute/fixed panes
     // are left out: the spot rule sets `position: relative`, which would
