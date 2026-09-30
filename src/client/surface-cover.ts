@@ -139,7 +139,11 @@ export function startSurfaceCover(): SurfaceCoverHandle {
   /** Enqueue one element for a decision (idempotent). */
   const enqueue = (el: Element): void => {
     if (disposed || !el.isConnected || queued.has(el)) return
-    if (decided.has(el) && stampOf(el) !== null) return
+    // Memoized: a face that was measured keeps its verdict (stamped or
+    // deliberately left alone) until something releases it — the attribute,
+    // resize and rescan paths delete from `decided` first. Without this the
+    // debounced sweeps would re-measure every non-stamped element.
+    if (decided.has(el)) return
     queued.add(el)
     queue.push(el)
   }
@@ -158,9 +162,9 @@ export function startSurfaceCover(): SurfaceCoverHandle {
     queued.delete(el)
     if (disposed || !el.isConnected) return
     const previous = stampOf(el)
-    if (decided.has(el) && previous !== null) return
     decided.add(el)
     measured += 1
+    // A re-check (attribute flip, resize, rescan) may have kept an old stamp.
     if (previous !== null) release(el)
     if (!(el instanceof HTMLElement)) return
     // The page ground is painted by the theme's own body rule: skip the two
