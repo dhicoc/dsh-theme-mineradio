@@ -36,8 +36,12 @@ export const COVER_SURFACE_ATTRIBUTE = 'data-dsh-aqua-auto'
 export const COVER_BONE_ATTRIBUTE = 'data-dsh-aqua-bone'
 /** Extra stamp for small faces: family glass without the backdrop blur. */
 export const COVER_FLAT_ATTRIBUTE = 'data-dsh-aqua-flat'
-/** Extra stamp for pane-scale faces: join the spotlight/tilt set. */
+/** Extra stamp for pane-scale faces: join the spotlight/tilt set. The seam
+ *  stamper also uses this attribute, so the cover writes the sentinel value
+ *  `cover` and only ever removes its own — a hand-stamped pane keeps its spot. */
 export const COVER_SPOT_ATTRIBUTE = 'data-dsh-aqua-spot'
+/** Value marking a spot the cover owns (an empty value belongs to the seams). */
+const COVER_SPOT_OWNER = 'cover'
 /** Opt-out for a host element that must stay stock-painted. */
 export const COVER_IGNORE_ATTRIBUTE = 'data-dsh-aqua-cover-ignore'
 /** Every stamp this module owns; used for release and for teardown. */
@@ -205,7 +209,10 @@ export function startSurfaceCover(): SurfaceCoverHandle {
   /** Release one element's stamps and forget its decision. */
   const release = (el: Element): void => {
     const stamp = stampOf(el)
-    if (el.hasAttribute(COVER_SPOT_ATTRIBUTE)) spots -= 1
+    if (el.getAttribute(COVER_SPOT_ATTRIBUTE) === COVER_SPOT_OWNER) {
+      el.removeAttribute(COVER_SPOT_ATTRIBUTE)
+      spots -= 1
+    }
     for (const attribute of OWN_ATTRIBUTES) el.removeAttribute(attribute)
     if (stamp === COVER_SURFACE_ATTRIBUTE) surfaces -= 1
     else if (stamp === COVER_BONE_ATTRIBUTE) bones -= 1
@@ -213,8 +220,10 @@ export function startSurfaceCover(): SurfaceCoverHandle {
 
   /** Drop every stamp this module owns, anywhere in the tree. */
   const clearAll = (): void => {
-    for (const el of document.querySelectorAll(OWN_ATTRIBUTES.map((a) => `[${a}]`).join(', '))) {
+    const selector = [...OWN_ATTRIBUTES.map((a) => `[${a}]`), `[${COVER_SPOT_ATTRIBUTE}='${COVER_SPOT_OWNER}']`].join(', ')
+    for (const el of document.querySelectorAll(selector)) {
       for (const attribute of OWN_ATTRIBUTES) el.removeAttribute(attribute)
+      if (el.getAttribute(COVER_SPOT_ATTRIBUTE) === COVER_SPOT_OWNER) el.removeAttribute(COVER_SPOT_ATTRIBUTE)
     }
   }
 
@@ -284,8 +293,11 @@ export function startSurfaceCover(): SurfaceCoverHandle {
     // re-anchor them, and `isolation` would trap their popovers.
     const position = computed.position
     if (rect.width * rect.height >= PANE_AREA && (position === 'static' || position === 'relative')) {
-      el.setAttribute(COVER_SPOT_ATTRIBUTE, '')
-      spots += 1
+      // Never clobber a spot the seam stamper already placed.
+      if (!el.hasAttribute(COVER_SPOT_ATTRIBUTE)) {
+        el.setAttribute(COVER_SPOT_ATTRIBUTE, COVER_SPOT_OWNER)
+        spots += 1
+      }
     }
   }
 
