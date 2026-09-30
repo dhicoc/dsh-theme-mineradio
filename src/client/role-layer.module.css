@@ -111,6 +111,14 @@
     0 18px 48px rgb(0 0 0 / 0.34) !important;
   backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.2) !important;
   -webkit-backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.2) !important;
+  /* Menus, dialogs and popovers appear and dismiss; without this their fill snaps
+     between states while every other role eases. Deliberately not `!important`: an
+     entry animation the host sets on the same element must still be able to win. */
+  transition:
+    box-shadow 0.28s ease,
+    background-color 0.28s ease,
+    backdrop-filter 0.28s ease,
+    opacity 0.18s ease;
 }
 
 /* A host popover whose plate is drawn by a covering pseudo-element (the
