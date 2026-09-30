@@ -241,10 +241,15 @@ export function apply(ctx: Context): void {
     }
   }
 
-  // Master switch card in the Plugins configurable tab.
-  ctx.slots.inject('settings.plugin.item', () => ctx.slots.register({
-    name: 'settings.plugin.item',
-    key: 'mineradio',
+  // Master switch tab in the Plugins section (0.2.0-rc.2: the plugin card
+  // slot is a localized tab ledger — `settings.plugins.tab`; the 0.1.x
+  // `settings.plugin.item` slot no longer exists). Label is the brand name
+  // (locale-independent); the card itself carries the localized copy.
+  ctx.slots.inject('settings.plugins.tab', () => ctx.slots.register({
+    name: 'settings.plugins.tab',
+    id: 'mineradio',
+    order: 20,
+    label: 'Mineradio',
     store: pluginStore,
     locale: NS,
     inject: pluginInjected,

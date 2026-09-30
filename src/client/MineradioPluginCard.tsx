@@ -1,13 +1,13 @@
 /**
- * Mineradio card registered into the Plugins settings section's configurable tab
- * (`settings.plugin.item`): the master on/off switch — name, description, and
- * one toggle, in the section's card language. Every other knob lives in the
- * General settings' Appearance row, so the card stays the same shape as the
- * other plugin cards.
+ * Mineradio card registered into the Plugins settings section's tab ledger
+ * (`settings.plugins.tab` in 0.2.0-rc.2; the 0.1.x `settings.plugin.item`
+ * card slot is gone): the master on/off switch — name, description, and
+ * one toggle. Every other knob lives in the General settings' Appearance
+ * row, so the card stays the same shape as the other plugin pages.
  */
-import { IconCheckOutline16 } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconCheckOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { InjectFace, PropsLocale, PropsRuntime, PropsStore } from '@deepseek-ai/dsh-client-ui-slots'
-// Type-only: pulls the `settings.plugin.item` SlotMap merge.
+// Type-only: pulls the `settings.plugins.tab` SlotMap merge.
 import type {} from '@deepseek-ai/dsh-client-ui-settings-plugins/client'
 import type { createMineradioRowStore } from './settings-store.ts'
 import css from './MineradioPluginCard.module.css'
@@ -20,7 +20,7 @@ export interface MineradioPluginCardInjected {
 
 /** Full component props: runtime share + store share + locale seat + injected face. */
 export type MineradioPluginCardComponentProps =
-  PropsRuntime<'settings.plugin.item'> & PropsStore<ReturnType<typeof createMineradioRowStore>>
+  PropsRuntime<'settings.plugins.tab'> & PropsStore<ReturnType<typeof createMineradioRowStore>>
   & PropsLocale<'settings.mineradio'> & InjectFace<MineradioPluginCardInjected>
 
 /**
@@ -45,7 +45,7 @@ export function MineradioPluginCard(props: MineradioPluginCardComponentProps) {
           onClick={() => { setEnabled(!enabled) }}
         >
           <span className={css.check}>
-            {enabled && <IconCheckOutline16 />}
+            {enabled && <IconCheckOutlineRegular size={16} />}
           </span>
           {enabled ? t('mineradio.enable') : t('mineradio.disable')}
         </button>

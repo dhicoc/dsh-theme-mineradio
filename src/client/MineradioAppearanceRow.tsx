@@ -10,7 +10,7 @@
  * section is off.
  */
 import { useRef, useState, type ReactNode } from 'react'
-import { IconCheckOutline16 } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconCheckOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { PropsLocale, PropsRuntime, PropsStore } from '@deepseek-ai/dsh-client-ui-slots'
 // Type-only: pulls the `settings.general.item` SlotMap merge.
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
@@ -439,7 +439,7 @@ export function MineradioAppearanceRow(props: MineradioAppearanceRowComponentPro
                   onClick={() => { setAutoTint(!autoTint) }}
                 >
                   <span className={css.check}>
-                    {autoTint && <IconCheckOutline16 />}
+                    {autoTint && <IconCheckOutlineRegular size={16} />}
                   </span>
                   {autoTint ? t('mineradio.enable') : t('mineradio.disable')}
                 </button>
@@ -453,7 +453,7 @@ export function MineradioAppearanceRow(props: MineradioAppearanceRowComponentPro
                   onClick={() => { setWallpaperMask(!wallpaperMask) }}
                 >
                   <span className={css.check}>
-                    {wallpaperMask && <IconCheckOutline16 />}
+                    {wallpaperMask && <IconCheckOutlineRegular size={16} />}
                   </span>
                   {wallpaperMask ? t('mineradio.enable') : t('mineradio.disable')}
                 </button>
@@ -505,7 +505,7 @@ export function MineradioAppearanceRow(props: MineradioAppearanceRowComponentPro
               onClick={() => { setWhale(!whale) }}
             >
               <span className={css.check}>
-                {whale && <IconCheckOutline16 />}
+                {whale && <IconCheckOutlineRegular size={16} />}
               </span>
               {whale ? t('mineradio.enable') : t('mineradio.disable')}
             </button>
@@ -519,7 +519,7 @@ export function MineradioAppearanceRow(props: MineradioAppearanceRowComponentPro
               onClick={() => { setCritters(!critters) }}
             >
               <span className={css.check}>
-                {critters && <IconCheckOutline16 />}
+                {critters && <IconCheckOutlineRegular size={16} />}
               </span>
               {critters ? t('mineradio.enable') : t('mineradio.disable')}
             </button>
@@ -533,7 +533,7 @@ export function MineradioAppearanceRow(props: MineradioAppearanceRowComponentPro
               onClick={() => { setMesh(!mesh) }}
             >
               <span className={css.check}>
-                {mesh && <IconCheckOutline16 />}
+                {mesh && <IconCheckOutlineRegular size={16} />}
               </span>
               {mesh ? t('mineradio.enable') : t('mineradio.disable')}
             </button>
@@ -547,7 +547,7 @@ export function MineradioAppearanceRow(props: MineradioAppearanceRowComponentPro
               onClick={() => { setAudioReact(!audioReact) }}
             >
               <span className={css.check}>
-                {audioReact && <IconCheckOutline16 />}
+                {audioReact && <IconCheckOutlineRegular size={16} />}
               </span>
               {audioReact ? t('mineradio.enable') : t('mineradio.disable')}
             </button>
@@ -570,7 +570,7 @@ export function MineradioAppearanceRow(props: MineradioAppearanceRowComponentPro
                 onClick={() => { setSpotlight(!spotlight) }}
               >
                 <span className={css.check}>
-                  {spotlight && <IconCheckOutline16 />}
+                  {spotlight && <IconCheckOutlineRegular size={16} />}
                 </span>
                 {spotlight ? t('mineradio.enable') : t('mineradio.disable')}
               </button>
@@ -584,7 +584,7 @@ export function MineradioAppearanceRow(props: MineradioAppearanceRowComponentPro
                 onClick={() => { setPress(!press) }}
               >
                 <span className={css.check}>
-                  {press && <IconCheckOutline16 />}
+                  {press && <IconCheckOutlineRegular size={16} />}
                 </span>
                 {press ? t('mineradio.enable') : t('mineradio.disable')}
               </button>

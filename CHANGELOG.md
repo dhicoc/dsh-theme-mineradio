@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.5.1 (2026-09-30)
+
+- **修复：设置页点开「动效」组后主题设置整体消失**。根因是 rc.2 的 `dsh-client-ui-primitives` 把图标 API 改名（`IconCheckOutline16` → `IconCheckOutlineRegular/Medium`），旧名运行时为 `undefined`；「动效」折叠组默认收起，点开才渲染鲸鱼/生物/网格等开关的选中态勾图标，React 渲染 undefined 组件即崩，整棵 slot 子树被卸载。现改用 `IconCheckOutlineRegular size={16}`（主卡同修）。
+- **主卡注册迁移**：rc.2 删除了 `settings.plugin.item` 卡片 slot，插件卡现按新契约注册为 `settings.plugins.tab` 贡献（`id: 'mineradio'`，`label: 'Mineradio'`，品牌名不翻译），总开关在「设置 → 插件」页以标签页形态出现。
+
 ## v2.5.0 (2026-09-30)
 
 - **三层漏斗覆盖架构（告别逐面打地鼠）**：新增 L0/L1 通配兜底层，插在全部精装规则之前——精装规则靠同特异度 + 源顺序保持最终话语权，通配层只接住它们没点名的面。**L0 骨架层**：`frame/Col/Body/Stack/Wrap/Layer/Seat/root` 等布局词根批量清掉 `--dsw-alias-bg-base` 实心填充（只清颜色分量、不上模糊，玻璃属于表面不属于骨架；stock 强意图如 composerSeat 渐变 scrim 以 (0,3,0) 特异度自然存活）；**L1 表面层**：`panel/card/bar/menu/dialog/popover/dropdown/sheet/drawer/modal/banner/tip/pill/toast` 等表面词根直接套**家族玻璃配方**（同一组 `--dsh-aqua-glass-card-*`/`glass-shadow-*` 变量），blur 走现有 `--dsh-aqua-blur` 旋钮的 60%，性能档（`data-dsh-aqua-perf='performance'`，由 applySettings 反射）下退化为纯染色。可读性词汇（code/terminal/markdown/scroll/progress）整列排除。所有通配规则 (0,2,0) 特异度用 `:is()` 锁定、黑名单用 `:where()` 零特异度——漏网面的代价从「丑陋实心板」降为「家族玻璃」，不再是 bug。
