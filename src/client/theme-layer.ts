@@ -202,6 +202,15 @@ export const MINERADIO_TOKEN_OVERRIDES: ThemeTokenOverrides = {
   '--dsw-specific-tip': { light: '#F0E9DC', dark: 'color-mix(in srgb, rgb(18 20 24) calc(60% * var(--dsh-aqua-frost, 1)), transparent)' },
   '--dsw-alias-toast-bg': { light: '#4A3A1E', dark: 'color-mix(in srgb, rgb(28 31 37) calc(60% * var(--dsh-aqua-frost, 1)), transparent)' },
   '--dsw-alias-tooltip-bg': { light: '#2A241A', dark: 'color-mix(in srgb, rgb(21 23 28) calc(72% * var(--dsh-aqua-frost, 1)), transparent)' },
+  // The onboarding screen's secondary button. The host ships it opaque
+  // (`onboarding.css:14`, rgb(72 73 76)), so on a fresh install the first thing a user
+  // sees has a plate the token layer could not reach. Its other onboarding tokens are
+  // deliberately left alone: the accent and the three brand gradients are identity, and
+  // the card fill is already a color-mix the host computes itself.
+  '--dsw-alias-onboarding-secondary-fill': {
+    light: 'color-mix(in srgb, rgb(240 233 220) calc(62% * var(--dsh-aqua-frost, 1)), transparent)',
+    dark: 'color-mix(in srgb, rgb(72 73 76) calc(62% * var(--dsh-aqua-frost, 1)), transparent)',
+  },
 
   // Elevation shadows (warm-tinted depth with a champagne bloom).
   '--dsw-shadow-lv1': { light: '0 2px 4px rgba(60, 43, 17, 0.08)', dark: '0 2px 4px rgba(0, 0, 0, 0.5)' },

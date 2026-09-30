@@ -43,6 +43,18 @@ A full-size gallery is also hosted at **https://dhicoc.github.io/dsh-theme-miner
 - **Champagne glow**: a pointer-tracking glow over the glass panes, plus a hover press-down for tactile depth
 - One switch: off restores the stock UI exactly, and every effect is removed with the plugin
 
+### How coverage works (3.0)
+
+Earlier versions decided what to style from class-name word roots, at a fixed specificity. Against the real 0.2.0-rc.2 shell that loses: the shell paints an opaque `--dsw-alias-bg-base` on its tab host, centre column and conversation column, and any host rule above that specificity wins outright — which is why patches kept missing areas. 3.0 covers surfaces three ways instead, in this order:
+
+1. **Design tokens**, through the official `ctx.theme.overrideTokens()` seam. It writes inline custom properties on `body`, so it wins without `!important` and without a specificity contest. Measured against the rc.2 sources, 97% of painted backgrounds resolve to a token, so this one layer reaches nearly every surface — including into `::before`/`::after`, which inherit them.
+2. **A runtime role census** for what tokens cannot express. It reads *computed paint and geometry* — never class names — and stamps `data-md-role` (`ground`, `structure`, `pane`, `overlay`, `control`, `chip`). The stylesheet then dresses by role with `!important`, so priority decides rather than a specificity race. It re-runs for elements added after mount, which is most of a React UI, and finishes in ~25 ms over 600 elements.
+3. **Carve-outs that stay stock.** Code, terminals, form fields and file previews keep their own fill and get no blur; containers that *hold* code (program source, diff bodies, consoles) are carved out too, so the text behind them is not greyed. The host's positional anchors are never touched, because a `backdrop-filter` on them would re-anchor every in-place overlay. Faces that already wear the family rim are left alone, so hand-tuned panes keep their look.
+
+A popover whose plate is drawn by a covering `::before` is detected and dressed on the *pseudo-element*, so the box stays clean instead of stacking a second layer of glass.
+
+You can inspect it live: `__mineradioCensus()` reports how many faces carry each role, `__mineradioCensus(true)` re-runs the pass, and `__mineradioAudit()` sweeps for opaque surfaces the theme did not reach.
+
 ## Installation
 
 ### Windows (one command)
