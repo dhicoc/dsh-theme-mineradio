@@ -497,8 +497,16 @@ export function startRoleCensus(): CensusHandle {
       if (record.type === 'attributes') {
         const target = record.target
         if (!(target instanceof Element)) continue
-        // Our own stamps are not inputs: re-deciding on them would loop.
-        if (record.attributeName?.startsWith('data-md-')) continue
+        const attr = record.attributeName
+        // Our own stamps and injected overlays are not inputs: re-deciding on them would loop.
+        if (attr?.startsWith('data-md-')) continue
+        if (attr?.startsWith('data-spot-')) continue
+        if (attr?.startsWith('data-dsh-')) continue
+        if (target.hasAttribute('data-dsh-aqua-glow')) continue
+        if (target.closest(OWN_LAYER_SELECTOR) !== null) continue
+        // Spotlight and tilt write inline styles (transform, transform-origin, radial gradient)
+        // onto hovered spots; ignore style churn on elements inside or marked as spots.
+        if (attr === 'style' && (target.hasAttribute('data-spot-on') || target.hasAttribute('data-md-spot') || target.hasAttribute('data-dsh-aqua-spot'))) continue
         decided.delete(target)
         enqueue(target)
         sweepSoon()

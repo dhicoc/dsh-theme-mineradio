@@ -50,6 +50,11 @@ export function spotElements(): HTMLElement[] {
  * side gutters stay outside every effect.
  */
 export function visualRect(spot: HTMLElement): DOMRect {
+  const questionCard = spot.querySelector<HTMLElement>('[data-question-key] section')
+    ?? spot.querySelector<HTMLElement>('[data-question-key]')
+  if (questionCard !== null) {
+    return questionCard.getBoundingClientRect()
+  }
   if (spot.querySelector('[data-composer-card]') !== null) {
     const card = spot.querySelector<HTMLElement>('[data-composer-card]')!
     const r0 = card.getBoundingClientRect()
@@ -91,6 +96,12 @@ function localTopLeft(el: HTMLElement, ancestor: HTMLElement): { x: number; y: n
  * stats band; for the other panes it is the pane's own box.
  */
 export function glassLocalRect(spot: HTMLElement): { left: number; top: number; width: number; height: number } {
+  const questionCard = spot.querySelector<HTMLElement>('[data-question-key] section')
+    ?? spot.querySelector<HTMLElement>('[data-question-key]')
+  if (questionCard !== null) {
+    const qPos = localTopLeft(questionCard, spot)
+    return { left: qPos.x, top: qPos.y, width: questionCard.offsetWidth, height: questionCard.offsetHeight }
+  }
   const card = spot.querySelector<HTMLElement>('[data-composer-card]')
   if (card === null) {
     return { left: 0, top: 0, width: spot.offsetWidth, height: spot.offsetHeight }

@@ -84,6 +84,14 @@ function tiltable(spot: HTMLElement): boolean {
   // overflow:hidden and trap at the 260px column width). It keeps the glow;
   // the geometric press is reserved for the hero glass panes.
   if (spot.matches('[class*="sidebarCol"]')) return false
+  if (spot.matches('header') || spot.closest('header') !== null) return false
+  // The geometric press is reserved for the hero glass panes (data-dsh-aqua-spot).
+  // Census-discovered panes (data-md-spot) and question takeovers must not tilt:
+  // a 3D perspective/scale transform disables subpixel font antialiasing in Chromium,
+  // making text blurry, and interferes with option selection / form controls.
+  if (!spot.hasAttribute('data-dsh-aqua-spot')) return false
+  if (spot.matches('[data-question-key]') || spot.querySelector('[data-question-key]') !== null) return false
+  if (spot.querySelector('[role="radiogroup"], [role="group"]') !== null) return false
   return true
 }
 
@@ -247,8 +255,12 @@ export function startSpotlight(): () => void {
   const onOut = (event: PointerEvent): void => {
     const spot = closestSpot(event.target)
     if (spot === null || spot !== current) return
-    // Moving between children keeps the effects live; leaving the visible
-    // glass (including into the wrapper's gutters) clears them.
+    // Moving between children of this spot keeps the effects live.
+    if (event.relatedTarget instanceof Node && spot.contains(event.relatedTarget)) {
+      if (!spot.hasAttribute('data-dsh-inputbar')) return
+      if (session !== null && inside(session.visual, event.clientX, event.clientY)) return
+    }
+    // Leaving the visible glass (including into the wrapper's gutters) clears them.
     if (session !== null && inside(session.visual, event.clientX, event.clientY)) return
     clearSpot(spot)
   }

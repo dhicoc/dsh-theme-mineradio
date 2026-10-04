@@ -1,5 +1,15 @@
 # Changelog
 
+## v3.0.3 (2026-10-04)
+
+- **交互选项看板（QuestionComposer / ask_user_question）悬停文字模糊消除（修复 issue #8）**：
+  - 根因：非“雾面”场景（Studio/Deepsea/Midnight/Rainbow）启用了悬停下压 `press`（3D 倾斜）。在 Chromium/Electron 渲染管线下，容器被施加 3D 透视形变 `perspective(800px) rotateX(...) rotateY(...) scale(1.01)` 会禁用亚像素文字抗锯齿（ClearType），并以 GPU 双线性过滤采样纹理，导致文字发虚变糊；
+  - 修复：将 3D 几何下压严格收敛于核心精装大板（`data-dsh-aqua-spot`），明确豁免选项交互卡片（`[data-question-key]`、`role="radiogroup"` 等表单控件容器），彻底根除文字虚焦问题，保持清晰锐利。
+- **选项窗口颜色跳变与停动闪烁消除（修复 issue #8）**：
+  - 根因一：指针在选项按钮子元素间移动时，`spotlight.ts` 的 `onOut` 因未校验 `spot.contains(event.relatedTarget)`，误判光标离开看板而频繁触发 `clearSpot` 与重绑，造成光标在短距离停动时辉光来回切换；
+  - 根因二：`role-census.ts` 的 MutationObserver 监听了 `'style'` 属性变化，而辉光与下压每帧都在宿主元素上写入内联样式（`transform`、`backgroundImage` 等），导致普查器在鼠标悬停时频繁启动 300ms 防抖重扫并反复剥除/补回角色标记，引发底色明暗跳动闪烁；
+  - 修复：在指针移出判定中补充同容器后代边界校验；在普查器属性监听中忽略辉光与激活光标在 spot 元素上的内联样式变动，消灭无效重扫与属性抖动。
+
 ## v3.0.2 (2026-09-30)
 
 - **输入框扩展坞（DockKit dock）宽匹配覆盖**：采用 `[data-slot='conversation.input.dock']` 宽匹配选择器，自动覆盖输入栏扩展条上的所有现有及未来新增标签项，并消除宿主伪元素遮挡板，继承家族精装玻璃。
