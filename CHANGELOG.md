@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.0.5 (2026-10-13)
+
+- Fix transparent rightbar fullscreen content superimposing on the mounted conversation header, messages and composer. Suppress the covered centre only while the enabled theme has an open fullscreen panel; preserve Grid geometry and session state, and restore on collapse/exit.
+- Cover float/compat modes, light/dark appearance, hidden retained sessions, theme disabling, and three viewport widths in 96 shipped-CSS regression cases. The negative control detects the original visibility failure.
+- Add a standalone `npm run test:rightbar-fullscreen` gate with host layout fixtures. Existing TypeScript interface errors remain outside this CSS fix; native Desktop fullscreen/exit are verified, native collapse/reopen was interrupted by window/user input.
+
+
 ## v3.0.3 (2026-10-04)
 
 - **交互选项看板（QuestionComposer / ask_user_question）悬停文字模糊消除（修复 issue #8）**：

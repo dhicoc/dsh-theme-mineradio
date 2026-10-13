@@ -80,6 +80,19 @@
   background: transparent;
 }
 
+/* The stock fullscreen DockKit pane hides the still-mounted conversation by
+   painting an opaque base. Our transparent shell sweep removes that occlusion.
+   Suppress only the covered centre's paint/input, NOT its Grid track or React
+   tree: exiting/collapsing must restore layout, scroll and unsent drafts.
+   The frame flag + open panel guard excludes collapsed and hidden sessions.
+   Opacity also suppresses descendants with an explicit visibility:visible. */
+[data-dsh-aqua] [data-dsh-frame][data-rightbar-fullscreen]:has([data-sidebar-right-panel='fullscreen'][data-sidebar-right-open]:not([hidden], [hidden] *)) > [class*='centerCol'] {
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+
 [data-dsh-aqua] [data-phase],
 [data-dsh-aqua] [data-dsh-details] {
   background: transparent;

@@ -13,3 +13,6 @@ build-tools/package-lock.json
 *.log
 *.tgz
 .gstack/
+
+# local regression artifacts
+outputs/

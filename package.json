@@ -1,7 +1,7 @@
 {
   "name": "dsh-theme-mineradio",
   "description": "Mineradio: a cinematic private-visual-radio glass theme for the Web surface — champagne glow, fluid or wallpaper backdrop, unified corners, and motion",
-  "version": "3.0.4",
+  "version": "3.0.5",
   "publishConfig": {
     "access": "public"
   },
@@ -59,7 +59,8 @@
     "build": "node build-tools/build-client.mjs",
     "bundle": "node build-tools/build-client.mjs",
     "typecheck": "tsc --noEmit",
-    "watch": "node build-tools/build-client.mjs"
+    "watch": "node build-tools/build-client.mjs",
+    "test:rightbar-fullscreen": "node tests/rightbar-fullscreen-isolation.mjs"
   },
   "license": "MIT",
   "peerDependencies": {
