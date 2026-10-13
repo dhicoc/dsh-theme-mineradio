@@ -97,7 +97,15 @@ const ANCHOR_SELECTOR = [
   '[data-shell-overlay]',
   '[data-composer-seat]',
   '[data-dsh-trajectory]',
+  '[data-sidebar-right-panel]',
 ].join(', ')
+
+/**
+ * Right-sidebar panels and panes that can expand to fullscreen (`100vw`) while
+ * remaining frosted glass surfaces rather than becoming structural viewport
+ * ground.
+ */
+const RIGHTBAR_GLASS_ROOT = '[data-sidebar-right-panel], [data-rightbar-col]'
 
 /**
  * The theme's OWN injected layers, which the census must never dress.
@@ -406,11 +414,15 @@ export function startRoleCensus(): CensusHandle {
     // Structural slabs are the fluid's window: the ambient backdrop must reach
     // the eye through them, so they only lose their fill. Painting glass over a
     // whole column is what made the conversation area read as a black plate.
-    if (!isOverlay && area >= viewportArea * POLICY.groundRatio) {
+    // Rightbar dockkit panes/surfaces are an exception: when the right sidebar
+    // enters fullscreen (`100vw`), its inner panes expand to viewport width
+    // while still acting as a frosted glass panel over the backdrop.
+    const inRightbar = el.closest(RIGHTBAR_GLASS_ROOT) !== null
+    if (!isOverlay && !inRightbar && area >= viewportArea * POLICY.groundRatio) {
       writeRole(el, 'ground')
       return
     }
-    if (!isOverlay && inFlow && area >= viewportArea * POLICY.structureRatio) {
+    if (!isOverlay && !inRightbar && inFlow && area >= viewportArea * POLICY.structureRatio) {
       writeRole(el, 'structure')
       return
     }
@@ -507,6 +519,11 @@ export function startRoleCensus(): CensusHandle {
         // Spotlight and tilt write inline styles (transform, transform-origin, radial gradient)
         // onto hovered spots; ignore style churn on elements inside or marked as spots.
         if (attr === 'style' && (target.hasAttribute('data-spot-on') || target.hasAttribute('data-md-spot') || target.hasAttribute('data-dsh-aqua-spot'))) continue
+        // Rightbar panel mode or open/close transitions: clear decisions under the rightbar so
+        // panes re-measure their geometry immediately.
+        if (attr === 'data-sidebar-right-open' || attr === 'data-sidebar-right-panel') {
+          for (const sub of target.querySelectorAll('*')) decided.delete(sub)
+        }
         decided.delete(target)
         enqueue(target)
         sweepSoon()
@@ -525,7 +542,17 @@ export function startRoleCensus(): CensusHandle {
     childList: true,
     subtree: true,
     attributes: true,
-    attributeFilter: ['class', 'style', 'hidden', 'aria-hidden', 'data-state', 'data-phase', 'data-active'],
+    attributeFilter: [
+      'class',
+      'style',
+      'hidden',
+      'aria-hidden',
+      'data-state',
+      'data-phase',
+      'data-active',
+      'data-sidebar-right-open',
+      'data-sidebar-right-panel',
+    ],
   })
 
   const onResize = (): void => {

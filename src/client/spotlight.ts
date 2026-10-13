@@ -76,20 +76,28 @@ function hoverGated(): boolean {
 }
 
 /** Whether the tilt may run on this pane right now. */
-function tiltable(spot: HTMLElement): boolean {
+export function tiltable(spot: HTMLElement): boolean {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false
   // The sidebar NEVER tilts: its tooltips, dropdown menus and the settings
   // overlay all render INSIDE the column, and a running transform would
   // re-anchor those position:fixed overlays into the column (they clip under
   // overflow:hidden and trap at the 260px column width). It keeps the glow;
   // the geometric press is reserved for the hero glass panes.
-  if (spot.matches('[class*="sidebarCol"]')) return false
+  if (spot.matches('[class*="sidebarCol"]') || spot.closest('[class*="sidebarCol"]') !== null) return false
   if (spot.matches('header') || spot.closest('header') !== null) return false
   // The geometric press is reserved for the hero glass panes (data-dsh-aqua-spot).
   // Census-discovered panes (data-md-spot) and question takeovers must not tilt:
   // a 3D perspective/scale transform disables subpixel font antialiasing in Chromium,
   // making text blurry, and interferes with option selection / form controls.
   if (!spot.hasAttribute('data-dsh-aqua-spot')) return false
+  // Text-dense interactive surfaces must never tilt: non-integer 3D perspective/scale
+  // breaks Chromium ClearType subpixel font antialiasing, causing text blur on hover.
+  if (
+    spot.matches('[data-dsh-inputbar], [data-conversation-content], [data-conversation-scroll], [data-chat-flow], [data-composer-seat], [data-composer-card], [data-dsh-surface]') ||
+    spot.closest('[data-dsh-inputbar], [data-conversation-content], [data-conversation-scroll], [data-chat-flow], [data-composer-seat], [data-composer-card], [data-dsh-surface]') !== null
+  ) {
+    return false
+  }
   if (spot.matches('[data-question-key]') || spot.querySelector('[data-question-key]') !== null) return false
   if (spot.querySelector('[role="radiogroup"], [role="group"]') !== null) return false
   return true

@@ -148,7 +148,7 @@
    progress) is excluded outright — those keep their stock fill. */
 [data-dsh-aqua]
   :is([class*='panel'], [class*='Panel'], [class*='card'], [class*='Card'], [class*='bar'], [class*='Bar'], [class*='menu'], [class*='Menu'], [class*='dialog'], [class*='Dialog'], [class*='popover'], [class*='Popover'], [class*='dropdown'], [class*='Dropdown'], [class*='sheet'], [class*='Sheet'], [class*='drawer'], [class*='Drawer'], [class*='modal'], [class*='Modal'], [class*='banner'], [class*='Banner'], [class*='tip'], [class*='Tip'], [class*='pill'], [class*='Pill'], [class*='toast'], [class*='Toast'])
-  :where(:not([class*='code'], [class*='Code'], [class*='terminal'], [class*='Terminal'], [class*='xterm'], [class*='markdown'], [class*='Markdown'], [class*='scroll'], [class*='Scroll'], [class*='progress'], [class*='Progress'])) {
+  :where(:not([class*='code'], [class*='Code'], [class*='terminal'], [class*='Terminal'], [class*='xterm'], [class*='markdown'], [class*='Markdown'], [class*='scroll'], [class*='Scroll'], [class*='progress'], [class*='Progress'], [data-sidebar-right-panel])) {
   background: var(--dsh-aqua-glass-card-light);
   box-shadow: var(--dsh-aqua-glass-shadow-light);
   backdrop-filter: blur(calc(var(--dsh-aqua-blur, 24px) * 0.6)) saturate(1.12);
@@ -156,14 +156,14 @@
 
 [data-dsh-aqua] body[data-ds-dark-theme]
   :is([class*='panel'], [class*='Panel'], [class*='card'], [class*='Card'], [class*='bar'], [class*='Bar'], [class*='menu'], [class*='Menu'], [class*='dialog'], [class*='Dialog'], [class*='popover'], [class*='Popover'], [class*='dropdown'], [class*='Dropdown'], [class*='sheet'], [class*='Sheet'], [class*='drawer'], [class*='Drawer'], [class*='modal'], [class*='Modal'], [class*='banner'], [class*='Banner'], [class*='tip'], [class*='Tip'], [class*='pill'], [class*='Pill'], [class*='toast'], [class*='Toast'])
-  :where(:not([class*='code'], [class*='Code'], [class*='terminal'], [class*='Terminal'], [class*='xterm'], [class*='markdown'], [class*='Markdown'], [class*='scroll'], [class*='Scroll'], [class*='progress'], [class*='Progress'])) {
+  :where(:not([class*='code'], [class*='Code'], [class*='terminal'], [class*='Terminal'], [class*='xterm'], [class*='markdown'], [class*='Markdown'], [class*='scroll'], [class*='Scroll'], [class*='progress'], [class*='Progress'], [data-sidebar-right-panel])) {
   background: var(--dsh-aqua-glass-card-dark);
   box-shadow: var(--dsh-aqua-glass-shadow-dark);
 }
 
 [data-dsh-aqua][data-dsh-aqua-perf='performance']
   :is([class*='panel'], [class*='Panel'], [class*='card'], [class*='Card'], [class*='bar'], [class*='Bar'], [class*='menu'], [class*='Menu'], [class*='dialog'], [class*='Dialog'], [class*='popover'], [class*='Popover'], [class*='dropdown'], [class*='Dropdown'], [class*='sheet'], [class*='Sheet'], [class*='drawer'], [class*='Drawer'], [class*='modal'], [class*='Modal'], [class*='banner'], [class*='Banner'], [class*='tip'], [class*='Tip'], [class*='pill'], [class*='Pill'], [class*='toast'], [class*='Toast'])
-  :where(:not([class*='code'], [class*='Code'], [class*='terminal'], [class*='Terminal'], [class*='xterm'], [class*='markdown'], [class*='Markdown'], [class*='scroll'], [class*='Scroll'], [class*='progress'], [class*='Progress'])) {
+  :where(:not([class*='code'], [class*='Code'], [class*='terminal'], [class*='Terminal'], [class*='xterm'], [class*='markdown'], [class*='Markdown'], [class*='scroll'], [class*='Scroll'], [class*='progress'], [class*='Progress'], [data-sidebar-right-panel])) {
   backdrop-filter: none;
 }
 
@@ -894,9 +894,13 @@ html:not(:has(body[data-ds-dark-theme])) [data-dsh-aqua] [data-dsh-station-tuner
 
 /* Collapsed: the floating rail reaches 12px into the chat gutter, so the
    header card steps right (28px inset = 16px clear of the rail's edge) —
-   the sidebar keeps its geometry, the top bar does the adjusting. */
+   the sidebar keeps its geometry, the top bar does the adjusting.
+   Windows titlebar has 0px rail when collapsed, so no shift needed. */
 [data-dsh-float] [data-dsh-frame][data-sidebar-collapsed] header {
   margin-left: 28px;
+}
+[data-windows-titlebar][data-dsh-float] [data-dsh-frame][data-sidebar-collapsed] header {
+  margin-left: 16px;
 }
 
 /* ---------- Sidebar: header-style glass card — same recipe as the header
@@ -964,6 +968,22 @@ html:not(:has(body[data-ds-dark-theme])) [data-dsh-aqua] [data-dsh-station-tuner
      entry keeps the hover press smooth while collapsed (the collapsed rule
      out-ranks the press transition, so it must carry transform too). */
   transition: margin 150ms var(--ds-ease-in-out), border-radius 150ms var(--ds-ease-in-out), transform 0.1s ease-out;
+}
+
+/* On Windows titlebar, the collapsed sidebar column collapses to 0 width and its
+   toggle & newSession buttons are fixed in the top titlebar. Reset margins, borders,
+   and disable transforms/containing blocks so fixed caption buttons are never trapped. */
+[data-windows-titlebar][data-dsh-float] [data-dsh-frame][data-sidebar-collapsed] [class*='sidebarCol'] {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  transform: none !important;
+  contain: none !important;
+}
+[data-windows-titlebar][data-dsh-float] [data-dsh-frame][data-sidebar-collapsed] [class*='sidebarCol']::before {
+  display: none;
 }
 
 /* Collapsed rail (dark): the 56px column amplifies the wide-pane teal catch-light
@@ -1541,7 +1561,7 @@ html:not(:has(body[data-ds-dark-theme])) [data-dsh-aqua] [data-dsh-station-tuner
 [data-dsh-compat] [role='tooltip'],
 [data-dsh-compat] [class*='card'],
 [data-dsh-compat] [class*='bubble'],
-[data-dsh-compat] [class*='panel'],
+[data-dsh-compat] [class*='panel']:not([data-sidebar-right-panel]),
 [data-dsh-compat] [class*='popover'],
 [data-dsh-compat] [class*='dropdown'] {
   backdrop-filter: blur(var(--dsh-aqua-blur, 22px));
