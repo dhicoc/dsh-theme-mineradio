@@ -1,0 +1,47 @@
+name: Theme regression
+
+on:
+  push:
+    branches: [main, 'fix/issue-triage-*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CHROME_BIN: /usr/bin/google-chrome
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install test dependencies
+        run: npm install --legacy-peer-deps --ignore-scripts
+      - name: Install standalone build dependencies
+        run: npm install --prefix build-tools --ignore-scripts
+      - name: Build shipped JavaScript and declarations
+        run: |
+          npm run build
+          npx tsc
+      - name: Run Chromium and type regressions
+        run: npm test
+      - name: Check bundle budget
+        run: node -e "const n=require('node:fs').statSync('lib/client.js').size; console.log('client bytes',n); if(n>262144)process.exit(1)"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: theme-regression-${{ github.sha }}
+          path: |
+            lib/
+            outputs/issue-11-composer-glow/**/measurements.json
+            outputs/issue-11-composer-glow/**/keeper.json
+            outputs/issue-12-station/result.json
+          retention-days: 7

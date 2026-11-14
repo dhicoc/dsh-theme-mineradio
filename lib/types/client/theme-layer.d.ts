@@ -11,6 +11,7 @@
  */
 import type { Context } from '@deepseek-ai/cordis';
 import type { ThemeTokenOverrides } from '@deepseek-ai/dsh-client-ui-theme/client';
+import { type CensusStats } from './role-census.ts';
 /** html attribute selecting the Mineradio layer: CSS hooks and ambient effects.
  *  Kept as the internal `data-dsh-aqua` seam so the stylesheet's 100+ gated
  *  selectors and the helper modules stay consistent across the skin. */
@@ -116,6 +117,8 @@ export declare class MineradioLayer {
     private interactionDisposer;
     private themeListener;
     private seamDisposer;
+    /** Runtime role census: the coverage engine (see role-census.ts). */
+    private censusHandle;
     private spotlightDisposer;
     private whaleHandle;
     private meshHandle;
@@ -262,7 +265,9 @@ export declare class MineradioLayer {
     private syncGlassDispersion;
     /** Start or stop the specular-highlight cursor parallax. */
     private syncSpecularParallax;
-    /** Mount or drop the particle whale to match enabled + the whale flag. */
+    /** Mount or drop the particle whale to match enabled + the whale flag.
+     *  Gated on allowMotionFx (balanced and vivid), not the vivid-only
+     *  allowDecor, so the golden whale rides along on the default tier. */
     private syncWhale;
     /** Mount or drop the interactive mesh to match enabled + the mesh flag. */
     private syncMesh;
@@ -283,5 +288,21 @@ export declare class MineradioLayer {
     private startSeamStamper;
     /** Attach the cursor-spotlight pointer feeds (idempotent per mount). */
     private startSpotlightFeed;
+    /**
+     * Start the runtime role census (idempotent per mount).
+     *
+     * This is the coverage engine: it reads what the host actually paints, stamps a
+     * role attribute, and the stylesheet dresses by role with `!important` so a
+     * declaration wins on priority rather than on a specificity contest it cannot
+     * reliably win. It runs after the seams and the token layer so it can see their
+     * effect, and it skips faces that already wear the family rim — the token layer
+     * and the hand-written rules have already dressed those, and re-dressing them
+     * is what flattened the session header in an earlier revision.
+     */
+    private startRoleCensus;
+    /** Role counters for the console API (`__mineradioCensus()`). */
+    censusStats(): CensusStats;
+    /** Force a fresh census pass (after a host repaint the memo missed). */
+    censusRescan(): CensusStats;
 }
 export {};

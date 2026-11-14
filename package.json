@@ -58,9 +58,15 @@
   "scripts": {
     "build": "node build-tools/build-client.mjs",
     "bundle": "node build-tools/build-client.mjs",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --project tests/tsconfig.store-contract.json",
     "watch": "node build-tools/build-client.mjs",
-    "test:rightbar-fullscreen": "node tests/rightbar-fullscreen-isolation.mjs"
+    "test": "npm run typecheck && npm run test:store-adapter && npm run test:rightbar-fullscreen && npm run test:issues-reopened && npm run test:terminal-glass && npm run test:composer-glow && npm run test:mutation-cost",
+    "test:rightbar-fullscreen": "node tests/rightbar-fullscreen-isolation.mjs",
+    "test:store-adapter": "node tests/host-store-adapter.mjs",
+    "test:issues-reopened": "node tests/issues-9-10-reopened.mjs",
+    "test:terminal-glass": "node tests/sidebar-terminal-glass.mjs",
+    "test:composer-glow": "node tests/issue-11-composer-glow.mjs",
+    "test:mutation-cost": "node tests/issue-12-census-seams.mjs && node tests/issue-12-station.mjs"
   },
   "license": "MIT",
   "peerDependencies": {
@@ -84,6 +90,7 @@
     "@deepseek-ai/cordis": "4.0.4",
     "@deepseek-ai/dsh-client-locale": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-runtime": "0.1.1-rc.2",
+    "@deepseek-ai/dsh-client-store": "0.1.2-alpha.2",
     "@deepseek-ai/dsh-client-ui-primitives": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-ui-settings": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-ui-settings-plugins": "0.2.0-rc.2",
