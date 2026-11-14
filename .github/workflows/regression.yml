@@ -24,9 +24,9 @@ jobs:
         with:
           node-version: 24
       - name: Install test dependencies
-        run: npm install --legacy-peer-deps --ignore-scripts --package-lock=false
+        run: npm install --legacy-peer-deps --ignore-scripts
       - name: Install standalone build dependencies
-        run: npm ci --prefix build-tools --ignore-scripts
+        run: npm install --prefix build-tools --ignore-scripts
       - name: Build shipped JavaScript and declarations
         run: |
           npm run build
