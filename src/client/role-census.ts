@@ -316,7 +316,9 @@ export function startRoleCensus(): CensusHandle {
   let queue: Element[] = []
   let cursor = 0
   let frame: number | undefined
-  let timer: number | undefined
+  const dirtyRoots = new Set<Element>()
+  const ownedRoles = new Map<Element, Role>()
+  let batchSize = 32
   let disposed = false
 
   let measured = 0
@@ -326,59 +328,58 @@ export function startRoleCensus(): CensusHandle {
     ground: 0, structure: 0, pane: 0, overlay: 0, control: 0, chip: 0,
   }
 
-  const writeRole = (el: Element, role: Role): void => {
-    if (el.getAttribute(ROLE_ATTRIBUTE) !== role) {
-      el.setAttribute(ROLE_ATTRIBUTE, role)
-      stamped += 1
+  interface Decision {
+    role: Role
+    veil: 'before' | 'after' | null
+    spot: boolean
+  }
+
+  const resetStamps = (el: Element): void => {
+    for (const attr of [ROLE_ATTRIBUTE, SPOT_ATTRIBUTE, VEIL_ATTRIBUTE]) {
+      if (el.hasAttribute(attr)) el.removeAttribute(attr)
     }
-    byRole[role] += 1
   }
 
-  const clear = (el: Element, previous: Role): void => {
-    el.removeAttribute(ROLE_ATTRIBUTE)
-    el.removeAttribute(SPOT_ATTRIBUTE)
-    el.removeAttribute(VEIL_ATTRIBUTE)
-    byRole[previous] -= 1
-    stamped -= 1
+  const commit = (el: Element, decision: Decision | null): void => {
+    const prior = ownedRoles.get(el)
+    const role = decision?.role
+    if (prior !== role) {
+      if (prior !== undefined) { byRole[prior] -= 1; stamped -= 1 }
+      if (role !== undefined) { byRole[role] += 1; stamped += 1; ownedRoles.set(el, role) }
+      else ownedRoles.delete(el)
+    }
+    if (decision === null) return
+    el.setAttribute(ROLE_ATTRIBUTE, decision.role)
+    if (decision.veil !== null) el.setAttribute(VEIL_ATTRIBUTE, decision.veil)
+    if (decision.spot) el.setAttribute(SPOT_ATTRIBUTE, '')
   }
 
-  /** Decide one element: measure, classify, stamp. */
-  const decide = (el: Element): void => {
-    queued.delete(el)
-    if (disposed || !el.isConnected) return
+  /** Measure only. All old roles in this batch are removed before any read. */
+  const classify = (el: Element): Decision | null => {
     decided.add(el)
     measured += 1
 
-    const prior = el.getAttribute(ROLE_ATTRIBUTE) as Role | null
-    if (prior !== null) clear(el, prior)
-
-    if (!(el instanceof HTMLElement)) return
-    if (el === document.body || el === document.documentElement) return
-    if (el.hasAttribute(IGNORE_ATTRIBUTE)) return
-    if (!document.documentElement.hasAttribute(AQUA)) return
-    if (el.closest(`[${IGNORE_ATTRIBUTE}]`) !== null) return
+    if (!(el instanceof HTMLElement)) return null
+    if (el === document.body || el === document.documentElement) return null
+    if (el.hasAttribute(IGNORE_ATTRIBUTE)) return null
+    if (!document.documentElement.hasAttribute(AQUA)) return null
+    if (el.closest(`[${IGNORE_ATTRIBUTE}]`) !== null) return null
     // Legibility carve-outs never receive glass; they keep the stock fill.
-    if (isReadability(el)) return
+    if (isReadability(el)) return null
     // Positional anchors keep the host's overlay geometry intact.
-    if (el.matches(ANCHOR_SELECTOR)) return
-    // The plugin's own backdrop layers stay untouched: glass over them would hide the
-    // backdrop they exist to show, and a blur on a full-viewport canvas is the most
-    // expensive thing the census could do.
-    if (el.matches(OWN_LAYER_SELECTOR) || el.closest(OWN_LAYER_SELECTOR) !== null) return
+    if (el.matches(ANCHOR_SELECTOR)) return null
+    // The theme's own backdrop must stay visible and free of nested blur.
+    if (el.matches(OWN_LAYER_SELECTOR) || el.closest(OWN_LAYER_SELECTOR) !== null) return null
 
     const rect = el.getBoundingClientRect()
-    if (rect.width < POLICY.minWidth || rect.height < POLICY.minHeight) return
+    if (rect.width < POLICY.minWidth || rect.height < POLICY.minHeight) return null
     const area = rect.width * rect.height
-    if (area < POLICY.minArea) return
+    if (area < POLICY.minArea) return null
 
     const style = getComputedStyle(el)
-
-    // A pane the theme has already hand-dressed keeps its look: the family rim
-    // (`inset 0 0 0 1px …`) is its signature, and the 3.0 role rules carry
-    // `!important`, so stamping it here would override a tuned pane.
     if (hasFamilyRim(style)) {
       handDressed += 1
-      return
+      return null
     }
 
     const alpha = ownPaintAlpha(style)
@@ -386,16 +387,8 @@ export function startRoleCensus(): CensusHandle {
     const stops = gradientStops(image)
     const paintsColor = alpha >= POLICY.paintAlpha
     const paintsImage = image !== 'none' && (stops.length === 0 || Math.max(...stops) >= POLICY.paintAlpha)
-    // A face may paint nothing itself and still be a visible plate, because a
-    // covering pseudo-element draws it (the agent-team panel does exactly this).
     const veil = paintsColor || paintsImage ? null : veilOf(el, rect)
-    if (!paintsColor && !paintsImage && veil === null) return
-
-    // Record the plate carrier BEFORE any role branch returns: an overlay whose
-    // plate lives in ::before must still be marked, or the stylesheet dresses
-    // the box and stacks a second glass layer over the pseudo's plate.
-    if (veil === null) el.removeAttribute(VEIL_ATTRIBUTE)
-    else el.setAttribute(VEIL_ATTRIBUTE, veil)
+    if (!paintsColor && !paintsImage && veil === null) return null
 
     const position = style.position
     const inFlow = position === 'static' || position === 'relative'
@@ -406,67 +399,54 @@ export function startRoleCensus(): CensusHandle {
       el.getAttribute('role') === 'menu' ||
       el.getAttribute('role') === 'tooltip' ||
       el.hasAttribute('popover')
-
-    const vw = window.innerWidth
-    const vh = window.innerHeight
-    const viewportArea = vw * vh
-
-    // Structural slabs are the fluid's window: the ambient backdrop must reach
-    // the eye through them, so they only lose their fill. Painting glass over a
-    // whole column is what made the conversation area read as a black plate.
-    // Rightbar dockkit panes/surfaces are an exception: when the right sidebar
-    // enters fullscreen (`100vw`), its inner panes expand to viewport width
-    // while still acting as a frosted glass panel over the backdrop.
+    const viewportArea = window.innerWidth * window.innerHeight
     const inRightbar = el.closest(RIGHTBAR_GLASS_ROOT) !== null
-    if (!isOverlay && !inRightbar && area >= viewportArea * POLICY.groundRatio) {
-      writeRole(el, 'ground')
-      return
+    let role: Role
+    if (!isOverlay && !inRightbar && area >= viewportArea * POLICY.groundRatio) role = 'ground'
+    else if (!isOverlay && !inRightbar && inFlow && area >= viewportArea * POLICY.structureRatio) role = 'structure'
+    else if (isOverlay) role = 'overlay'
+    else {
+      const interactive =
+        el.tagName === 'BUTTON' ||
+        el.tagName === 'INPUT' ||
+        el.tagName === 'TEXTAREA' ||
+        el.tagName === 'SELECT' ||
+        el.getAttribute('role') === 'tab' ||
+        el.getAttribute('role') === 'button'
+      role = interactive ? 'control' : area >= POLICY.chipArea ? 'pane' : 'chip'
     }
-    if (!isOverlay && !inRightbar && inFlow && area >= viewportArea * POLICY.structureRatio) {
-      writeRole(el, 'structure')
-      return
-    }
-    if (isOverlay) {
-      writeRole(el, 'overlay')
-      return
-    }
-
-    // Interactive small parts read as controls, not as glass cards.
-    const interactive =
-      el.tagName === 'BUTTON' ||
-      el.tagName === 'INPUT' ||
-      el.tagName === 'TEXTAREA' ||
-      el.tagName === 'SELECT' ||
-      el.getAttribute('role') === 'tab' ||
-      el.getAttribute('role') === 'button'
-    const role: Role = interactive ? 'control' : area >= POLICY.chipArea ? 'pane' : 'chip'
-    writeRole(el, role)
-
-    // Panes big enough to matter join the spotlight/tilt set. The spot recipe
-    // needs `position: relative` and `isolation`, which would re-anchor fixed
-    // overlays, so only in-flow faces qualify.
-    if (role === 'pane' && area >= POLICY.spotArea && inFlow) {
-      el.setAttribute(SPOT_ATTRIBUTE, '')
-    }
-    if (veil !== null) el.removeAttribute(SPOT_ATTRIBUTE)
+    // Only in-flow panes qualify: the spot recipe would re-anchor fixed overlays.
+    return { role, veil, spot: role === 'pane' && area >= POLICY.spotArea && inFlow && veil === null }
   }
 
-  /** Drain the queue inside a per-frame budget. */
+  /** One reset/read/commit transaction per frame; never read between commits. */
   const pump = (): void => {
     frame = undefined
     if (disposed) return
-    const deadline = performance.now() + POLICY.frameBudgetMs
-    while (cursor < queue.length) {
-      decide(queue[cursor])
-      cursor += 1
-      if (performance.now() >= deadline) break
+    flushDirtyRoots()
+    const started = performance.now()
+    const batch: Element[] = []
+    while (cursor < queue.length && batch.length < batchSize) {
+      const el = queue[cursor++]
+      queued.delete(el)
+      if (el.isConnected) batch.push(el)
+    }
+    // Removing all roles together reveals host paint, including transparent and
+    // hand-dressed faces, without causing one layout flush per measured element.
+    for (const el of batch) resetStamps(el)
+    const decisions = batch.map(classify)
+    for (let i = 0; i < batch.length; i += 1) commit(batch[i], decisions[i])
+    // A transaction must restore every cleared role before yielding. Bound its
+    // size and adapt the next batch to the existing per-frame time budget.
+    if (batch.length > 0) {
+      const elapsed = Math.max(0.1, performance.now() - started)
+      batchSize = Math.max(1, Math.min(64, Math.floor(batch.length * POLICY.frameBudgetMs / elapsed)))
     }
     if (cursor >= queue.length) {
       queue = []
       cursor = 0
       return
     }
-    // Compact the consumed head so long sweeps don't grow without bound.
     if (cursor > 400) {
       queue = queue.slice(cursor)
       cursor = 0
@@ -496,12 +476,28 @@ export function startRoleCensus(): CensusHandle {
     for (const el of root.querySelectorAll('*')) enqueue(el)
   }
 
-  const sweepSoon = (): void => {
-    if (disposed || timer !== undefined) return
-    timer = window.setTimeout(() => {
-      timer = undefined
-      sweep()
-    }, 300)
+  const invalidate = (el: Element): void => {
+    if (disposed || !el.isConnected) return
+    dirtyRoots.add(el)
+    schedule()
+  }
+
+  const flushDirtyRoots = (): void => {
+    const roots = [...dirtyRoots]
+    dirtyRoots.clear()
+    const rootSet = new Set(roots)
+    for (const root of roots) {
+      if (!root.isConnected) continue
+      let parent = root.parentElement
+      while (parent !== null && !rootSet.has(parent)) parent = parent.parentElement
+      if (parent !== null) continue
+      decided.delete(root)
+      enqueue(root)
+      for (const child of root.querySelectorAll('*')) {
+        decided.delete(child)
+        enqueue(child)
+      }
+    }
   }
 
   const observer = new MutationObserver((records) => {
@@ -519,21 +515,25 @@ export function startRoleCensus(): CensusHandle {
         // Spotlight and tilt write inline styles (transform, transform-origin, radial gradient)
         // onto hovered spots; ignore style churn on elements inside or marked as spots.
         if (attr === 'style' && (target.hasAttribute('data-spot-on') || target.hasAttribute('data-md-spot') || target.hasAttribute('data-dsh-aqua-spot'))) continue
-        // Rightbar panel mode or open/close transitions: clear decisions under the rightbar so
-        // panes re-measure their geometry immediately.
-        if (attr === 'data-sidebar-right-open' || attr === 'data-sidebar-right-panel') {
-          for (const sub of target.querySelectorAll('*')) decided.delete(sub)
-        }
-        decided.delete(target)
-        enqueue(target)
-        sweepSoon()
+        // Class, visibility and state may affect inherited paint/geometry. Only
+        // that subtree is dirty; overlapping roots are coalesced in the pump.
+        invalidate(target)
         continue
       }
+      for (const node of record.removedNodes) {
+        if (!(node instanceof Element) || node.isConnected) continue
+        const release = (el: Element): void => {
+          resetStamps(el)
+          commit(el, null)
+          decided.delete(el)
+        }
+        release(node)
+        for (const child of node.querySelectorAll(`[${ROLE_ATTRIBUTE}]`)) release(child)
+      }
       for (const node of record.addedNodes) {
-        if (node.nodeType !== Node.ELEMENT_NODE) continue
-        const el = node as Element
-        enqueue(el)
-        for (const child of el.querySelectorAll('*')) enqueue(child)
+        if (!(node instanceof Element)) continue
+        // Reinserted or moved elements need fresh ancestor/geometry decisions.
+        invalidate(node)
       }
     }
   })
@@ -567,10 +567,12 @@ export function startRoleCensus(): CensusHandle {
 
   return {
     rescan(): void {
-      for (const el of document.querySelectorAll(`[${ROLE_ATTRIBUTE}]`)) {
-        const role = el.getAttribute(ROLE_ATTRIBUTE) as Role | null
-        if (role !== null) clear(el, role)
-      }
+      for (const el of ownedRoles.keys()) resetStamps(el)
+      ownedRoles.clear()
+      dirtyRoots.clear()
+      queue = []
+      cursor = 0
+      queued.clear()
       // The memo must be dropped too: every element is already in `decided`, so
       // without this the sweep below enqueues nothing and a rescan is a no-op.
       decidedRef = new WeakSet<Element>()
@@ -594,7 +596,8 @@ export function startRoleCensus(): CensusHandle {
       observer.disconnect()
       window.removeEventListener('resize', onResize)
       if (frame !== undefined) cancelAnimationFrame(frame)
-      if (timer !== undefined) window.clearTimeout(timer)
+      dirtyRoots.clear()
+      ownedRoles.clear()
       for (const el of document.querySelectorAll(`[${ROLE_ATTRIBUTE}], [${SPOT_ATTRIBUTE}], [${VEIL_ATTRIBUTE}]`)) {
         el.removeAttribute(ROLE_ATTRIBUTE)
         el.removeAttribute(SPOT_ATTRIBUTE)

@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased (2026-11-14)
+
+- Fix the composer glow adding phantom scroll height in long conversations. Boxless composer slots now use the glow's real containing block; scroll, resize, borders and scaled ancestors retain aligned geometry (#11).
+- Reduce session creation and streaming overhead: replace mutation-triggered full-root census passes with coalesced dirty subtrees, batch layout reads before role writes, and scope seam, glow and station work to relevant changes (#12).
+- Restore rightbar glass across fullscreen/collapse/reopen, isolate question-card material from the session header, keep text free of hover tilt, and preserve the Windows sidebar toggle after maximize/collapse/restore (#9, #10).
+- Give built-in and legacy sidebar terminals the family glass backing while preserving sharp terminal output.
+- Align host store action/selector types with the host declarations without adding a static dependency on an optional runtime store module.
+- Add a repository-local regression command (`npm test`) covering the shipped CSS, composer geometry, mutation work, store adapters and teardown. Add animated README previews in both languages (#13, #14).
+
 ## v3.0.5 (2026-10-13)
 
 - Fix transparent rightbar fullscreen content superimposing on the mounted conversation header, messages and composer. Suppress the covered centre only while the enabled theme has an open fullscreen panel; preserve Grid geometry and session state, and restore on collapse/exit.

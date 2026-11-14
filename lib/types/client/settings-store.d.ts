@@ -103,9 +103,9 @@ export interface MineradioSettingsPayload {
     perf: PerfTier;
     rainbow: boolean;
 }
-/** Declared action shape giving the exported factory a stable return type. */
+/** Draft mutator declarations; the host strips draft when binding actions. */
 type MineradioRowActions = {
-    sync: (next: MineradioSettingsPayload, revision: number) => void;
+    sync: (draft: MineradioRowState, next: MineradioSettingsPayload, revision: number) => void;
 };
 /**
  * Declares the Mineradio row state and write surface.

@@ -113,6 +113,7 @@ export function startStationDial(onOffset: (offset: number) => void): () => void
   let station: string | null = null
   let primed = false
   let raf = 0
+  let scanRaf = 0
 
   const tuner = (): HTMLElement | null => document.querySelector<HTMLElement>(TUNER_SELECTOR)
 
@@ -128,7 +129,7 @@ export function startStationDial(onOffset: (offset: number) => void): () => void
       host.appendChild(el)
     }
     if (el.textContent !== label) el.textContent = label
-    el.toggleAttribute(TUNING_ATTR, tuning)
+    if (el.hasAttribute(TUNING_ATTR) !== tuning) el.toggleAttribute(TUNING_ATTR, tuning)
   }
 
   const settle = (offset: number): void => {
@@ -176,7 +177,7 @@ export function startStationDial(onOffset: (offset: number) => void): () => void
   }
 
   const scan = (): void => {
-    paintTuner(freqLabel(current), false)
+    paintTuner(freqLabel(current), raf !== 0)
     const name = resolveStationName()
     if (name === null || name === station) return
     station = name
@@ -192,11 +193,33 @@ export function startStationDial(onOffset: (offset: number) => void): () => void
   }
 
   scan()
-  const observer = new MutationObserver(() => { scan() })
-  observer.observe(document.documentElement, { childList: true, subtree: true })
+  const relevant = (node: Node): boolean => {
+    const el = node instanceof Element ? node : node.parentElement
+    return el !== null && (el.closest(`${TUNER_SELECTOR}, [role='treeitem']`) !== null ||
+      el.querySelector(`${TUNER_SELECTOR}, [role='treeitem']`) !== null)
+  }
+  const observer = new MutationObserver((records) => {
+    if (scanRaf !== 0 || !records.some((record) => {
+      const target = record.target instanceof Element ? record.target : record.target.parentElement
+      // The frequency label is theme-owned. Its own animation never retunes.
+      if (target !== null && target.closest(`[${TUNER_ATTR}]`) !== null) return false
+      if (record.type !== 'childList') return target?.closest("[role='treeitem']") != null
+      return target?.closest("[role='treeitem']") != null ||
+        [...record.addedNodes, ...record.removedNodes].some(relevant)
+    })) return
+    scanRaf = requestAnimationFrame(() => {
+      scanRaf = 0
+      scan()
+    })
+  })
+  observer.observe(document.documentElement, {
+    childList: true, subtree: true, characterData: true,
+    attributes: true, attributeFilter: ['aria-selected', 'class'],
+  })
 
   return () => {
     observer.disconnect()
+    cancelAnimationFrame(scanRaf)
     cancelAnimationFrame(raf)
     raf = 0
     document.querySelector(`[${TUNER_ATTR}]`)?.remove()

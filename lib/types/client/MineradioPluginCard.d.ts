@@ -6,7 +6,7 @@ export interface MineradioPluginCardInjected {
     setEnabled: (enabled: boolean) => void;
 }
 /** Full component props: runtime share + store share + locale seat + injected face. */
-export type MineradioPluginCardComponentProps = PropsRuntime<'settings.plugin.item'> & PropsStore<ReturnType<typeof createMineradioRowStore>> & PropsLocale<'settings.mineradio'> & InjectFace<MineradioPluginCardInjected>;
+export type MineradioPluginCardComponentProps = PropsRuntime<'settings.plugins.tab'> & PropsStore<ReturnType<typeof createMineradioRowStore>> & PropsLocale<'settings.mineradio'> & InjectFace<MineradioPluginCardInjected>;
 /**
  * Render the Mineradio plugin card.
  * @param props - composed slot props.

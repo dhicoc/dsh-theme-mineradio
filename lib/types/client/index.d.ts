@@ -11,6 +11,7 @@
  */
 import type { Context } from '@deepseek-ai/cordis';
 import './mineradio.module.css';
+import './role-layer.module.css';
 import './fonts.module.css';
 /** Required services: theme override stack plus the settings-card surfaces. */
 export declare const inject: string[];
