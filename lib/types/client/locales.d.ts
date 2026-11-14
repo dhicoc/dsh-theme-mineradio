@@ -15,6 +15,8 @@ export declare const zh: {
     'mineradio.textColorNeutral': string;
     'mineradio.textColorMint': string;
     'mineradio.textColorRose': string;
+    'mineradio.textColorCustom': string;
+    'mineradio.customTextColor': string;
     'mineradio.scene': string;
     'mineradio.sceneStudio': string;
     'mineradio.sceneDeepsea': string;
@@ -87,6 +89,8 @@ export declare const en: {
     'mineradio.textColorNeutral': string;
     'mineradio.textColorMint': string;
     'mineradio.textColorRose': string;
+    'mineradio.textColorCustom': string;
+    'mineradio.customTextColor': string;
     'mineradio.scene': string;
     'mineradio.sceneStudio': string;
     'mineradio.sceneDeepsea': string;

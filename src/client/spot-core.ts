@@ -74,46 +74,67 @@ export function inside(visual: DOMRect, clientX: number, clientY: number): boole
     && clientY >= visual.top && clientY <= visual.bottom
 }
 
-/** Offset-chain position of `el` within `ancestor` (both boxes), in the
- *  UNTRANSFORMED layout space — offsetLeft/offsetTop ignore transforms, so
- *  this stays exact while the pane is tilted. */
-function localTopLeft(el: HTMLElement, ancestor: HTMLElement): { x: number; y: number } {
+/** Border-box origin in untransformed document layout space. Offset parents
+ * contribute their borders; scroll containers need not be offset parents. */
+function layoutOrigin(el: HTMLElement): { x: number; y: number } {
   let x = 0
   let y = 0
-  let node: HTMLElement | null = el
-  while (node !== null && node !== ancestor) {
+  for (let node: HTMLElement | null = el; node !== null;) {
     x += node.offsetLeft
     y += node.offsetTop
-    node = node.offsetParent as HTMLElement | null
+    const parent = node.offsetParent as HTMLElement | null
+    if (parent !== null) {
+      x += parent.clientLeft
+      y += parent.clientTop
+    }
+    node = parent
+  }
+  for (let parent = el.parentElement; parent !== null; parent = parent.parentElement) {
+    if (parent === document.scrollingElement) continue
+    x -= parent.scrollLeft
+    y -= parent.scrollTop
   }
   return { x, y }
 }
 
+/** Absolute offsets use the actual containing block's scrolling padding box.
+ * A display:contents spot has no box and never appears in an offset chain. */
+function localTopLeft(el: HTMLElement, containingBlock: HTMLElement | null): { x: number; y: number } {
+  const point = layoutOrigin(el)
+  if (containingBlock === null) return point
+  const origin = layoutOrigin(containingBlock)
+  return {
+    x: point.x - origin.x - containingBlock.clientLeft + containingBlock.scrollLeft,
+    y: point.y - origin.y - containingBlock.clientTop + containingBlock.scrollTop,
+  }
+}
+
 /**
- * The visible glass region of a pane in the pane's own local space
- * (untransformed — safe to measure while tilted). For the fused
- * composer+stats spot this is the union of the composer card and the docked
- * stats band; for the other panes it is the pane's own box.
+ * The visible glass region in a containing block's scrolling padding space
+ * (untransformed — safe to measure while tilted). Pass the glow's actual
+ * offsetParent for a boxless owner; null denotes the initial containing block.
+ * The fused composer+stats spot uses the union of card and stats border boxes.
  */
-export function glassLocalRect(spot: HTMLElement): { left: number; top: number; width: number; height: number } {
+export function glassLocalRect(spot: HTMLElement, containingBlock: HTMLElement | null = spot): { left: number; top: number; width: number; height: number } {
   const questionCard = spot.querySelector<HTMLElement>('[data-question-key] section')
     ?? spot.querySelector<HTMLElement>('[data-question-key]')
   if (questionCard !== null) {
-    const qPos = localTopLeft(questionCard, spot)
+    const qPos = localTopLeft(questionCard, containingBlock)
     return { left: qPos.x, top: qPos.y, width: questionCard.offsetWidth, height: questionCard.offsetHeight }
   }
   const card = spot.querySelector<HTMLElement>('[data-composer-card]')
   if (card === null) {
-    return { left: 0, top: 0, width: spot.offsetWidth, height: spot.offsetHeight }
+    const pos = localTopLeft(spot, containingBlock)
+    return { left: pos.x, top: pos.y, width: spot.offsetWidth, height: spot.offsetHeight }
   }
-  const cardPos = localTopLeft(card, spot)
+  const cardPos = localTopLeft(card, containingBlock)
   let left = cardPos.x
   let top = cardPos.y
   let right = left + card.offsetWidth
   let bottom = top + card.offsetHeight
   const stats = spot.querySelector<HTMLElement>('[data-dsh-stats]')
   if (stats !== null) {
-    const statsPos = localTopLeft(stats, spot)
+    const statsPos = localTopLeft(stats, containingBlock)
     left = Math.min(left, statsPos.x)
     top = Math.min(top, statsPos.y)
     right = Math.max(right, statsPos.x + stats.offsetWidth)
@@ -129,6 +150,10 @@ export function ensureGlow(spot: HTMLElement): HTMLElement {
     glow = document.createElement('div')
     glow.setAttribute(GLOW_ATTR, '')
     glow.setAttribute('aria-hidden', 'true')
+    // The logical spot may be display:contents. Until measured, inset:0
+    // would stretch across a different ancestor's entire padding box.
+    glow.style.width = '0px'
+    glow.style.height = '0px'
     spot.appendChild(glow)
   }
   return glow
@@ -141,17 +166,87 @@ export function ensureGlow(spot: HTMLElement): HTMLElement {
  * @returns a disposer that removes every injected glow div.
  */
 export function startOverlayKeeper(onChange: () => void): () => void {
-  const tick = (): void => {
-    for (const spot of spotElements()) ensureGlow(spot)
+  const spots = new Set<HTMLElement>()
+  const roots = new Set<Element>()
+  const repair = new Set<HTMLElement>()
+  let removed = false
+  let raf = 0
+  const collect = (root: Element): void => {
+    if (root.matches(SPOT_SELECTOR)) repair.add(root as HTMLElement)
+    for (const spot of root.querySelectorAll<HTMLElement>(SPOT_SELECTOR)) repair.add(spot)
+  }
+  const flush = (): void => {
+    raf = 0
+    for (const root of roots) if (root.isConnected) collect(root)
+    roots.clear()
+    if (removed) {
+      for (const spot of spots) if (!spot.isConnected) spots.delete(spot)
+      removed = false
+    }
+    for (const spot of repair) {
+      if (!spot.isConnected) continue
+      if (spot.matches(SPOT_SELECTOR)) {
+        spots.add(spot)
+        ensureGlow(spot)
+      } else {
+        spots.delete(spot)
+        spot.querySelector<HTMLElement>(`:scope > [${GLOW_ATTR}]`)?.remove()
+      }
+    }
+    repair.clear()
     onChange()
   }
-  tick()
-  const observer = new MutationObserver(tick)
-  observer.observe(document.documentElement, { childList: true, subtree: true })
-  window.addEventListener('resize', tick, { passive: true })
+  const schedule = (): void => {
+    if (raf === 0) raf = requestAnimationFrame(flush)
+  }
+  const addRoot = (root: Element): void => {
+    for (const pending of roots) {
+      if (pending.contains(root)) return
+      if (root.contains(pending)) roots.delete(pending)
+    }
+    roots.add(root)
+  }
+  // The only whole-document discovery. Subsequent work is limited to added
+  // subtrees and the closest affected owner, once per animation frame.
+  collect(document.documentElement)
+  flush()
+  const observer = new MutationObserver(records => {
+    let changed = false
+    for (const record of records) {
+      const target = record.target instanceof Element ? record.target : record.target.parentElement
+      if (target === null || target.closest(`[${GLOW_ATTR}]`) !== null) continue
+      if (record.type === 'attributes') {
+        repair.add(target as HTMLElement)
+        changed = true
+        continue
+      }
+      const nodes = [...record.addedNodes, ...record.removedNodes]
+      // Our overlay attachments/removals are already accounted for. React
+      // removing a glow still queues its owner for repair below.
+      const onlyGlow = nodes.length > 0 && nodes.every(node => node instanceof Element && node.hasAttribute(GLOW_ATTR))
+      if (onlyGlow && (record.removedNodes.length === 0 || !target.matches(SPOT_SELECTOR))) continue
+      const owner = closestSpot(target)
+      if (owner !== null) repair.add(owner)
+      for (const node of record.addedNodes) {
+        if (node instanceof Element && !node.hasAttribute(GLOW_ATTR)) addRoot(node)
+      }
+      if (Array.from(record.removedNodes).some(node => node instanceof Element && !node.hasAttribute(GLOW_ATTR))) removed = true
+      changed = true
+    }
+    if (changed) schedule()
+  })
+  observer.observe(document.documentElement, {
+    childList: true, subtree: true, attributes: true,
+    attributeFilter: [SPOT_ATTR, ROLE_SPOT_ATTR],
+  })
+  window.addEventListener('resize', schedule, { passive: true })
   return () => {
     observer.disconnect()
-    window.removeEventListener('resize', tick)
-    for (const glow of document.querySelectorAll(`[${GLOW_ATTR}]`)) glow.remove()
+    window.removeEventListener('resize', schedule)
+    if (raf !== 0) cancelAnimationFrame(raf)
+    for (const spot of spots) spot.querySelector<HTMLElement>(`:scope > [${GLOW_ATTR}]`)?.remove()
+    spots.clear()
+    roots.clear()
+    repair.clear()
   }
 }

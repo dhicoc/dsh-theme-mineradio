@@ -60,39 +60,134 @@ const SEAMS: readonly Seam[] = [
   { attribute: 'data-dsh-wordmark', selector: '[class*="sidebarCol"] [class*="brand"]', first: true },
 ]
 
-function stamp(seam: Seam): void {
-  if (seam.first) {
-    const el = document.querySelector(seam.selector)
-    if (el !== null && !el.hasAttribute(seam.attribute)) el.setAttribute(seam.attribute, '')
-    return
-  }
-  for (const el of document.querySelectorAll(seam.selector)) {
-    if (!el.hasAttribute(seam.attribute)) el.setAttribute(seam.attribute, '')
-  }
-}
-
-function stampAll(): void {
-  for (const seam of SEAMS) stamp(seam)
-  stampOnAir()
-}
-
-/** Studio lamp: the composer shows a stop button only while a turn is live. */
-function stampOnAir(): void {
-  const bar = document.querySelector('[data-dsh-inputbar]')
-  if (bar === null) return
-  const live = bar.querySelector(
-    'button[aria-label="停止生成"], button[aria-label="Stop generating"]',
-  ) !== null
-  bar.toggleAttribute('data-dsh-on-air', live)
-}
-
 /**
- * Stamp the seams once, then keep them stamped as React remounts nodes.
- * @returns a disposer that disconnects the observer.
+ * Stamp the seams once, then inspect only changed subtrees as React remounts.
+ * First-match seams retain document order, including removal of the first node.
  */
 export function startSeamStamper(): () => void {
-  stampAll()
-  const observer = new MutationObserver(() => { stampAll() })
-  observer.observe(document.documentElement, { childList: true, subtree: true })
-  return () => { observer.disconnect() }
+  const roots = new Set<Element>()
+  const parents = new Set<Element>()
+  const firstMatches = new Map<Seam, Element>()
+  const invalidFirst = new Set<Seam>()
+  const lamps = new Set<Element>()
+  let frame: number | undefined
+  let disposed = false
+
+  const apply = (seam: Seam, el: Element): void => {
+    if (!el.hasAttribute(seam.attribute)) el.setAttribute(seam.attribute, '')
+    if (seam.attribute === 'data-dsh-inputbar') lamps.add(el)
+  }
+
+  const considerFirst = (seam: Seam, candidate: Element | null): void => {
+    if (candidate === null) return
+    const previous = firstMatches.get(seam)
+    if (previous !== undefined && previous.isConnected &&
+        !(candidate.compareDocumentPosition(previous) & Node.DOCUMENT_POSITION_FOLLOWING)) return
+    firstMatches.set(seam, candidate)
+    apply(seam, candidate)
+  }
+
+  const stampRoots = (initial = false): void => {
+    // Preserve seam declaration order: inputbar/trajectory/surface stamps are
+    // themselves the selectors of the later spotlight seams.
+    for (const seam of SEAMS) {
+      const previous = firstMatches.get(seam)
+      if (seam.first && (initial || invalidFirst.has(seam) ||
+          (previous !== undefined && (!previous.isConnected || !previous.matches(seam.selector))))) {
+        firstMatches.delete(seam)
+        const match = document.querySelector(seam.selector)
+        if (match !== null) { firstMatches.set(seam, match); apply(seam, match) }
+        continue
+      }
+      for (const parent of parents) {
+        if (!parent.isConnected || !parent.matches(seam.selector)) continue
+        if (seam.first) considerFirst(seam, parent)
+        else apply(seam, parent)
+      }
+      for (const root of roots) {
+        if (!root.isConnected) continue
+        if (seam.first) {
+          considerFirst(seam, root.matches(seam.selector) ? root : root.querySelector(seam.selector))
+        } else {
+          if (root.matches(seam.selector)) apply(seam, root)
+          for (const el of root.querySelectorAll(seam.selector)) apply(seam, el)
+        }
+      }
+    }
+    for (const bar of lamps) {
+      if (!bar.isConnected) continue
+      const live = bar.querySelector('button[aria-label="停止生成"], button[aria-label="Stop generating"]') !== null
+      if (bar.hasAttribute('data-dsh-on-air') !== live) bar.toggleAttribute('data-dsh-on-air', live)
+    }
+    roots.clear()
+    parents.clear()
+    invalidFirst.clear()
+    lamps.clear()
+  }
+
+  const flush = (): void => {
+    frame = undefined
+    if (disposed) return
+    // Ancestor/descendant records in one React commit need only one subtree scan.
+    for (const root of roots) {
+      let parent = root.parentElement
+      while (parent !== null && !roots.has(parent)) parent = parent.parentElement
+      if (parent !== null) roots.delete(root)
+    }
+    stampRoots()
+  }
+
+  roots.add(document.documentElement)
+  stampRoots(true)
+
+  const observer = new MutationObserver((records) => {
+    for (const record of records) {
+      const target = record.target instanceof Element ? record.target : record.target.parentElement
+      if (target === null) continue
+      const bar = target.closest('[data-dsh-inputbar]')
+      if (bar !== null) lamps.add(bar)
+      if (record.type === 'attributes') {
+        if (record.attributeName !== 'aria-label') {
+          roots.add(target)
+          if (target.parentElement !== null) parents.add(target.parentElement)
+        }
+        continue
+      }
+      let elementsChanged = false
+      for (const node of record.addedNodes) {
+        if (!(node instanceof Element)) continue
+        roots.add(node)
+        elementsChanged = true
+      }
+      for (const node of record.removedNodes) {
+        if (!(node instanceof Element)) continue
+        elementsChanged = true
+        for (const [seam, first] of firstMatches) {
+          if (node === first || node.contains(first)) invalidFirst.add(seam)
+        }
+      }
+      // :has(> ...) seams can become true on the mutation target itself. Text
+      // streaming affects none of these selectors, so it needs no seam sweep.
+      if (elementsChanged) parents.add(target)
+    }
+    if (frame === undefined && (roots.size || parents.size || invalidFirst.size || lamps.size)) {
+      frame = requestAnimationFrame(flush)
+    }
+  })
+  observer.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['class', 'data-composer-card', 'data-conversation-composer-overlay', 'data-rightbar-col', 'data-slot', 'aria-label'],
+  })
+  return () => {
+    disposed = true
+    observer.disconnect()
+    if (frame !== undefined) cancelAnimationFrame(frame)
+    roots.clear()
+    parents.clear()
+    firstMatches.clear()
+    invalidFirst.clear()
+    lamps.clear()
+  }
 }

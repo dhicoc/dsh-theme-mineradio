@@ -10,12 +10,23 @@
  */
 /** Seam attribute marking a floating-glass pane as a spotlight target. */
 export declare const SPOT_ATTR = "data-dsh-aqua-spot";
+/**
+ * Attribute the role census puts on a pane large enough to earn the spotlight.
+ *
+ * The spotlight used to find its panes only through {@link SPOT_ATTR}, which the seam
+ * stamper writes onto five hand-picked selectors. The census marks far more panes than
+ * that (any in-flow face over `POLICY.spotArea`), and those marks reached the stylesheet
+ * but nothing else — so a large card got `position: relative` and `isolation: isolate`
+ * and then no glow, because the pointer feed had never heard of it. Including the role
+ * marker in the selector is what connects the census to the existing glow machinery.
+ */
+export declare const ROLE_SPOT_ATTR = "data-md-spot";
 /** Attribute on the injected glow overlay div. */
 export declare const GLOW_ATTR = "data-dsh-aqua-glow";
 /** Marker set on a pane while the pointer is inside it. */
 export declare const ON_ATTR = "data-spot-on";
-/** Selector matching every stamped pane. */
-export declare const SPOT_SELECTOR = "[data-dsh-aqua-spot]";
+/** Selector matching every stamped pane, from either marker. */
+export declare const SPOT_SELECTOR = "[data-dsh-aqua-spot], [data-md-spot]";
 /** Nearest stamped pane from an event target (null when outside all panes). */
 export declare function closestSpot(target: EventTarget | null): HTMLElement | null;
 /** Every stamped pane in document order. */

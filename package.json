@@ -58,9 +58,12 @@
   "scripts": {
     "build": "node build-tools/build-client.mjs",
     "bundle": "node build-tools/build-client.mjs",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --project tests/tsconfig.store-contract.json",
     "watch": "node build-tools/build-client.mjs",
-    "test:rightbar-fullscreen": "node tests/rightbar-fullscreen-isolation.mjs"
+    "test:rightbar-fullscreen": "node tests/rightbar-fullscreen-isolation.mjs",
+    "test:store-adapter": "node tests/host-store-adapter.mjs",
+    "test:terminal-glass": "node tests/sidebar-terminal-glass.mjs",
+    "test:issues-reopened": "node tests/issues-9-10-reopened.mjs"
   },
   "license": "MIT",
   "peerDependencies": {

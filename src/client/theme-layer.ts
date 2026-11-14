@@ -233,22 +233,55 @@ export const MINERADIO_TOKEN_OVERRIDES: ThemeTokenOverrides = {
 }
 
 /** Preset global text-ink tints: the "text colour" switch swaps the warm
- *  champagne ink for a neutral / mint / rose tint while keeping the SAME
- *  lightness ladder, so every preset stays readable in either scheme. The
- *  champagne preset reproduces the shipped values exactly (no regression). */
-export type TextStyle = 'champagne' | 'neutral' | 'mint' | 'rose'
+ *  champagne ink for a neutral / mint / rose tint or a custom hex colour while
+ *  keeping a readable lightness ladder in either scheme. The champagne preset
+ *  reproduces the shipped values exactly (no regression). */
+export type TextStyle = 'champagne' | 'neutral' | 'mint' | 'rose' | 'custom'
 
 /** hsl(h,s,l) → #rrggbb (s/l in 0-1, h in degrees). */
 function hslHex(h: number, s: number, l: number): string {
-  const c = (1 - Math.abs(2 * l - 1)) * s
-  const x = c * (1 - Math.abs(((h / 60) % 2) - 1))
-  const m = l - c / 2
+  const hn = ((h % 360) + 360) % 360
+  const sn = Math.min(1, Math.max(0, s))
+  const ln = Math.min(1, Math.max(0, l))
+  const c = (1 - Math.abs(2 * ln - 1)) * sn
+  const x = c * (1 - Math.abs(((hn / 60) % 2) - 1))
+  const m = ln - c / 2
   let r = 0, g = 0, b = 0
-  if (h < 60) { r = c; g = x } else if (h < 120) { r = x; g = c }
-  else if (h < 180) { g = c; b = x } else if (h < 240) { g = x; b = c }
-  else if (h < 300) { r = x; b = c } else { r = c; b = x }
+  if (hn < 60) { r = c; g = x } else if (hn < 120) { r = x; g = c }
+  else if (hn < 180) { g = c; b = x } else if (hn < 240) { g = x; b = c }
+  else if (hn < 300) { r = x; b = c } else { r = c; b = x }
   const hex = (v: number): string => Math.round((v + m) * 255).toString(16).padStart(2, '0')
   return `#${hex(r)}${hex(g)}${hex(b)}`
+}
+
+/** Normalize a CSS hex string to #rrggbb (returns null if invalid). */
+export function normalizeHexColor(raw: string): string | null {
+  const m = /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.exec(raw.trim())
+  if (m === null) return null
+  const hex = m[1].toLowerCase()
+  if (hex.length === 3) {
+    return `#${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}`
+  }
+  return `#${hex}`
+}
+
+/** #rrggbb → { h: 0-360, s: 0-1, l: 0-1 }. */
+function hexToHsl(hex: string): { h: number; s: number; l: number } {
+  const clean = normalizeHexColor(hex) ?? '#f2f0ea'
+  const r = parseInt(clean.slice(1, 3), 16) / 255
+  const g = parseInt(clean.slice(3, 5), 16) / 255
+  const b = parseInt(clean.slice(5, 7), 16) / 255
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  const l = (max + min) / 2
+  if (max === min) return { h: 0, s: 0, l }
+  const d = max - min
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+  let h = 0
+  if (max === r) h = (g - b) / d + (g < b ? 6 : 0)
+  else if (max === g) h = (b - r) / d + 2
+  else h = (r - g) / d + 4
+  return { h: h * 60, s, l }
 }
 
 /** The readable ink ladder for one preset, per scheme. */
@@ -262,11 +295,37 @@ interface TextInkPalette {
   primaryDimmed: string
 }
 
-function textInkPalette(style: TextStyle): { light: TextInkPalette; dark: TextInkPalette } {
+function textInkPalette(style: TextStyle, customColor = '#F2F0EA'): { light: TextInkPalette; dark: TextInkPalette } {
   if (style === 'champagne') {
     return {
       light: { primary: '#1F1A14', secondary: '#4A4030', tertiary: '#675A45', caption: '#7A6C54', dimmed: '#A89880', bluish: '#8A6420', primaryDimmed: '#3A2E18' },
       dark: { primary: '#F2F0EA', secondary: '#CBC4B8', tertiary: '#98917F', caption: '#7A7468', dimmed: '#5A564C', bluish: '#E8CEA0', primaryDimmed: '#EADFC6' },
+    }
+  }
+  if (style === 'custom') {
+    const clean = normalizeHexColor(customColor) ?? '#f2f0ea'
+    const { h, s, l } = hexToHsl(clean)
+    const darkPrimary = l >= 0.48 ? clean : hslHex(h, Math.min(1, s * 0.9), 0.90)
+    const lightPrimary = l <= 0.52 ? clean : hslHex(h, Math.min(1, s * 0.9), 0.16)
+    return {
+      light: {
+        primary: lightPrimary,
+        secondary: hslHex(h, s * 0.85, 0.28),
+        tertiary: hslHex(h, s * 0.75, 0.40),
+        caption: hslHex(h, s * 0.65, 0.48),
+        dimmed: hslHex(h, s * 0.50, 0.62),
+        bluish: hslHex(h, Math.min(1, s + 0.15), 0.30),
+        primaryDimmed: hslHex(h, s * 0.9, 0.20),
+      },
+      dark: {
+        primary: darkPrimary,
+        secondary: hslHex(h, s * 0.85, 0.76),
+        tertiary: hslHex(h, s * 0.75, 0.62),
+        caption: hslHex(h, s * 0.65, 0.50),
+        dimmed: hslHex(h, s * 0.50, 0.38),
+        bluish: hslHex(h, Math.min(1, s + 0.15), 0.82),
+        primaryDimmed: hslHex(h, s * 0.9, 0.88),
+      },
     }
   }
   const h = style === 'mint' ? 166 : style === 'rose' ? 352 : 0
@@ -349,8 +408,10 @@ function writeEnabled(value: boolean): void {
 export interface MineradioSettings {
   /** Rendering mode: mica (frosted floating cards) or the stock layout with a generic glass material. */
   mode: 'mica' | 'compat'
-  /** Global text-ink tint: warm champagne (default) or a neutral/mint/rose. */
+  /** Global text-ink tint: warm champagne (default) or a neutral/mint/rose/custom. */
   textStyle: TextStyle
+  /** Custom text color in hex format (used when textStyle === 'custom'). */
+  customTextColor: string
   /** Glass backdrop blur radius, px. */
   blur: number
   /** Glass fill opacity, 0-100 (50 = the shipped look; drives the frost multiplier). */
@@ -474,6 +535,7 @@ export function matchScenePreset(settings: Pick<MineradioSettings, keyof SceneBu
 const SETTINGS_DEFAULTS: MineradioSettings = {
   mode: 'mica',
   textStyle: 'champagne',
+  customTextColor: '#F2F0EA',
   blur: 22,
   frost: 50,
   bgBrightness: 50,
@@ -523,6 +585,7 @@ type NumericKey = keyof typeof NUMERIC_KEYS
 
 const MODE_KEY = 'dsh.ui-mineradio.mode'
 const TEXT_STYLE_KEY = 'dsh.ui-mineradio.textStyle'
+const CUSTOM_TEXT_COLOR_KEY = 'dsh.ui-mineradio.customTextColor'
 const BACKGROUND_KEY = 'dsh.ui-mineradio.background'
 const WALLPAPER_KEY = 'dsh.ui-mineradio.wallpaper'
 const AUTO_TINT_KEY = 'dsh.ui-mineradio.autoTint'
@@ -643,7 +706,7 @@ function writeMode(value: 'mica' | 'compat'): void {
 function readTextStyle(): TextStyle {
   try {
     const stored = localStorage.getItem(TEXT_STYLE_KEY)
-    return stored === 'neutral' || stored === 'mint' || stored === 'rose' ? stored : 'champagne'
+    return stored === 'neutral' || stored === 'mint' || stored === 'rose' || stored === 'custom' ? stored : 'champagne'
   } catch {
     return 'champagne'
   }
@@ -653,6 +716,32 @@ function readTextStyle(): TextStyle {
 function writeTextStyle(value: TextStyle): void {
   try {
     localStorage.setItem(TEXT_STYLE_KEY, value)
+  } catch {
+    /* in-memory state still applies */
+  }
+}
+
+/** Read the custom global text color (absent/invalid means '#F2F0EA'). */
+function readCustomTextColor(): string {
+  try {
+    const stored = localStorage.getItem(CUSTOM_TEXT_COLOR_KEY)
+    if (stored !== null) {
+      const normalized = normalizeHexColor(stored)
+      if (normalized !== null) return normalized.toUpperCase()
+    }
+    return '#F2F0EA'
+  } catch {
+    return '#F2F0EA'
+  }
+}
+
+/** Persist the custom global text color. */
+function writeCustomTextColor(value: string): void {
+  try {
+    const normalized = normalizeHexColor(value)
+    if (normalized !== null) {
+      localStorage.setItem(CUSTOM_TEXT_COLOR_KEY, normalized.toUpperCase())
+    }
   } catch {
     /* in-memory state still applies */
   }
@@ -969,6 +1058,7 @@ export class MineradioLayer {
     this.settings = {
       mode: readMode(),
       textStyle: readTextStyle(),
+      customTextColor: readCustomTextColor(),
       blur: readSetting('blur'),
       frost: readSetting('frost'),
       fluidHue: readSetting('fluidHue'),
@@ -1065,11 +1155,24 @@ export class MineradioLayer {
     if (this.enabled) { this.applySettings(); this.applyTokens() }
   }
 
-  /** Set the global text-ink preset ('champagne' | 'neutral' | 'mint' | 'rose'). */
+  /** Set the global text-ink preset ('champagne' | 'neutral' | 'mint' | 'rose' | 'custom'). */
   setTextStyle(value: TextStyle): void {
     if (value === this.settings.textStyle) return
     this.settings.textStyle = value
     writeTextStyle(value)
+    if (this.enabled) this.applyTokens()
+  }
+
+  /** Set the custom global text color in hex format. */
+  setCustomTextColor(value: string): void {
+    const normalized = normalizeHexColor(value)
+    if (normalized === null) return
+    const formatted = normalized.toUpperCase()
+    if (formatted === this.settings.customTextColor && this.settings.textStyle === 'custom') return
+    this.settings.customTextColor = formatted
+    this.settings.textStyle = 'custom'
+    writeCustomTextColor(formatted)
+    writeTextStyle('custom')
     if (this.enabled) this.applyTokens()
   }
 
@@ -1565,7 +1668,7 @@ export class MineradioLayer {
   /** The text-ink override for the current preset: redefines the warm ink
    *  tokens only; every other token falls through to the base layer. */
   private inkOverrides(): ThemeTokenOverrides {
-    const p = textInkPalette(this.settings.textStyle)
+    const p = textInkPalette(this.settings.textStyle, this.settings.customTextColor)
     return {
       '--dsw-alias-label-primary': { light: p.light.primary, dark: p.dark.primary },
       '--dsw-alias-label-secondary': { light: p.light.secondary, dark: p.dark.secondary },

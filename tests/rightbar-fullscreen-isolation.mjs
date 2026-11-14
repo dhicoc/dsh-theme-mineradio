@@ -15,6 +15,9 @@ const bundle = fs.readFileSync(path.join(theme, 'lib/client.js'), 'utf8')
 let css = [...bundle.matchAll(/\.textContent\s*=\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)/g)]
   .map(m => { assert(!m[1].includes('${'), 'CSS must be a static string'); return vm.runInNewContext(m[1]) }).filter(s => s.includes('{')).join('\n')
 assert(css.includes("[data-dsh-aqua] [class*="), 'shipped CSS must be loaded, not source-only CSS')
+if (process.argv.includes('--without-rightbar-glass')) {
+  css = css.replace(/[^{}]+\{[^{}]*\}/g, rule => rule.includes('data-sidebar-right-panel') && rule.includes('data-dockkit-content') ? '' : rule)
+}
 if (process.argv.includes('--without-isolation')) {
   css = css.replace(/[^{}]+\{[^{}]*\}/g, rule =>
     rule.includes('data-rightbar-fullscreen') && rule.includes('centerCol') ? '' : rule)
@@ -39,7 +42,7 @@ header{height:70px}.live_frame{grid-template-columns:200px minmax(0,1fr) 300px}
 <div class="live_sidebarCol" id="sidebar">sidebar</div>
 <div class="live_centerCol" id="center"><header id="header">conversation header</header><main id="chat">conversation text that must not bleed through</main><div data-composer-card id="composer"><textarea id="draft">unsent draft</textarea></div><span id="forced" style="visibility:visible">explicit visibility descendant</span></div>
 <div class="live_rightbarCol" data-rightbar-col><div class="right_session" id="session"><div class="right_panel" id="panel" data-sidebar-right-panel="push">
-<div class="kit_tabCell" data-dockkit-host="dock" data-dockkit-column="0"><div class="kit_tabHost" data-dockkit-pane><div class="kit_tabHostHeader"><button id="fullscreen">fullscreen</button></div><div class="kit_paneBody" id="file">file contents</div></div></div><div id="floating" data-dockkit-host="float">floating</div>
+<div class="kit_tabCell" data-dockkit-host="dock" data-dockkit-column="0"><div class="kit_tabHost" data-dockkit-content="tab-live" data-dockkit-pane="pane-live" data-dockkit-pane-active><div class="kit_tabHostHeader"><button id="fullscreen">fullscreen</button></div><div class="kit_paneBody" id="file">file contents</div></div></div><div id="floating" data-dockkit-host="float">floating</div>
 </div></div></div></div><script>
 window.measure = () => {
  const center = document.getElementById('center'), panel = document.getElementById('panel');
@@ -50,7 +53,9 @@ window.measure = () => {
  sidebarVisible:document.getElementById('sidebar').checkVisibility({checkVisibilityCSS:true,checkOpacity:true}),
  floatingVisible:document.getElementById('floating').checkVisibility({checkVisibilityCSS:true,checkOpacity:true}),
  hitCenter:document.elementsFromPoint(center.getBoundingClientRect().x+30,150).some(e=>center.contains(e)),draft:document.getElementById('draft').value,
- panelFilter:getComputedStyle(panel).backdropFilter,panelTransform:getComputedStyle(panel).transform }
+ panelFilter:getComputedStyle(panel).backdropFilter,panelTransform:getComputedStyle(panel).transform,
+ dockFilter:getComputedStyle(document.querySelector('[data-dockkit-content][data-dockkit-pane-active]')).backdropFilter,
+ dockImage:getComputedStyle(document.querySelector('[data-dockkit-content][data-dockkit-pane-active]')).backgroundImage }
 };
 window.present = (mode, open) => { const f=document.getElementById('frame'),p=document.getElementById('panel');f.toggleAttribute('data-rightbar-fullscreen',mode==='fullscreen');p.setAttribute('data-sidebar-right-panel',mode);p.toggleAttribute('data-sidebar-right-open',open); };
 </script></body></html>`
@@ -74,7 +79,7 @@ try {
  const evaluate=async expression=>{const r=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});if(r.exceptionDetails)throw new Error(JSON.stringify(r.exceptionDetails));return r.result.value}
  await send('Runtime.enable')
  const records=[]
- async function check(label,hidden){
+ async function check(label,hidden,open){
   const m=await evaluate('window.measure()');records.push({label,...m});
   assert.equal(m.draft,'unsent draft',`${label}: draft preserved`)
   assert.equal(m.visibility,hidden?'hidden':'visible',`${label}: center visibility`)
@@ -83,6 +88,7 @@ try {
   assert(m.floatingVisible,`${label}: independently floating pane remains visible`)
   assert.equal(m.panelFilter,'none',`${label}: no full-panel containing block from blur`)
   assert.equal(m.panelTransform,'none',`${label}: floating geometry preserved`)
+  if(open){assert.match(m.dockFilter,/blur\(/,`${label}: open dock pane owns family frost`);assert.notEqual(m.dockImage,'none',`${label}: open dock pane owns family material`)}else{assert.equal(m.dockFilter,'none',`${label}: collapsed pane leaves no frosted overlay`)}
   if(hidden){assert(m.fileVisible,`${label}: dock body visible`);assert(!m.hitCenter,`${label}: conversation cannot receive clicks`)}
   return m
  }
@@ -91,21 +97,21 @@ try {
   for(const mode of ['float','compat']) for(const scheme of ['dark','light']) {
    await evaluate(`document.documentElement.toggleAttribute('data-dsh-float',${mode==='float'});document.documentElement.toggleAttribute('data-dsh-compat',${mode==='compat'});document.body.toggleAttribute('data-ds-dark-theme',${scheme==='dark'});present('push',true)`)
    const label=`${width} ${mode} ${scheme}`
-   const before=await check(label+' push',false)
+   const before=await check(label+' push',false,true)
    await evaluate("present('fullscreen',true)")
-   const full=await check(label+' fullscreen',true)
+   const full=await check(label+' fullscreen',true,true)
    assert.deepEqual(full.center,before.center,label+': grid track retained')
    assert(full.panel.x<=full.center.x && full.panel.width>full.center.width,label+': actual overlap geometry reproduced')
-   await evaluate("present('fullscreen',false)");await check(label+' collapse',false)
-   await evaluate("present('fullscreen',true)");await check(label+' reopen',true)
-   await evaluate("present('push',true)");await check(label+' exit',false)
-   await evaluate("present('fullscreen',true);document.documentElement.removeAttribute('data-dsh-aqua')");await check(label+' theme off',false)
-   await evaluate("document.documentElement.setAttribute('data-dsh-aqua','')");await check(label+' theme on',true)
+   await evaluate("present('fullscreen',false)");await check(label+' collapse',false,false)
+   await evaluate("present('fullscreen',true)");await check(label+' reopen',true,true)
+   await evaluate("present('push',true)");await check(label+' exit',false,true)
+   await evaluate("present('fullscreen',true);document.documentElement.removeAttribute('data-dsh-aqua')");await check(label+' theme off',false,false)
+   await evaluate("document.documentElement.setAttribute('data-dsh-aqua','')");await check(label+' theme on',true,true)
    await evaluate("present('push',true);document.getElementById('frame').setAttribute('data-rightbar-fullscreen','true');var stale=document.getElementById('session').cloneNode(true);stale.hidden=true;stale.removeAttribute('id');stale.querySelector('[data-sidebar-right-panel]').setAttribute('data-sidebar-right-panel','fullscreen');document.querySelector('[data-rightbar-col]').append(stale)")
-   await check(label+' stale hidden session',false)
+   await check(label+' stale hidden session',false,true)
    await evaluate("document.querySelector('[data-rightbar-col] > [hidden]').remove()")
   }
  }
  fs.writeFileSync(path.join(out,'measurements.json'),JSON.stringify(records,null,2))
- console.log(`Rightbar isolation passed: ${records.length} state/viewport/scheme checks against shipped CSS`)
+ console.log(`Rightbar isolation and deterministic glass passed: ${records.length} state/viewport/scheme checks against shipped CSS`)
 } finally { ws?.close();chrome.kill() }

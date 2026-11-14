@@ -13,6 +13,8 @@ export interface MineradioRowState {
     mode: 'mica' | 'compat';
     /** Global text-ink tint preset. */
     textStyle: TextStyle;
+    /** Custom global text color in hex format. */
+    customTextColor: string;
     /** Glass blur radius, px. */
     blur: number;
     /** Glass frost amount, 0-100. */
@@ -75,6 +77,7 @@ export interface MineradioSettingsPayload {
     enabled: boolean;
     mode: 'mica' | 'compat';
     textStyle: TextStyle;
+    customTextColor: string;
     blur: number;
     frost: number;
     fluidHue: number;
@@ -103,9 +106,9 @@ export interface MineradioSettingsPayload {
     perf: PerfTier;
     rainbow: boolean;
 }
-/** Declared action shape giving the exported factory a stable return type. */
+/** Draft mutator declarations; the host strips draft when binding actions. */
 type MineradioRowActions = {
-    sync: (next: MineradioSettingsPayload, revision: number) => void;
+    sync: (draft: MineradioRowState, next: MineradioSettingsPayload, revision: number) => void;
 };
 /**
  * Declares the Mineradio row state and write surface.

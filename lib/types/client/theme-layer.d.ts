@@ -11,6 +11,7 @@
  */
 import type { Context } from '@deepseek-ai/cordis';
 import type { ThemeTokenOverrides } from '@deepseek-ai/dsh-client-ui-theme/client';
+import { type CensusStats } from './role-census.ts';
 /** html attribute selecting the Mineradio layer: CSS hooks and ambient effects.
  *  Kept as the internal `data-dsh-aqua` seam so the stylesheet's 100+ gated
  *  selectors and the helper modules stay consistent across the skin. */
@@ -28,16 +29,20 @@ export declare const DEFAULT_ENABLED = true;
  */
 export declare const MINERADIO_TOKEN_OVERRIDES: ThemeTokenOverrides;
 /** Preset global text-ink tints: the "text colour" switch swaps the warm
- *  champagne ink for a neutral / mint / rose tint while keeping the SAME
- *  lightness ladder, so every preset stays readable in either scheme. The
- *  champagne preset reproduces the shipped values exactly (no regression). */
-export type TextStyle = 'champagne' | 'neutral' | 'mint' | 'rose';
+ *  champagne ink for a neutral / mint / rose tint or a custom hex colour while
+ *  keeping a readable lightness ladder in either scheme. The champagne preset
+ *  reproduces the shipped values exactly (no regression). */
+export type TextStyle = 'champagne' | 'neutral' | 'mint' | 'rose' | 'custom';
+/** Normalize a CSS hex string to #rrggbb (returns null if invalid). */
+export declare function normalizeHexColor(raw: string): string | null;
 /** Tunable layer knobs, persisted independently of the enable flag. */
 export interface MineradioSettings {
     /** Rendering mode: mica (frosted floating cards) or the stock layout with a generic glass material. */
     mode: 'mica' | 'compat';
-    /** Global text-ink tint: warm champagne (default) or a neutral/mint/rose. */
+    /** Global text-ink tint: warm champagne (default) or a neutral/mint/rose/custom. */
     textStyle: TextStyle;
+    /** Custom text color in hex format (used when textStyle === 'custom'). */
+    customTextColor: string;
     /** Glass backdrop blur radius, px. */
     blur: number;
     /** Glass fill opacity, 0-100 (50 = the shipped look; drives the frost multiplier). */
@@ -116,6 +121,8 @@ export declare class MineradioLayer {
     private interactionDisposer;
     private themeListener;
     private seamDisposer;
+    /** Runtime role census: the coverage engine (see role-census.ts). */
+    private censusHandle;
     private spotlightDisposer;
     private whaleHandle;
     private meshHandle;
@@ -161,8 +168,10 @@ export declare class MineradioLayer {
     setEnabled(value: boolean): void;
     /** Set the rendering mode ('mica' or 'compat'). */
     setMode(value: 'mica' | 'compat'): void;
-    /** Set the global text-ink preset ('champagne' | 'neutral' | 'mint' | 'rose'). */
+    /** Set the global text-ink preset ('champagne' | 'neutral' | 'mint' | 'rose' | 'custom'). */
     setTextStyle(value: TextStyle): void;
+    /** Set the custom global text color in hex format. */
+    setCustomTextColor(value: string): void;
     /** Set the glass blur radius (px). */
     setBlur(value: number): void;
     /** Set the glass frost amount (0-100). */
@@ -262,7 +271,9 @@ export declare class MineradioLayer {
     private syncGlassDispersion;
     /** Start or stop the specular-highlight cursor parallax. */
     private syncSpecularParallax;
-    /** Mount or drop the particle whale to match enabled + the whale flag. */
+    /** Mount or drop the particle whale to match enabled + the whale flag.
+     *  Gated on allowMotionFx (balanced and vivid), not the vivid-only
+     *  allowDecor, so the golden whale rides along on the default tier. */
     private syncWhale;
     /** Mount or drop the interactive mesh to match enabled + the mesh flag. */
     private syncMesh;
@@ -283,5 +294,21 @@ export declare class MineradioLayer {
     private startSeamStamper;
     /** Attach the cursor-spotlight pointer feeds (idempotent per mount). */
     private startSpotlightFeed;
+    /**
+     * Start the runtime role census (idempotent per mount).
+     *
+     * This is the coverage engine: it reads what the host actually paints, stamps a
+     * role attribute, and the stylesheet dresses by role with `!important` so a
+     * declaration wins on priority rather than on a specificity contest it cannot
+     * reliably win. It runs after the seams and the token layer so it can see their
+     * effect, and it skips faces that already wear the family rim — the token layer
+     * and the hand-written rules have already dressed those, and re-dressing them
+     * is what flattened the session header in an earlier revision.
+     */
+    private startRoleCensus;
+    /** Role counters for the console API (`__mineradioCensus()`). */
+    censusStats(): CensusStats;
+    /** Force a fresh census pass (after a host repaint the memo missed). */
+    censusRescan(): CensusStats;
 }
 export {};

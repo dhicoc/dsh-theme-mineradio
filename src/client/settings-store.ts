@@ -14,6 +14,8 @@ export interface MineradioRowState {
   mode: 'mica' | 'compat'
   /** Global text-ink tint preset. */
   textStyle: TextStyle
+  /** Custom global text color in hex format. */
+  customTextColor: string
   /** Glass blur radius, px. */
   blur: number
   /** Glass frost amount, 0-100. */
@@ -77,6 +79,7 @@ export interface MineradioSettingsPayload {
   enabled: boolean
   mode: 'mica' | 'compat'
   textStyle: TextStyle
+  customTextColor: string
   blur: number
   frost: number
   fluidHue: number
@@ -106,9 +109,9 @@ export interface MineradioSettingsPayload {
   rainbow: boolean
 }
 
-/** Declared action shape giving the exported factory a stable return type. */
+/** Draft mutator declarations; the host strips draft when binding actions. */
 type MineradioRowActions = {
-  sync: (next: MineradioSettingsPayload, revision: number) => void
+  sync: (draft: MineradioRowState, next: MineradioSettingsPayload, revision: number) => void
 }
 
 /**
@@ -121,6 +124,7 @@ export function createMineradioRowStore(): EngineStoreHandle<MineradioRowState, 
       enabled: true,
       mode: 'mica',
       textStyle: 'champagne',
+      customTextColor: '#F2F0EA',
       blur: 24,
       frost: 14,
       fluidHue: 44,
@@ -156,6 +160,7 @@ export function createMineradioRowStore(): EngineStoreHandle<MineradioRowState, 
         d.enabled = next.enabled
         d.mode = next.mode
         d.textStyle = next.textStyle
+        d.customTextColor = next.customTextColor
         d.blur = next.blur
         d.frost = next.frost
         d.fluidHue = next.fluidHue

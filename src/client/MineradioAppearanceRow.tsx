@@ -59,6 +59,8 @@ export interface MineradioAppearanceRowInjected {
   setMode: (value: 'mica' | 'compat') => void
   /** Set the global text-ink preset. */
   setTextStyle: (value: TextStyle) => void
+  /** Set the custom global text color in hex format. */
+  setCustomTextColor: (value: string) => void
   /** Set the glass blur radius, px. */
   setBlur: (value: number) => void
   /** Set the glass frost amount, 0-100. */
@@ -123,13 +125,14 @@ export type MineradioAppearanceRowComponentProps =
  */
 export function MineradioAppearanceRow(props: MineradioAppearanceRowComponentProps) {
   const {
-    t, applyScene, setPerf, setMode, setTextStyle, setBlur, setFrost, setFluidHue, setFluidDepth, setDispersionHue, setDispersionRefract, setBgBrightness,
+    t, applyScene, setPerf, setMode, setTextStyle, setCustomTextColor, setBlur, setFrost, setFluidHue, setFluidDepth, setDispersionHue, setDispersionRefract, setBgBrightness,
     setBackground, setWallpaper, setAutoTint, setWhale, setCritters, setMesh, setStarDensity, setSpotlight, setPress, setAudioReact,
     setWallpaperBlur, setWallpaperFrost, setWallpaperMask, setWallpaperMaskBlur, setWallpaperMaskOpacity, setVideoBlur, setVideoBrightness, authorizeVideo, useStore,
   } = props
   const enabled = useStore(s => s.enabled)
   const mode = useStore(s => s.mode)
   const textStyle = useStore(s => s.textStyle)
+  const customTextColor = useStore(s => s.customTextColor)
   const blur = useStore(s => s.blur)
   const frost = useStore(s => s.frost)
   const fluidHue = useStore(s => s.fluidHue)
@@ -308,7 +311,7 @@ export function MineradioAppearanceRow(props: MineradioAppearanceRowComponentPro
         </div>
       </div>
 
-      {/* 文字颜色：全局文本墨色预设 */}
+      {/* 文字颜色：全局文本墨色预设及自定义取色器 */}
       <div className={css.subGroup}>
         <div className={css.subTitle}>{t('mineradio.textColor')}</div>
         <div className={css.controls}>
@@ -321,10 +324,40 @@ export function MineradioAppearanceRow(props: MineradioAppearanceRowComponentPro
                 { id: 'neutral', label: t('mineradio.textColorNeutral') },
                 { id: 'mint', label: t('mineradio.textColorMint') },
                 { id: 'rose', label: t('mineradio.textColorRose') },
+                { id: 'custom', label: t('mineradio.textColorCustom') },
               ]}
               onSelect={setTextStyle}
             />
           </div>
+          {textStyle === 'custom' && (
+            <div className={css.row}>
+              <div className={css.colorPickerWrap}>
+                <span className={css.knobLabel}>{t('mineradio.customTextColor')}</span>
+                <div className={css.colorInputGroup}>
+                  <input
+                    type="color"
+                    className={css.colorNativeInput}
+                    value={customTextColor.startsWith('#') ? customTextColor : '#F2F0EA'}
+                    onChange={(e) => {
+                      setCustomTextColor(e.target.value)
+                    }}
+                    aria-label={t('mineradio.customTextColor')}
+                  />
+                  <input
+                    type="text"
+                    className={css.hexInput}
+                    value={customTextColor}
+                    spellCheck={false}
+                    maxLength={7}
+                    onChange={(e) => {
+                      setCustomTextColor(e.target.value)
+                    }}
+                    placeholder="#F2F0EA"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       </Fold>

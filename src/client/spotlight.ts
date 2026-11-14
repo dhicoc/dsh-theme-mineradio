@@ -158,7 +158,13 @@ export function startSpotlight(): () => void {
       session = null
     }
     const glow = spot.querySelector<HTMLElement>(`:scope > [${GLOW_ATTR}]`)
-    if (glow !== null) glow.style.removeProperty('background-image')
+    if (glow !== null) {
+      glow.style.removeProperty('background-image')
+      glow.style.left = '0px'
+      glow.style.top = '0px'
+      glow.style.width = '0px'
+      glow.style.height = '0px'
+    }
     easeBack(spot)
   }
 
@@ -168,10 +174,11 @@ export function startSpotlight(): () => void {
     const local = glassLocalRect(spot)
     const glow = glowGated() ? ensureGlow(spot) : null
     if (glow !== null) {
-      glow.style.left = `${local.left}px`
-      glow.style.top = `${local.top}px`
-      glow.style.width = `${local.width}px`
-      glow.style.height = `${local.height}px`
+      const box = glassLocalRect(spot, glow.offsetParent as HTMLElement | null)
+      glow.style.left = `${box.left}px`
+      glow.style.top = `${box.top}px`
+      glow.style.width = `${box.width}px`
+      glow.style.height = `${box.height}px`
     }
     return { spot, visual, local, glow }
   }
@@ -197,7 +204,7 @@ export function startSpotlight(): () => void {
         if (glowGated()) {
           // background-image only: the shorthand would wipe any CSS paint.
           glow.style.backgroundImage =
-            `radial-gradient(${GLOW_RADIUS}px at ${clientX - visual.left}px ${clientY - visual.top}px, var(--dsh-aqua-spot-color, ${GLOW_FALLBACK}), transparent 70%)`
+            `radial-gradient(${GLOW_RADIUS}px at ${(clientX - visual.left) * local.width / visual.width}px ${(clientY - visual.top) * local.height / visual.height}px, var(--dsh-aqua-spot-color, ${GLOW_FALLBACK}), transparent 70%)`
         } else {
           // Toggle flipped off mid-hover: drop the last radial so the
           // now-ungated div turns invisible immediately.
@@ -218,7 +225,7 @@ export function startSpotlight(): () => void {
         // Same recipe for every pane — the sidebar and its collapsed rail
         // included.
         spot.style.transformOrigin =
-          `${local.left + local.width / 2}px ${local.top + local.height / 2}px`
+          `${local.left + spot.clientLeft + local.width / 2}px ${local.top + spot.clientTop + local.height / 2}px`
         spot.style.transform =
           `perspective(${TILT_PERSPECTIVE}px) rotateX(${tiltMax * -2 * dy}rad) rotateY(${tiltMax * 2 * dx}rad) scale(1.01)`
         tilted.add(spot)
@@ -275,16 +282,11 @@ export function startSpotlight(): () => void {
 
   // The glow divs live with the panes through React re-renders; DOM/layout
   // changes also refresh the active hover session (coalesced).
-  const keeper = startOverlayKeeper(() => {
-    // The settings dialog mounts INSIDE the sidebar column — release the
-    // sidebar with a SNAP, not a glide: removing the inline transform while
-    // the CSS transition is live would keep the COMPUTED transform alive
-    // for ~0.1s and trap the panel's fixed overlay in the column for those
-    // frames (the "stuck in the sidebar for a moment" bug). Disabling the
-    // transition around the removal makes the release instant.
-    for (const spot of spotElements()) {
-      if (!spot.matches('[class*="sidebarCol"]')) continue
-      if (spot.querySelector('[role="dialog"]') === null) continue
+  const refresh = (): void => {
+    // Only a hovered sidebar can carry an active hover effect. Keep mutations
+    // elsewhere from scanning every stamped pane in a long conversation.
+    const spot = current
+    if (spot !== null && spot.matches('[class*="sidebarCol"]') && spot.querySelector('[role="dialog"]') !== null) {
       spot.removeAttribute(ON_ATTR)
       const id = settle.get(spot)
       if (id !== undefined) {
@@ -297,17 +299,24 @@ export function startSpotlight(): () => void {
       spot.style.removeProperty('transform-origin')
       void spot.offsetWidth
       spot.style.removeProperty('transition')
-      if (current === spot) {
-        current = null
-        session = null
-      }
+      current = null
+      session = null
     }
     if (session === null || refreshRaf !== 0) return
     refreshRaf = requestAnimationFrame(() => {
       refreshRaf = 0
-      if (session !== null) session = measure(session.spot)
+      if (session === null) return
+      if (!session.spot.isConnected) {
+        clearSpot(session.spot)
+        return
+      }
+      session = measure(session.spot)
     })
-  })
+  }
+  const keeper = startOverlayKeeper(refresh)
+  // Scroll does not necessarily mutate the DOM. Refresh both viewport and
+  // containing-block geometry, including non-offset-parent scrollers.
+  document.addEventListener('scroll', refresh, { passive: true, capture: true })
 
   document.addEventListener('pointermove', onMove, { passive: true })
   document.addEventListener('pointerover', onOver, { passive: true })
@@ -317,6 +326,7 @@ export function startSpotlight(): () => void {
     document.removeEventListener('pointermove', onMove)
     document.removeEventListener('pointerover', onOver)
     document.removeEventListener('pointerout', onOut)
+    document.removeEventListener('scroll', refresh, true)
     keeper()
     if (raf !== 0) cancelAnimationFrame(raf)
     if (refreshRaf !== 0) cancelAnimationFrame(refreshRaf)

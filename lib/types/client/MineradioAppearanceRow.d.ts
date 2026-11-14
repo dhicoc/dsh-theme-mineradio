@@ -11,6 +11,8 @@ export interface MineradioAppearanceRowInjected {
     setMode: (value: 'mica' | 'compat') => void;
     /** Set the global text-ink preset. */
     setTextStyle: (value: TextStyle) => void;
+    /** Set the custom global text color in hex format. */
+    setCustomTextColor: (value: string) => void;
     /** Set the glass blur radius, px. */
     setBlur: (value: number) => void;
     /** Set the glass frost amount, 0-100. */

@@ -92,7 +92,6 @@
   pointer-events: none !important;
 }
 
-
 [data-dsh-aqua] [data-phase],
 [data-dsh-aqua] [data-dsh-details] {
   background: transparent;
@@ -195,7 +194,7 @@
    z-index 8 (not 6) keeps it above the markdown CodeBlock sticky banner,
    which the stock UI stacks at z-index 6 —otherwise a code block's copy
    button row slides OVER the header and drifts as it scrolls past. */
-[data-dsh-float] [data-phase='active'] header {
+[data-dsh-float] [data-phase='active'] header[data-window-drag] {
   position: relative;
   z-index: 8;
 }
@@ -589,6 +588,29 @@
   box-shadow: var(--dsh-aqua-glass-shadow-dark);
 }
 
+/* Diff-preview HoverCards (the turn's "edited files" hover): their inner
+   diff lines and preview surface paint translucent fills directly over the
+   page, so the translucent card material alone lets conversation text and
+   the fluid show THROUGH the popup. Give this specific card the dense
+   menu-grade plate (the same recipe as inline media previews) and back the
+   inner preview with one solid first-layer plate; the diff ink keeps its
+   own colors and stays fully legible. */
+[data-dsh-float] body > [class*='_card']:has([data-changes-hover-preview]) {
+  background: var(--dsw-specific-menu);
+  backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04);
+}
+
+[data-dsh-float] [data-changes-hover-preview] {
+  background: var(--dsw-alias-bg-layer-1);
+  backdrop-filter: blur(calc(var(--dsh-aqua-blur, 22px) / 2));
+}
+
+[data-dsh-float] [data-changes-hover-preview] pre,
+[data-dsh-float] [data-changes-hover-preview] code,
+[data-dsh-float] [data-changes-hover-preview] [class*='diffBody'] {
+  background: var(--dsw-alias-bg-layer-1) !important;
+}
+
 /* Buttons (component roots carry the `button`-named class; icon circles
    carry `iconButton`; the sidebar search circle is its own family). */
 [data-dsh-float] button[class*='button'] {
@@ -883,7 +905,7 @@ html:not(:has(body[data-ds-dark-theme])) [data-dsh-aqua] [data-dsh-station-tuner
 /* ---------- Session header: a detached glass card, same recipe as the
    composer. The bottom edge opens into the chat —no bottom border and a
    shallow shadow, so the original header/chat divider line is gone. ---------- */
-[data-dsh-float] header {
+[data-dsh-float] header[data-window-drag] {
   margin: 12px 16px 0;
   padding: 10px 16px 8px;
   border: 1px solid rgba(122, 86, 28, 0.34);
@@ -894,11 +916,11 @@ html:not(:has(body[data-ds-dark-theme])) [data-dsh-aqua] [data-dsh-station-tuner
   backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04);
 }
 
-[data-dsh-float] header::after {
+[data-dsh-float] header[data-window-drag]::after {
   display: none;
 }
 
-[data-dsh-float] body[data-ds-dark-theme] header {
+[data-dsh-float] body[data-ds-dark-theme] header[data-window-drag] {
   border-color: rgba(0, 245, 212, 0.22);
   border-bottom-color: transparent;
   background: var(--dsh-aqua-glass-card-dark);
@@ -909,10 +931,10 @@ html:not(:has(body[data-ds-dark-theme])) [data-dsh-aqua] [data-dsh-station-tuner
    header card steps right (28px inset = 16px clear of the rail's edge) —
    the sidebar keeps its geometry, the top bar does the adjusting.
    Windows titlebar has 0px rail when collapsed, so no shift needed. */
-[data-dsh-float] [data-dsh-frame][data-sidebar-collapsed] header {
+[data-dsh-float] [data-dsh-frame][data-sidebar-collapsed] header[data-window-drag] {
   margin-left: 28px;
 }
-[data-windows-titlebar][data-dsh-float] [data-dsh-frame][data-sidebar-collapsed] header {
+[data-windows-titlebar][data-dsh-float] [data-dsh-frame][data-sidebar-collapsed] header[data-window-drag] {
   margin-left: 16px;
 }
 
@@ -994,9 +1016,22 @@ html:not(:has(body[data-ds-dark-theme])) [data-dsh-aqua] [data-dsh-station-tuner
   box-shadow: none;
   transform: none !important;
   contain: none !important;
+  overflow: visible;
 }
 [data-windows-titlebar][data-dsh-float] [data-dsh-frame][data-sidebar-collapsed] [class*='sidebarCol']::before {
   display: none;
+}
+
+/* The zero-width column contains two host-fixed controls. Only the sidebar
+   toggle belongs in Mineradio's collapsed titlebar; the New Session shortcut
+   otherwise floats below it as an orphan circle. The command remains available
+   from the expanded sidebar and global shortcut. Reclaim its 36px menu gap. */
+[data-windows-titlebar][data-dsh-float] [data-dsh-frame][data-sidebar-collapsed] [class*='sidebarCol'] [class*='newSession'] {
+  display: none !important;
+}
+
+[data-windows-titlebar][data-dsh-float]:has([data-dsh-frame][data-sidebar-collapsed]) {
+  --dsh-windows-menu-start: 48px;
 }
 
 /* Collapsed rail (dark): the 56px column amplifies the wide-pane teal catch-light
@@ -1072,7 +1107,7 @@ html:not(:has(body[data-ds-dark-theme])) [data-dsh-aqua] [data-dsh-station-tuner
   backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04);
   /* Stats text: neutral slate (dark on light glass, near-white on dark
      glass) — kills the stock blue-gray cast. */
-  color: rgb(38 46 62 / 0.9);
+  color: var(--dsw-alias-label-secondary);
 }
 
 [data-dsh-float] body[data-ds-dark-theme] [data-dsh-stats] {
@@ -1080,16 +1115,16 @@ html:not(:has(body[data-ds-dark-theme])) [data-dsh-aqua] [data-dsh-station-tuner
   border-top-color: rgba(255, 255, 255, 0.095);
   background: var(--dsh-aqua-glass-card-dark);
   box-shadow: var(--dsh-aqua-glass-shadow-dark);
-  color: rgb(228 236 248 / 0.92);
+  color: var(--dsw-alias-label-secondary);
 }
 
-/* Composer placeholder: neutral, scheme-adaptive — no blue hint. */
+/* Composer placeholder: scheme-adaptive from global text ink ladder. */
 [data-dsh-float] [data-composer-card] textarea::placeholder {
-  color: rgb(55 64 84 / 0.5);
+  color: var(--dsw-alias-label-caption);
 }
 
 [data-dsh-float] body[data-ds-dark-theme] [data-composer-card] textarea::placeholder {
-  color: rgb(205 216 234 / 0.52);
+  color: var(--dsw-alias-label-caption);
 }
 
 /* ---------- Cursor spotlight glow: the official feature-card glow on the
@@ -1533,7 +1568,7 @@ html:not(:has(body[data-ds-dark-theme])) [data-dsh-aqua] [data-dsh-station-tuner
    inner composer/stats keep backdrop-filter:none (their higher-specificity
    fused rules still win); the slab itself carries it. ---------- */
 [data-dsh-float][data-dsh-dispersion] [data-composer-card]::before,
-[data-dsh-float][data-dsh-dispersion] header,
+[data-dsh-float][data-dsh-dispersion] header[data-window-drag],
 [data-dsh-float][data-dsh-dispersion] [data-dsh-trajectory],
 [data-dsh-float][data-dsh-dispersion] [data-dsh-stats],
 [data-dsh-float][data-dsh-dispersion] [data-dsh-inputbar]:has([data-dsh-stats])::before {
@@ -1580,6 +1615,49 @@ html:not(:has(body[data-ds-dark-theme])) [data-dsh-aqua] [data-dsh-station-tuner
   backdrop-filter: blur(var(--dsh-aqua-blur, 22px));
 }
 
+/* ---------- Issue #9 state contracts: deterministic, not census-timed. ---------- */
+/* Each open DockKit pane owns one family-glass plate. The absolute panel stays
+   filter/transform-free so fixed floating panes keep viewport geometry. Closing
+   removes the material synchronously; reopening in push or fullscreen restores it. */
+[data-dsh-aqua] [data-sidebar-right-panel][data-sidebar-right-open] [data-dockkit-content][data-dockkit-pane-active] {
+  background: var(--dsh-aqua-glass-card-light) !important;
+  box-shadow: var(--dsh-aqua-glass-shadow-light) !important;
+  backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04) !important;
+  -webkit-backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04) !important;
+}
+
+[data-dsh-aqua] body[data-ds-dark-theme] [data-sidebar-right-panel][data-sidebar-right-open] [data-dockkit-content][data-dockkit-pane-active] {
+  background: var(--dsh-aqua-glass-card-dark) !important;
+  box-shadow: var(--dsh-aqua-glass-shadow-dark) !important;
+}
+
+[data-dsh-aqua][data-dsh-aqua-perf='performance'] [data-sidebar-right-panel][data-sidebar-right-open] [data-dockkit-content][data-dockkit-pane-active] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* QuestionComposer is a composer takeover, not the session titlebar. Its card
+   carries one glass plate; its nested header keeps the host's layout and never
+   receives the detached session-header material. */
+[data-dsh-aqua] [data-question-key] > section {
+  border: 1px solid rgba(122, 86, 28, 0.34);
+  background: var(--dsh-aqua-glass-card-light);
+  box-shadow: var(--dsh-aqua-glass-shadow-light);
+  backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04);
+  -webkit-backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04);
+}
+
+[data-dsh-aqua] body[data-ds-dark-theme] [data-question-key] > section {
+  border-color: rgba(0, 245, 212, 0.22);
+  background: var(--dsh-aqua-glass-card-dark);
+  box-shadow: var(--dsh-aqua-glass-shadow-dark);
+}
+
+[data-dsh-aqua][data-dsh-aqua-perf='performance'] [data-question-key] > section {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 /* ---------- dsh-better-sidebar (omdsh/DSH-better-sidebar) glass pantry ----------
    The plugin is token-driven (`--dsw-alias-*`), so its panels already inherit the
    translucent fill + champagne hairline; add the missing frosted backdrop-filter
@@ -1606,15 +1684,46 @@ html:not(:has(body[data-ds-dark-theme])) [data-dsh-aqua] [data-dsh-station-tuner
 [data-dsh-aqua] [data-dsh-panel-host] [class*='_pane']:not([class*='panel']):not([class*='Content']):not([class*='Tab']) {
   background: transparent;
 }
-/* Terminal wrap + xterm viewport paint an OPAQUE --dsw-alias-bg-base
-   (#08090B) slab — xterm even inlines it on .xterm-viewport. Drop both
-   fills so the panel frost shows through. allowTransparency is already
-   on; ANSI ink stays. */
+/* Built-in right-sidebar terminal: its stable root is data-sidebar-terminal.
+   The screen — not xterm's text/canvas layers — owns the family glass so the
+   monospaced output remains sharp and fixed/scroll geometry stays untouched. */
+[data-dsh-aqua] [data-sidebar-terminal] > [class*='screen'] {
+  margin: 0 8px 8px;
+  border: 1px solid rgba(122, 86, 28, 0.34);
+  border-radius: var(--dsl-terminal-radius, 14px);
+  background: var(--dsh-aqua-glass-card-light);
+  box-shadow: var(--dsh-aqua-glass-shadow-light);
+  backdrop-filter: blur(var(--dsh-aqua-blur, 22px)) saturate(1.22) brightness(1.04);
+  overflow: hidden;
+}
+
+[data-dsh-aqua] body[data-ds-dark-theme] [data-sidebar-terminal] > [class*='screen'] {
+  border-color: rgba(0, 245, 212, 0.22);
+  background: var(--dsh-aqua-glass-card-dark);
+  box-shadow: var(--dsh-aqua-glass-shadow-dark);
+}
+
+[data-dsh-aqua][data-dsh-aqua-perf='performance'] [data-sidebar-terminal] > [class*='screen'] {
+  backdrop-filter: none;
+}
+
+/* xterm 6 paints the effective theme background as an INLINE color on
+   .xterm-scrollable-element. The old viewport/screen rule therefore left a
+   solid black rectangle. Override all three backing layers, but never blur
+   .xterm/.xterm-rows themselves: ANSI ink, cursor and selection stay crisp. */
+[data-dsh-aqua] [data-sidebar-terminal] [class~='xterm-scrollable-element'],
+[data-dsh-aqua] [data-sidebar-terminal] [class~='xterm-viewport'],
+[data-dsh-aqua] [data-sidebar-terminal] [class~='xterm-screen'] {
+  background-color: transparent !important;
+}
+
+/* Legacy dsh-better-sidebar terminals still use these wrappers. */
 [data-dsh-aqua] [data-dsh-panel-host] [class*='terminalWrap'] {
   background: transparent;
 }
-[data-dsh-aqua] [data-dsh-panel-host] [class*='xterm-viewport'],
-[data-dsh-aqua] [data-dsh-panel-host] [class*='xterm-screen'] {
+[data-dsh-aqua] [data-dsh-panel-host] [class~='xterm-scrollable-element'],
+[data-dsh-aqua] [data-dsh-panel-host] [class~='xterm-viewport'],
+[data-dsh-aqua] [data-dsh-panel-host] [class~='xterm-screen'] {
   background-color: transparent !important;
 }
 

@@ -90,6 +90,7 @@ export function apply(ctx: Context): void {
       enabled: layer.getEnabled(),
       mode: s.mode,
       textStyle: s.textStyle,
+      customTextColor: s.customTextColor,
       blur: s.blur,
       frost: s.frost,
       fluidHue: s.fluidHue,
@@ -159,6 +160,10 @@ export function apply(ctx: Context): void {
       },
       setTextStyle: (textStyle) => {
         layer.setTextStyle(textStyle)
+        sync()
+      },
+      setCustomTextColor: (customTextColor) => {
+        layer.setCustomTextColor(customTextColor)
         sync()
       },
       setBlur: (blur) => {

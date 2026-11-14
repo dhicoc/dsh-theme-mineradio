@@ -5,28 +5,13 @@
  * graph fails to load. Probe both packages at factory time and keep the first
  * one the host actually registered.
  */
-export interface EngineStoreHandle<State, Actions> {
-  spec: unknown
-  create: (scopeKey?: string) => {
-    actions: Actions
-    getSnapshot: () => State
-    subscribe: (fn: () => void) => () => void
-    store: unknown
-    clearPersisted: () => void
-  }
-}
+// Type-only imports: do not require this optional engine at module evaluation.
+// The host declaration infers draft mutators and exposes the shared StoreHandle
+// shape consumed by ui-slots' BoundActions / PropsStore conditionals.
+import type { defineStore as hostDefineStore } from '@deepseek-ai/dsh-client-store'
+export type { EngineStoreHandle } from '@deepseek-ai/dsh-client-store'
 
-interface DefineStoreDecl<State, Actions extends Record<string, (...args: never[]) => unknown>> {
-  init: () => State
-  persist?: string
-  actions: {
-    [K in keyof Actions]: (draft: State, ...args: Parameters<Actions[K]>) => void
-  }
-}
-
-type DefineStoreFn = <State, Actions extends Record<string, (...args: never[]) => unknown>>(
-  decl: DefineStoreDecl<State, Actions>,
-) => EngineStoreHandle<State, Actions>
+type DefineStoreFn = typeof hostDefineStore
 
 const STORE_CANDIDATES = [
   '@deepseek-ai/dsh-client-runtime/client',
